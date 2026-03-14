@@ -44,9 +44,6 @@ in {
 
   flake.homeConfigurations = {
     goodrod = mkHomeConfig {username = "goodrod";};
-    calle = mkHomeConfig {username = "calle";};
-    david = mkHomeConfig {username = "david";};
-    david3 = mkHomeConfig {username = "david3";};
     test-user = mkHomeConfig {username = "test-user";};
 
     "goodrod@work" = mkHomeConfig {
