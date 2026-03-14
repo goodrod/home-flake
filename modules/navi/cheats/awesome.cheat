@@ -1,0 +1,5 @@
+% awesome
+@ constants
+
+# (edit/change)                 Open awesome config directory
+nvim <nixos-config-path>/modules/awesome/config
