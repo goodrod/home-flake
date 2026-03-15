@@ -4,8 +4,14 @@ let
   option = config.module.git-repos;
   cloneScript = concatStringsSep "\n" (map (repo: ''
     if [ ! -d "$HOME/${repo.path}" ]; then
+      mkdir -p "$HOME/$(dirname "${repo.path}")"
       ${pkgs.git}/bin/git clone ${repo.url} "$HOME/${repo.path}"
     fi
+    ${lib.optionalString (repo.link != null) ''
+      if [ ! -e "$HOME/${repo.link}" ]; then
+        ln -s "$HOME/${repo.path}" "$HOME/${repo.link}"
+      fi
+    ''}
   '') option.repos);
 in {
   options.module.git-repos = {
@@ -15,6 +21,10 @@ in {
         options = {
           url = mkOption { type = types.str; };
           path = mkOption { type = types.str; };
+          link = mkOption {
+            type = types.nullOr types.str;
+            default = null;
+          };
         };
       });
       default = [];
