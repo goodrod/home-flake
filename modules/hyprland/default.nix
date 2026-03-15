@@ -480,7 +480,15 @@ in {
     };
     programs.hyprlock = {
       enable = true;
-      settings.label = [];
+      settings = {
+        background = {
+          monitor = "";
+          path = "screenshot";
+          blur_passes = 3;
+          blur_size = 8;
+        };
+        label = [];
+      };
     };
     services = {
       hypridle.enable = false;
