@@ -19,6 +19,8 @@ button {
     border: 2px solid #98DEF2;
     border-radius: 10px;
     transition: 150ms;
+    min-width: 200px;
+    min-height: 200px;
 }
 
 button:focus,
