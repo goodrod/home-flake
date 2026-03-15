@@ -1,5 +1,9 @@
-{ config, pkgs, lib, ... }:
-let
+{
+  config,
+  pkgs,
+  lib,
+  ...
+}: let
   inherit (lib) mkOption mkEnableOption types mkIf;
   inherit (types) path str;
   waybarConfig = config.module.waybar;
@@ -10,24 +14,22 @@ in {
     config-source-directory = mkOption {
       default = ./config;
       type = path;
-      description =
-        "Path to the directory containing the config files to output to the directory specified in the config-output-directory.";
+      description = "Path to the directory containing the config files to output to the directory specified in the config-output-directory.";
     };
 
     config-output-directory = mkOption {
       default = ".config/waybar";
       type = str;
-      description =
-        "Path to the output directory where all config files located in the config-source-directory. Output is relative to your home directory.";
+      description = "Path to the output directory where all config files located in the config-source-directory. Output is relative to your home directory.";
     };
   };
 
   config = mkIf waybarConfig.enable {
     fonts.fontconfig.enable = true;
     home.packages = with pkgs;
-      [ waybar font-awesome ]
+      [waybar font-awesome]
       ++ builtins.filter lib.attrsets.isDerivation
-        (builtins.attrValues pkgs.nerd-fonts);
+      (builtins.attrValues pkgs.nerd-fonts);
     home.file."${waybarConfig.config-output-directory}" = {
       source = "${waybarConfig.config-source-directory}";
       executable = false;
@@ -95,7 +97,7 @@ in {
           };
           on-click = "activate";
           persistent-workspaces = {
-            "*" = [ 10 20 30 40 50 ];
+            "*" = [10 20 30 40 50];
           };
         };
         network = {
@@ -103,7 +105,7 @@ in {
           format-ethernet = " 󰅢 {bandwidthDownBytes} ";
           tooltip-format = " 󰅧 {bandwidthUpBytes} 󰅢 {bandwidthDownBytes}";
           format-linked = " 󱘖 {ifname} (No IP) ";
-          format-disconnected = "  Disconnected ";
+          format-disconnected = "  Disconnected ";
           format-alt = " 󰤨 {signalStrength}% ";
           interval = 1;
         };
@@ -115,20 +117,24 @@ in {
           format = " {icon} {capacity}% ";
           format-charging = " 󱐋{capacity}%";
           interval = 1;
-          format-icons = [ "󰂎" "󰁼" "󰁿" "󰂁" "󰁹" ];
+          format-icons = ["󰂎" "󰁼" "󰁿" "󰂁" "󰁹"];
           tooltip = true;
         };
         pulseaudio = {
           format = "{icon}{volume}% ";
           format-muted = " 󰖁 0% ";
           format-icons = {
-            headphone = "  ";
-            hands-free = "  ";
-            headset = "  ";
-            phone = "  ";
-            portable = "  ";
-            car = "  ";
-            default = [ "  " "  " "  " ];
+            headphone = "  ";
+            hands-free = "  ";
+            headset = "  ";
+            phone = "  ";
+            portable = "  ";
+            car = "   ";
+            default = [
+              "  "
+              "  "
+              "  "
+            ];
           };
           on-click-right = "pavucontrol -t 3";
           on-click = "pactl -- set-sink-mute 0 toggle";
@@ -141,7 +147,7 @@ in {
           tooltip-format = "{used:0.2f}G/{total:0.2f}G";
         };
         cpu = {
-          format = "  {usage}% ";
+          format = "  {usage}% ";
           tooltip = true;
         };
         clock = {
@@ -160,7 +166,7 @@ in {
           format = "{icon}{percent}% ";
           tooltip = true;
           tooltip-format = ": {percent}%";
-          format-icons = [ " 󰃞 " " 󰃝 " " 󰃟 " " 󰃠 " ];
+          format-icons = [" 󰃞 " " 󰃝 " " 󰃟 " " 󰃠 "];
         };
       };
     };
