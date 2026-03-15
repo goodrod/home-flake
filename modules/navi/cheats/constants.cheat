@@ -1,6 +1,7 @@
 % constants
 $ nixos-config-path: echo "~/nixos"
-$ home-manager-module-path: echo "<nixos-config-path>/modules/homeManager"
+$ home-flake-config-path: echo "~/home-flake"
+$ home-manager-module-path: echo "<home-flake-config-path>/modules/"
 $ nixos-module-path: echo "<nixos-config-path>/modules/nixos"
 $ current-nixos-host: cat /etc/nixos-hostname
 $ nixos-host: echo "<current-nixos-host>" && ls -C1 <nixos-config-path>/hosts | grep -v "^<current-nixos-host>$"
