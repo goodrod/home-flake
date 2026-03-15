@@ -39,7 +39,6 @@ in {
       wlogout
       nixfmt
       xwallpaper
-      spotify
       pavucontrol
       gsimplecal
       openssl
