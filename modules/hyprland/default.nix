@@ -271,10 +271,10 @@ in {
 
             render_titles = true;
             text_offset = 0;
-            text_color = "0xffe6e6e6";
-            text_color_inactive = "0x99c8d0d8";
-            text_color_locked_active = "0xffffffff"; # white text for locked active
-            text_color_locked_inactive = "0x99c8d0d8";
+            text_color = "0xffcdd6f4";
+            text_color_inactive = "0x99898fa2";
+            text_color_locked_active = "0xffcdd6f4";
+            text_color_locked_inactive = "0x99898fa2";
 
             gradients = true;
             rounding = 6;
@@ -292,10 +292,10 @@ in {
             stacked = false;
 
             # palette
-            "col.active" = "rgba(2255aaff) rgba(1a4488ff) 90deg";
-            "col.inactive" = "rgba(141e30dd) rgba(0c1420dd) 90deg";
-            "col.locked_active" = "rgba(f4a261ff) rgba(e68f3cff) 90deg";
-            "col.locked_inactive" = "rgba(f4a261aa) rgba(e68f3caa) 90deg";
+            "col.active" = "rgba(89dcebff) rgba(cba6f7ff) 90deg";
+            "col.inactive" = "rgba(404A60dd) rgba(404A60dd) 90deg";
+            "col.locked_active" = "rgba(DDC062ff) rgba(FF9F81ff) 90deg";
+            "col.locked_inactive" = "rgba(DDC062aa) rgba(FF9F81aa) 90deg";
           };
         };
 
@@ -303,8 +303,8 @@ in {
           gaps_in = 5;
           gaps_out = 20;
           border_size = 2;
-          "col.active_border" = "rgba(33ccffee) rgba(00ff99ee) 45deg";
-          "col.inactive_border" = "rgba(595959aa)";
+          "col.active_border" = "rgba(cdd6f4ee) rgba(89dcebee) 45deg";
+          "col.inactive_border" = "rgba(404A60aa)";
           resize_on_border = false;
           allow_tearing = false;
           layout = "master";
@@ -494,9 +494,9 @@ in {
           outline_thickness = 2;
           dots_size = 0.25;
           dots_spacing = 0.3;
-          outer_color = "rgba(33, 204, 255, 0.4)";
-          inner_color = "rgba(0, 0, 0, 0.3)";
-          font_color = "rgba(255, 255, 255, 1.0)";
+          outer_color = "rgba(152, 222, 242, 0.4)";
+          inner_color = "rgba(64, 74, 96, 0.3)";
+          font_color = "rgba(205, 214, 244, 1.0)";
           fade_on_empty = true;
           placeholder_text = "<i>Password...</i>";
           rounding = 15;
@@ -510,7 +510,7 @@ in {
             text = "$TIME";
             font_size = 72;
             font_family = "Sans Bold";
-            color = "rgba(255, 255, 255, 1.0)";
+            color = "rgba(205, 214, 244, 1.0)";
             shadow_passes = 2;
             shadow_size = 3;
             position = "0, 200";
@@ -522,7 +522,7 @@ in {
             text = "cmd[update:60000] date +'%A, %d %B %Y'";
             font_size = 18;
             font_family = "Sans";
-            color = "rgba(255, 255, 255, 0.8)";
+            color = "rgba(205, 214, 244, 0.8)";
             position = "0, 130";
             halign = "center";
             valign = "center";
@@ -532,7 +532,7 @@ in {
             text = "Hi, $USER";
             font_size = 20;
             font_family = "Sans";
-            color = "rgba(255, 255, 255, 0.6)";
+            color = "rgba(205, 214, 244, 0.6)";
             position = "0, -40";
             halign = "center";
             valign = "center";
