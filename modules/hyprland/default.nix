@@ -547,6 +547,7 @@ in {
     home.packages = with pkgs; [
       hyprlauncher
       papirus-icon-theme
+      playerctl
     ];
 
     programs.waybar.enable = true;
