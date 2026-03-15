@@ -291,10 +291,10 @@ in {
             scrolling = true;
             stacked = false;
 
-            "col.active" = "rgba(33ccffcc) rgba(00ff99cc) 45deg";
-            "col.inactive" = "rgba(595959aa) rgba(3a3a3aaa) 90deg";
-            "col.locked_active" = "rgba(ff9933cc) rgba(cc6600cc) 45deg";
-            "col.locked_inactive" = "rgba(595959aa) rgba(3a3a3aaa) 90deg";
+            "col.active" = "rgba(33ccffff) rgba(00ff99ff) 45deg";
+            "col.inactive" = "rgba(1a1a2eee) rgba(2a2a3eee) 90deg";
+            "col.locked_active" = "rgba(ff9933ff) rgba(cc6600ff) 45deg";
+            "col.locked_inactive" = "rgba(1a1a2eee) rgba(2a2a3eee) 90deg";
           };
         };
 
