@@ -494,7 +494,18 @@ in {
           fade_on_empty = true;
           placeholder_text = "<i>Password...</i>";
         };
-        label = [];
+        label = [
+          {
+            monitor = "";
+            text = "$TIME";
+            font_size = 64;
+            font_family = "Sans";
+            color = "rgba(255, 255, 255, 1.0)";
+            position = "0, 80";
+            halign = "center";
+            valign = "center";
+          }
+        ];
       };
     };
     services = {
