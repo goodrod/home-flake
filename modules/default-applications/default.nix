@@ -36,7 +36,6 @@ in {
       git
       wget
       fzf
-      wlogout
       swaynotificationcenter
       nixfmt
       xwallpaper

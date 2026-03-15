@@ -12,6 +12,7 @@
     ./default-home-dirs
     ./navi
     ./waybar
+    ./wlogout
     ./ashell
     ./alacritty
     ./hyprland
