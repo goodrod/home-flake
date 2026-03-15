@@ -63,7 +63,7 @@ in {
           "backlight"
         ];
         "custom/notification" = {
-          format = "";
+          format = "";
           on-click = "swaync-client -t -sw";
         };
         "custom/power" = {
