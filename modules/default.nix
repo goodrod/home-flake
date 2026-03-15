@@ -15,5 +15,6 @@
     ./alacritty
     ./hyprland
     ./bash
+    ./git-repos
   ];
 }
