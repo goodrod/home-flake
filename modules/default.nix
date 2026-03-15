@@ -14,6 +14,7 @@
     ./waybar
     ./wlogout
     ./swaync
+    ./hyprpaper
     ./ashell
     ./alacritty
     ./hyprland
