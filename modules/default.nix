@@ -12,6 +12,7 @@
     ./default-home-dirs
     ./navi
     ./waybar
+    ./ashell
     ./alacritty
     ./hyprland
     ./bash

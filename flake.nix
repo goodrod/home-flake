@@ -32,6 +32,8 @@
 
     hyprlauncher.url = "github:hyprwm/hyprlauncher";
 
+    ashell.url = "github:MalpenZibo/ashell";
+
     import-tree.url = "github:vic/import-tree";
   };
 
