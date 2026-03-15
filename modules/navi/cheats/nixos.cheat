@@ -4,10 +4,10 @@
 # (clean/garbage collect)       Remove old nixos builds
 sudo nix-collect-garbage --delete-old
 
-# (rebuild)                     Build nixos
-sudo nixos-rebuild switch --flake <nixos-config-path>#<current-nixos-host>
+# (rebuild)                     Rebuild system (NixOS or home-manager)
+if [ -f /etc/nixos-hostname ]; then sudo nixos-rebuild switch --flake <nixos-config-path>#<current-nixos-host>; else home-manager switch --flake <home-configs-path>#<current-home-config>; fi
 
-# (rebuild/test)                Test test build nixos
+# (rebuild/test)                Test build (NixOS only)
 sudo nixos-rebuild test --flake <nixos-config-path>#<current-nixos-host>
 
 # (edit/change)                 Edit home configuration
