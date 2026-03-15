@@ -71,7 +71,19 @@ in {
         "hyprland/workspaces" = {
           disable-scroll = false;
           all-outputs = true;
-          format = "";
+          format = "{icon}";
+          format-icons = {
+            "1" = "󰒓";
+            "2" = "󰎆";
+            "3" = "󰊗";
+            "4" = "󰇮";
+            "5" = "󰠮";
+            "6" = "󰭹";
+            "7" = "󰅩";
+            "8" = "";
+            "9" = "󰈹";
+            "default" = "";
+          };
           on-click = "activate";
           persistent-workspaces = {
             "*" = [ 1 2 3 4 5 ];
