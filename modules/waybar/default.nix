@@ -23,7 +23,11 @@ in {
   };
 
   config = mkIf waybarConfig.enable {
-    home.packages = with pkgs; [ waybar ];
+    fonts.fontconfig.enable = true;
+    home.packages = with pkgs;
+      [ waybar font-awesome ]
+      ++ builtins.filter lib.attrsets.isDerivation
+        (builtins.attrValues pkgs.nerd-fonts);
     home.file."${waybarConfig.config-output-directory}" = {
       source = "${waybarConfig.config-source-directory}";
       executable = false;
