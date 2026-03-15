@@ -478,7 +478,10 @@ in {
         ];
       };
     };
-    programs.hyprlock.enable = true;
+    programs.hyprlock = {
+      enable = true;
+      settings.label = [];
+    };
     services = {
       hypridle.enable = false;
       hyprpaper.enable = false;
