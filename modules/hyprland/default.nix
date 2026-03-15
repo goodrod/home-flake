@@ -282,8 +282,8 @@ in {
             round_only_edges = true;
             gradient_round_only_edges = true;
 
-            indicator_gap = -16;
-            indicator_height = 16;
+            indicator_gap = -22;
+            indicator_height = 22;
             gaps_in = 3;
             gaps_out = 3;
             keep_upper_gap = true;

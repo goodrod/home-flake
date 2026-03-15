@@ -34,17 +34,19 @@
     margin: 6px 3px;
     border-radius: 40px;
     background-color: #898fa2;
-    color: #D8DEE9;
+    color: #181825;
     transition: 100ms;
-    font-size: 13px;
+    font-size: 16px;
+    font-family: "CaskaydiaCove Nerd Font", "Font Awesome 6 Free";
+    text-align: center;
 }
 
 #workspaces button.active {
     transition: 100ms;
     color: #404A60;
     background-color: #cdd6f4;
-    padding-left: 26px;
-    padding-right: 26px;
+    padding-left: 14px;
+    padding-right: 14px;
 }
 
 #workspaces button:hover {
