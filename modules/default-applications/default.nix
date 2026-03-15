@@ -1,4 +1,4 @@
-{ config, pkgs, lib, inputs, ... }:
+{ config, pkgs, lib, ... }:
 with lib;
 let
   # Shorter name to access final settings a
@@ -57,7 +57,7 @@ in {
       swappy
       grim
       tree
-      inputs.nvim.packages.${pkgs.stdenv.system}.nvim
+      pkgs.custom-nvim
     ];
   };
 }

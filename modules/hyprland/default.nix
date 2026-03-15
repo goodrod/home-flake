@@ -2,7 +2,6 @@
   config,
   pkgs,
   lib,
-  inputs,
   ...
 }:
 with lib; let
@@ -191,9 +190,9 @@ in {
       systemd.enable = true;
       xwayland.enable = true;
       package =
-        inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.hyprland;
+        pkgs.hyprland;
       portalPackage =
-        inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.xdg-desktop-portal-hyprland;
+        pkgs.xdg-desktop-portal-hyprland;
       settings = {
         exec-once = option.startup-commands;
         monitor = mkMerge [
@@ -484,7 +483,7 @@ in {
       hyprpaper.enable = false;
     };
     home.packages = with pkgs; [
-      inputs.hyprlauncher.packages.${pkgs.stdenv.hostPlatform.system}.default
+      hyprlauncher
       papirus-icon-theme
     ];
 
