@@ -263,8 +263,8 @@ in {
         group = {
           groupbar = {
             enabled = true;
-            height = 16;
-            font_size = 13;
+            height = 22;
+            font_size = 11;
             font_family = "JetBrains Mono";
             font_weight_active = "bold";
             font_weight_inactive = "normal";
@@ -300,8 +300,8 @@ in {
         };
 
         general = {
-          gaps_in = 5;
-          gaps_out = 20;
+          gaps_in = 3;
+          gaps_out = 8;
           border_size = 2;
           "col.active_border" = "rgba(cdd6f4ee) rgba(89dcebee) 45deg";
           "col.inactive_border" = "rgba(404A60aa)";
