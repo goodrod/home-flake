@@ -14,5 +14,6 @@
     ./waybar
     ./alacritty
     ./hyprland
+    ./bash
   ];
 }
