@@ -263,39 +263,38 @@ in {
         group = {
           groupbar = {
             enabled = true;
-            height = 16;
-            font_size = 9;
+            height = 22;
+            font_size = 11;
             font_family = "JetBrains Mono";
             font_weight_active = "bold";
             font_weight_inactive = "normal";
 
             render_titles = true;
             text_offset = 0;
-            text_color = "0xffe6e6e6";
-            text_color_inactive = "0x99c8d0d8";
-            text_color_locked_active = "0xffffffff"; # white text for locked active
-            text_color_locked_inactive = "0x99c8d0d8";
+            text_color = "0xffffffff";
+            text_color_inactive = "0x99a0a8b8";
+            text_color_locked_active = "0xffffffff";
+            text_color_locked_inactive = "0x99a0a8b8";
 
             gradients = true;
-            rounding = 6;
-            gradient_rounding = 6;
+            rounding = 8;
+            gradient_rounding = 8;
             round_only_edges = true;
             gradient_round_only_edges = true;
 
-            indicator_gap = 2;
-            indicator_height = 3;
-            gaps_in = 3;
-            gaps_out = 3;
+            indicator_gap = 0;
+            indicator_height = 0;
+            gaps_in = 4;
+            gaps_out = 4;
             keep_upper_gap = true;
 
             scrolling = true;
             stacked = false;
 
-            # palette
-            "col.active" = "rgba(3a7bd5dd) rgba(2850a7dd) 90deg"; # softer indigo-blue
-            "col.inactive" = "rgba(2a3b4f55) rgba(22304155) 90deg"; # muted fade
-            "col.locked_active" = "rgba(f4a261dd) rgba(e68f3cdd) 90deg"; # warm accent
-            "col.locked_inactive" = "rgba(f4a26155) rgba(e68f3c55) 90deg";
+            "col.active" = "rgba(33ccffcc) rgba(00ff99cc) 45deg";
+            "col.inactive" = "rgba(595959aa) rgba(3a3a3aaa) 90deg";
+            "col.locked_active" = "rgba(ff9933cc) rgba(cc6600cc) 45deg";
+            "col.locked_inactive" = "rgba(595959aa) rgba(3a3a3aaa) 90deg";
           };
         };
 
