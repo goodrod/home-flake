@@ -500,7 +500,7 @@ in {
           fade_on_empty = true;
           placeholder_text = "<i>Password...</i>";
           rounding = 15;
-          position = "0, -90";
+          position = "0, -120";
           halign = "center";
           valign = "center";
         };
@@ -513,7 +513,7 @@ in {
             color = "rgba(255, 255, 255, 1.0)";
             shadow_passes = 2;
             shadow_size = 3;
-            position = "0, 120";
+            position = "0, 200";
             halign = "center";
             valign = "center";
           }
@@ -523,7 +523,7 @@ in {
             font_size = 18;
             font_family = "Sans";
             color = "rgba(255, 255, 255, 0.8)";
-            position = "0, 55";
+            position = "0, 130";
             halign = "center";
             valign = "center";
           }
@@ -533,7 +533,7 @@ in {
             font_size = 20;
             font_family = "Sans";
             color = "rgba(255, 255, 255, 0.6)";
-            position = "0, -20";
+            position = "0, -40";
             halign = "center";
             valign = "center";
           }
