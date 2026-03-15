@@ -48,6 +48,7 @@ in {
           "tray"
         ];
         modules-center = [
+          "custom/notification"
           "hyprland/workspaces"
         ];
         modules-right = [
@@ -58,6 +59,10 @@ in {
           "memory"
           "backlight"
         ];
+        "custom/notification" = {
+          format = "";
+          on-click = "swaync-client -t -sw";
+        };
         "hyprland/workspaces" = {
           disable-scroll = false;
           all-outputs = true;
