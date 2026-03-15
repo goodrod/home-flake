@@ -500,7 +500,7 @@ in {
           fade_on_empty = true;
           placeholder_text = "<i>Password...</i>";
           rounding = 15;
-          position = "0, -80";
+          position = "0, -90";
           halign = "center";
           valign = "center";
         };
@@ -530,10 +530,10 @@ in {
           {
             monitor = "";
             text = "Hi, $USER";
-            font_size = 14;
+            font_size = 20;
             font_family = "Sans";
             color = "rgba(255, 255, 255, 0.6)";
-            position = "0, -30";
+            position = "0, -20";
             halign = "center";
             valign = "center";
           }
