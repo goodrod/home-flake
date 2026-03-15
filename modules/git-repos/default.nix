@@ -6,10 +6,10 @@ let
     if [ ! -d "$HOME/${repo.path}" ]; then
       mkdir -p "$HOME/$(dirname "${repo.path}")"
       ${pkgs.git}/bin/git clone ${repo.url} "$HOME/${repo.path}"
-      ${lib.optionalString (repo.pushUrl != null) ''
-        ${pkgs.git}/bin/git -C "$HOME/${repo.path}" remote set-url --push origin ${repo.pushUrl}
-      ''}
     fi
+    ${lib.optionalString (repo.pushUrl != null) ''
+      ${pkgs.git}/bin/git -C "$HOME/${repo.path}" remote set-url --push origin ${repo.pushUrl}
+    ''}
     ${lib.optionalString (repo.link != null) ''
       if [ ! -e "$HOME/${repo.link}" ]; then
         ln -s "$HOME/${repo.path}" "$HOME/${repo.link}"
