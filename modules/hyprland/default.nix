@@ -270,7 +270,7 @@ in {
             font_weight_inactive = "normal";
 
             render_titles = true;
-            text_offset = 3;
+            text_offset = 5;
             text_color = "0xff181825";
             text_color_inactive = "0x99cdd6f4";
             text_color_locked_active = "0xff181825";
