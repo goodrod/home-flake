@@ -1,9 +1,11 @@
 % constants
 $ nixos-config-path: echo "~/nixos"
 $ home-flake-config-path: echo "~/home-flake"
+$ home-configs-path: echo "~/home-configs"
 $ home-manager-module-path: echo "<home-flake-config-path>/modules/"
 $ nixos-module-path: echo "<nixos-config-path>/modules/nixos"
 $ current-nixos-host: cat /etc/nixos-hostname
+$ current-home-config: echo "$(whoami)@$(hostname)"
 $ nixos-host: echo "<current-nixos-host>" && ls -C1 <nixos-config-path>/hosts | grep -v "^<current-nixos-host>$"
 $ home-manager-template-path: echo "<home-manager-module-path>/templates"
 $ flake-location: echo "<nixos-config-path>"

@@ -1,0 +1,13 @@
+% nix/home-configs
+@ constants
+
+# (rebuild)                     Build home-manager config
+home-manager switch --flake <home-configs-path>#<current-home-config>
+
+# (edit/change)                 Edit home configuration
+nvim <home-configs-path>/hosts/<home-configs-host>/home.nix
+
+# (upgrade/update)              Update flake
+nix flake update --flake <home-configs-path>
+
+$ home-configs-host: ls -C1 <home-configs-path>/hosts
