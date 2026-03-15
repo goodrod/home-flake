@@ -37,6 +37,7 @@ in {
       wget
       fzf
       wlogout
+      swaynotificationcenter
       nixfmt
       xwallpaper
       pavucontrol
