@@ -264,7 +264,7 @@ in {
           groupbar = {
             enabled = true;
             height = 16;
-            font_size = 9;
+            font_size = 13;
             font_family = "JetBrains Mono";
             font_weight_active = "bold";
             font_weight_inactive = "normal";
@@ -282,8 +282,8 @@ in {
             round_only_edges = true;
             gradient_round_only_edges = true;
 
-            indicator_gap = 2;
-            indicator_height = 3;
+            indicator_gap = -16;
+            indicator_height = 16;
             gaps_in = 3;
             gaps_out = 3;
             keep_upper_gap = true;
@@ -292,9 +292,9 @@ in {
             stacked = false;
 
             # palette
-            "col.active" = "rgba(3a7bd5ff) rgba(2850a7ff) 90deg"; # softer indigo-blue
-            "col.inactive" = "rgba(2a3b4faa) rgba(223041aa) 90deg"; # muted fade
-            "col.locked_active" = "rgba(f4a261ff) rgba(e68f3cff) 90deg"; # warm accent
+            "col.active" = "rgba(2255aaff) rgba(1a4488ff) 90deg";
+            "col.inactive" = "rgba(141e30dd) rgba(0c1420dd) 90deg";
+            "col.locked_active" = "rgba(f4a261ff) rgba(e68f3cff) 90deg";
             "col.locked_inactive" = "rgba(f4a261aa) rgba(e68f3caa) 90deg";
           };
         };
