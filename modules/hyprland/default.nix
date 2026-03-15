@@ -276,11 +276,8 @@ in {
             text_color_locked_active = "0xffffffff";
             text_color_locked_inactive = "0x99a0a8b8";
 
-            gradients = true;
+            gradients = false;
             rounding = 8;
-            gradient_rounding = 8;
-            round_only_edges = true;
-            gradient_round_only_edges = true;
 
             indicator_gap = 0;
             indicator_height = 0;
@@ -291,10 +288,10 @@ in {
             scrolling = true;
             stacked = false;
 
-            "col.active" = "rgba(33ccffff) rgba(00ff99ff) 45deg";
-            "col.inactive" = "rgba(1a1a2eee) rgba(2a2a3eee) 90deg";
-            "col.locked_active" = "rgba(ff9933ff) rgba(cc6600ff) 45deg";
-            "col.locked_inactive" = "rgba(1a1a2eee) rgba(2a2a3eee) 90deg";
+            "col.active" = "rgba(33ccffff)";
+            "col.inactive" = "rgba(1a1a2eff)";
+            "col.locked_active" = "rgba(ff9933ff)";
+            "col.locked_inactive" = "rgba(1a1a2eff)";
           };
         };
 
