@@ -13,6 +13,7 @@
     ./navi
     ./waybar
     ./wlogout
+    ./swaync
     ./ashell
     ./alacritty
     ./hyprland

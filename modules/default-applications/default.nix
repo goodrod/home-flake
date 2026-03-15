@@ -36,7 +36,6 @@ in {
       git
       wget
       fzf
-      swaynotificationcenter
       nixfmt
       xwallpaper
       pavucontrol
