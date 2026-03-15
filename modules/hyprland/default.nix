@@ -377,6 +377,7 @@ in {
           "$mainMod CTRL, Tab, Toggle lock on active group, lockactivegroup, toggle"
           "$mainMod, C, Kill active window, killactive,"
           "$mainMod, L, Make window leave group, exec, hyprctl dispatch moveoutofgroup; hyprctl dispatch movefocus r"
+          "$mainMod SHIFT, L, Lock screen, exec, hyprlock"
           "$mainMod, J, Make window to the right join groiup, exec, hyprctl dispatch movefocus r; hyprctl dispatch moveintogroup l; hyprctl dispatch focuswindow previous"
           "$mainMod, F12, Exit Hyprland, exit,"
           "$mainMod, F, Open file manager, exec, $fileManager"
