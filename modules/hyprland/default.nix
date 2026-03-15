@@ -271,10 +271,10 @@ in {
 
             render_titles = true;
             text_offset = 0;
-            text_color = "0xffcdd6f4";
-            text_color_inactive = "0x99898fa2";
-            text_color_locked_active = "0xffcdd6f4";
-            text_color_locked_inactive = "0x99898fa2";
+            text_color = "0xff181825";
+            text_color_inactive = "0x99cdd6f4";
+            text_color_locked_active = "0xff181825";
+            text_color_locked_inactive = "0x99cdd6f4";
 
             gradients = true;
             rounding = 6;
