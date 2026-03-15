@@ -487,6 +487,13 @@ in {
           blur_passes = 3;
           blur_size = 8;
         };
+        input-field = {
+          monitor = "";
+          size = "200, 50";
+          outline_thickness = 3;
+          fade_on_empty = true;
+          placeholder_text = "<i>Password...</i>";
+        };
         label = [];
       };
     };
