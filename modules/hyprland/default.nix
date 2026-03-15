@@ -263,35 +263,39 @@ in {
         group = {
           groupbar = {
             enabled = true;
-            height = 22;
-            font_size = 11;
+            height = 16;
+            font_size = 9;
             font_family = "JetBrains Mono";
             font_weight_active = "bold";
             font_weight_inactive = "normal";
 
             render_titles = true;
             text_offset = 0;
-            text_color = "0xffffffff";
-            text_color_inactive = "0x99a0a8b8";
-            text_color_locked_active = "0xffffffff";
-            text_color_locked_inactive = "0x99a0a8b8";
+            text_color = "0xffe6e6e6";
+            text_color_inactive = "0x99c8d0d8";
+            text_color_locked_active = "0xffffffff"; # white text for locked active
+            text_color_locked_inactive = "0x99c8d0d8";
 
-            gradients = false;
-            rounding = 8;
+            gradients = true;
+            rounding = 6;
+            gradient_rounding = 6;
+            round_only_edges = true;
+            gradient_round_only_edges = true;
 
-            indicator_gap = 0;
-            indicator_height = 0;
-            gaps_in = 4;
-            gaps_out = 4;
+            indicator_gap = 2;
+            indicator_height = 3;
+            gaps_in = 3;
+            gaps_out = 3;
             keep_upper_gap = true;
 
             scrolling = true;
             stacked = false;
 
-            "col.active" = "rgba(33ccffff)";
-            "col.inactive" = "rgba(1a1a2eff)";
-            "col.locked_active" = "rgba(ff9933ff)";
-            "col.locked_inactive" = "rgba(1a1a2eff)";
+            # palette
+            "col.active" = "rgba(3a7bd5ff) rgba(2850a7ff) 90deg"; # softer indigo-blue
+            "col.inactive" = "rgba(2a3b4faa) rgba(223041aa) 90deg"; # muted fade
+            "col.locked_active" = "rgba(f4a261ff) rgba(e68f3cff) 90deg"; # warm accent
+            "col.locked_inactive" = "rgba(f4a261aa) rgba(e68f3caa) 90deg";
           };
         };
 
