@@ -34,7 +34,7 @@
     margin: 6px 3px;
     border-radius: 40px;
     background-color: #898fa2;
-    color: #cdd6f4;
+    color: #ffffff;
     transition: 100ms;
     font-size: 16px;
     font-family: "CaskaydiaCove Nerd Font", "Font Awesome 6 Free";
@@ -42,7 +42,7 @@
 
 #workspaces button.active {
     transition: 100ms;
-    color: #404A60;
+    color: #181825;
     background-color: #cdd6f4;
     padding-left: 14px;
     padding-right: 14px;
@@ -51,7 +51,7 @@
 #workspaces button:hover {
     box-shadow: inherit;
     text-shadow: inherit;
-    color: #1e1e2e;
+    color: #181825;
     background-color: #cdd6f4;
 }
 
