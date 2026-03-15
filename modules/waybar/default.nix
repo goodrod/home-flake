@@ -50,6 +50,7 @@ in {
         modules-center = [
           "custom/notification"
           "hyprland/workspaces"
+          "custom/power"
         ];
         modules-right = [
           "network"
@@ -62,6 +63,10 @@ in {
         "custom/notification" = {
           format = "";
           on-click = "swaync-client -t -sw";
+        };
+        "custom/power" = {
+          format = "⏻";
+          on-click = "wlogout -b 4";
         };
         "hyprland/workspaces" = {
           disable-scroll = false;
