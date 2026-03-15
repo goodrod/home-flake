@@ -5,7 +5,7 @@ let
   cloneScript = concatStringsSep "\n" (map (repo: ''
     if [ ! -d "$HOME/${repo.path}" ]; then
       mkdir -p "$HOME/$(dirname "${repo.path}")"
-      ${pkgs.git}/bin/git clone ${repo.url} "$HOME/${repo.path}"
+      PATH="${pkgs.openssh}/bin:$PATH" ${pkgs.git}/bin/git clone ${repo.url} "$HOME/${repo.path}"
     fi
     ${lib.optionalString (repo.link != null) ''
       if [ ! -e "$HOME/${repo.link}" ]; then
