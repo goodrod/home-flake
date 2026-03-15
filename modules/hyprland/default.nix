@@ -377,7 +377,7 @@ in {
           "$mainMod CTRL, Tab, Toggle lock on active group, lockactivegroup, toggle"
           "$mainMod, C, Kill active window, killactive,"
           "$mainMod, L, Make window leave group, exec, hyprctl dispatch moveoutofgroup; hyprctl dispatch movefocus r"
-          "$mainMod SHIFT, L, Lock screen, exec, hyprlock"
+          "$mainMod SHIFT, L, Lock screen, exec, playerctl -a pause; hyprlock"
           "$mainMod, J, Make window to the right join groiup, exec, hyprctl dispatch movefocus r; hyprctl dispatch moveintogroup l; hyprctl dispatch focuswindow previous"
           "$mainMod, F12, Exit Hyprland, exit,"
           "$mainMod, F, Open file manager, exec, $fileManager"
@@ -484,24 +484,56 @@ in {
         background = {
           monitor = "";
           path = "screenshot";
-          blur_passes = 3;
-          blur_size = 8;
+          blur_passes = 4;
+          blur_size = 10;
+          brightness = 0.7;
         };
         input-field = {
           monitor = "";
-          size = "200, 50";
-          outline_thickness = 3;
+          size = "280, 55";
+          outline_thickness = 2;
+          dots_size = 0.25;
+          dots_spacing = 0.3;
+          outer_color = "rgba(33, 204, 255, 0.4)";
+          inner_color = "rgba(0, 0, 0, 0.3)";
+          font_color = "rgba(255, 255, 255, 1.0)";
           fade_on_empty = true;
           placeholder_text = "<i>Password...</i>";
+          rounding = 15;
+          position = "0, -80";
+          halign = "center";
+          valign = "center";
         };
         label = [
           {
             monitor = "";
             text = "$TIME";
-            font_size = 64;
-            font_family = "Sans";
+            font_size = 72;
+            font_family = "Sans Bold";
             color = "rgba(255, 255, 255, 1.0)";
-            position = "0, 80";
+            shadow_passes = 2;
+            shadow_size = 3;
+            position = "0, 120";
+            halign = "center";
+            valign = "center";
+          }
+          {
+            monitor = "";
+            text = "cmd[update:60000] date +'%A, %d %B %Y'";
+            font_size = 18;
+            font_family = "Sans";
+            color = "rgba(255, 255, 255, 0.8)";
+            position = "0, 55";
+            halign = "center";
+            valign = "center";
+          }
+          {
+            monitor = "";
+            text = "Hi, $USER";
+            font_size = 14;
+            font_family = "Sans";
+            color = "rgba(255, 255, 255, 0.6)";
+            position = "0, -30";
             halign = "center";
             valign = "center";
           }
