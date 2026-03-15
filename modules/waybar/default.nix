@@ -142,7 +142,7 @@ in {
           tooltip-format = "{volume}%";
         };
         memory = {
-          format = "  {used:0.1f}G ";
+          format = "  {used:0.1f}G ";
           tooltip = true;
           tooltip-format = "{used:0.2f}G/{total:0.2f}G";
         };
