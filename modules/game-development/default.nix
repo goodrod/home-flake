@@ -1,21 +1,21 @@
-{ config, pkgs, lib, ... }:
+{ config, pkgs, lib, inputs, ... }:
 with lib;
 let
   # Shorter name to access final settings a
   # user of hello.nix module HAS ACTUALLY SET.
   # cfg is a typical convention.
-  cfg = config.module.default-applications;
+  cfg = config.module.game-development;
 in {
   imports = [
     # Paths to other modules.
     # Compose this module out of smaller ones.
   ];
 
-  options.module.default-applications = {
+  options.module.game-development = {
     # Option declarations.
     # Declare what settings a user of this module module can set.
     # Usually this includes a global "enable" option which defaults to false.
-    enable = mkEnableOption "default-applications";
+    enable = mkEnableOption "game-development";
   };
 
   config = mkIf cfg.enable {
@@ -24,32 +24,6 @@ in {
     # Usually these depend on whether a user of this module chose to "enable" it
     # using the "option" above.
     # Options for modules imported in "imports" can be set here.
-    home.packages = with pkgs; [
-      alacritty
-      jq
-      fuzzel
-      jsonfmt
-      killall
-      git
-      wget
-      fzf
-      nixfmt
-      xwallpaper
-      pavucontrol
-      openssl
-      wlr-randr
-      wl-clipboard
-      libnotify
-      icu
-      unzip
-      traceroute
-      htop
-      atop
-      slurp
-      swappy
-      grim
-      tree
-      pkgs.custom-nvim
-    ];
+    home.packages = with pkgs; [ godot blender aseprite ];
   };
 }

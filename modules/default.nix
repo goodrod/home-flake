@@ -5,7 +5,14 @@
 
   imports = [
     ./default-applications
+    ./bluetooth
+    ./discord
+    ./game-development
+    ./icon-fonts
+    ./kiro
     ./obsidian
+    ./personal-apps
+    ./spotify
     ./fuzzel
     ./wofi
     ./dunst
