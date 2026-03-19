@@ -32,6 +32,11 @@
 
     hyprlauncher.url = "github:hyprwm/hyprlauncher";
 
+    hyprpaper = {
+      url = "github:hyprwm/hyprpaper";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     ashell.url = "github:MalpenZibo/ashell";
 
     import-tree.url = "github:vic/import-tree";
