@@ -1,6 +1,6 @@
 { config, lib, ... }:
 let
-  inherit (lib) mkOption mkEnableOption types mkIf map;
+  inherit (lib) mkOption mkEnableOption types mkIf;
   cfg = config.module.hyprpaper;
   wallpaperPath = "${config.home.homeDirectory}/${cfg.wallpaper-output-directory}/${cfg.wallpaper}";
 in {
@@ -11,12 +11,6 @@ in {
       type = types.str;
       default = "wallpaper.png";
       description = "Filename of the wallpaper to use from the wallpaper directory.";
-    };
-
-    monitors = mkOption {
-      default = [];
-      type = types.listOf types.str;
-      description = "List of monitor names to apply wallpaper to.";
     };
 
     wallpaper-source-directory = mkOption {
@@ -42,7 +36,7 @@ in {
       settings = {
         splash = false;
         preload = [ wallpaperPath ];
-        wallpaper = map (m: { monitor = m; path = wallpaperPath; }) cfg.monitors;
+        wallpaper = [{ monitor = ""; path = wallpaperPath; }];
       };
     };
   };
