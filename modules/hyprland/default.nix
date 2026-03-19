@@ -238,14 +238,6 @@ in {
           "size monitor_w*0.50 monitor_h*0.50,match:class toggle-window"
           "move monitor_w*0.25 monitor_h*0.25,match:class toggle-window"
         ];
-        layerrule = [
-          "blur, swaync-control-center"
-          "blur, swaync-notification-window"
-          "ignorezero, swaync-control-center"
-          "ignorezero, swaync-notification-window"
-          "animation slide, swaync-notification-window"
-          "animation slide, swaync-control-center"
-        ];
         ecosystem = {no_donation_nag = true;};
         group = {
           groupbar = {
