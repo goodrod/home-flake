@@ -33,8 +33,10 @@ in {
     };
     xdg.configFile."hypr/hyprpaper.conf".text = ''
       splash = false
-      preload = ${wallpaperPath}
-      wallpaper = ,${wallpaperPath}
+      wallpaper {
+        monitor =
+        path = ${wallpaperPath}
+      }
     '';
     home.packages = [ pkgs.hyprpaper ];
     wayland.windowManager.hyprland.settings.exec-once = [ "hyprpaper" ];
