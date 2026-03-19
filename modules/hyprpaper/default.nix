@@ -2,10 +2,16 @@
 let
   inherit (lib) mkOption mkEnableOption types mkIf map;
   cfg = config.module.hyprpaper;
-  wallpaperPath = "${config.home.homeDirectory}/${cfg.wallpaper-output-directory}/wallpaper.png";
+  wallpaperPath = "${config.home.homeDirectory}/${cfg.wallpaper-output-directory}/${cfg.wallpaper}";
 in {
   options.module.hyprpaper = {
     enable = mkEnableOption "hyprpaper";
+
+    wallpaper = mkOption {
+      type = types.str;
+      default = "wallpaper.png";
+      description = "Filename of the wallpaper to use from the wallpaper directory.";
+    };
 
     monitors = mkOption {
       default = [];
