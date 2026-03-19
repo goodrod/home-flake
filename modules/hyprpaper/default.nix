@@ -31,13 +31,11 @@ in {
       source = "${cfg.wallpaper-source-directory}";
       recursive = true;
     };
-    services.hyprpaper = {
-      enable = true;
-      settings = {
-        splash = false;
-        preload = [ wallpaperPath ];
-        wallpaper = [{ monitor = ""; path = wallpaperPath; }];
-      };
-    };
+    xdg.configFile."hypr/hyprpaper.conf".text = ''
+      splash = false
+      preload = ${wallpaperPath}
+      wallpaper = ,${wallpaperPath}
+    '';
+    wayland.windowManager.hyprland.settings.exec-once = [ "hyprpaper" ];
   };
 }
