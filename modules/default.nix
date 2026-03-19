@@ -14,7 +14,6 @@
     ./personal-apps
     ./spotify
     ./fuzzel
-    ./wofi
     ./dunst
     ./default-home-dirs
     ./navi

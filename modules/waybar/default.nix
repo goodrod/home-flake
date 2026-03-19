@@ -155,7 +155,7 @@ in {
           timezone = "Europe/Stockholm";
           format = " {:%H:%M} ";
           tooltip = true;
-          tooltip-format = "{calendar}";
+          tooltip-format = "{:%A, %d %B %Y}\n{calendar}";
         };
         tray = {
           icon-size = 20;

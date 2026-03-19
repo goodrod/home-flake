@@ -41,11 +41,11 @@ in {
           horizontal_padding = 8;
           text_icon_padding = 0;
           frame_width = 2;
-          frame_color = "#89B4FA";
+          frame_color = "#cdd6f4";
           separator_color = "frame";
           sort = "yes";
           idle_threshold = 120;
-          font = "monospace 10";
+          font = "CaskaydiaCove Nerd Font 10";
           line_height = 0;
           markup = "full";
           alignment = [ "left" ];
@@ -58,27 +58,23 @@ in {
           min_icon_size = 0;
           max_icon_size = 64;
 
-          dmenu = "/usr/bin/wofi -p dunst:";
-          browser = "/usr/bin/firefox --new-tab";
-          title = "Dunst";
-          class = "Dunst";
           corner_radius = 10;
           timeout = 5;
         };
         urgency_low = {
-          background = "#1E1E2E";
-          foreground = "#CDD6F4";
+          background = "#404A60";
+          foreground = "#D8DEE9";
         };
 
         urgency_normal = {
-          background = "#1E1E2E";
-          foreground = "#CDD6F4";
+          background = "#404A60";
+          foreground = "#D8DEE9";
         };
 
         urgency_critical = {
-          background = "#1E1E2E";
-          foreground = "#CDD6F4";
-          frame_color = "#FAB387";
+          background = "#404A60";
+          foreground = "#D8DEE9";
+          frame_color = "#f38ba8";
         };
       };
     };
