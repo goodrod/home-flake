@@ -1,6 +1,6 @@
-{ config, pkgs, lib, ... }:
+{ config, lib, ... }:
 let
-  inherit (lib) mkOption mkEnableOption types mkIf concatMapStringsSep;
+  inherit (lib) mkOption mkEnableOption types mkIf map;
   cfg = config.module.hyprpaper;
   wallpaperPath = "${config.home.homeDirectory}/${cfg.wallpaper-output-directory}/wallpaper.png";
 in {
@@ -27,15 +27,17 @@ in {
   };
 
   config = mkIf cfg.enable {
-    home.packages = [ pkgs.hyprpaper ];
     home.file."${cfg.wallpaper-output-directory}" = {
       source = "${cfg.wallpaper-source-directory}";
       recursive = true;
     };
-    home.file.".config/hypr/hyprpaper.conf".text = ''
-      preload = ${wallpaperPath}
-      ${concatMapStringsSep "\n" (m: "wallpaper = ${m},${wallpaperPath}") cfg.monitors}
-      splash = false
-    '';
+    services.hyprpaper = {
+      enable = true;
+      settings = {
+        splash = false;
+        preload = [ wallpaperPath ];
+        wallpaper = map (m: { monitor = m; path = wallpaperPath; }) cfg.monitors;
+      };
+    };
   };
 }
