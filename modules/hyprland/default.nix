@@ -520,7 +520,7 @@ in {
     };
     services = {
       hypridle.enable = false;
-      hyprpaper.enable = false;
+      hyprpaper.enable = lib.mkDefault false;
     };
     home.packages = with pkgs; [
       hyprlauncher
