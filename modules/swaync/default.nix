@@ -79,6 +79,11 @@ in {
             padding: 0px;
         }
 
+        @keyframes timeout-shrink {
+            from { width: 100%; }
+            to { width: 0%; }
+        }
+
         .notification {
             background: #404A60;
             border: 2px solid #98DEF2;
@@ -86,14 +91,31 @@ in {
             margin: 3px 0px;
         }
 
+        .floating-notifications .notification {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .floating-notifications .notification-default-action::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 3px;
+            width: 100%;
+            background: #98DEF2;
+            border-radius: 0 0 4px 4px;
+            animation: timeout-shrink 10s linear forwards;
+        }
+
         .notification-content {
             background: transparent;
-            padding: 4px;
+            padding: 8px;
         }
 
         .notification-default-action {
             margin: 0;
-            padding: 8px;
+            padding: 10px 12px;
             border-radius: 4px;
         }
 
@@ -180,15 +202,15 @@ in {
             font-size: 16px;
             font-weight: 700;
             background: transparent;
-            color: #A3BE8C;
+            color: #cdd6f4;
             text-shadow: none;
         }
 
         .time {
-            font-size: 16px;
-            font-weight: 700;
+            font-size: 14px;
+            font-weight: 400;
             background: transparent;
-            color: #D8DEE9;
+            color: #898fa2;
             text-shadow: none;
             margin-right: 18px;
         }
@@ -199,6 +221,30 @@ in {
             background: transparent;
             color: #D8DEE9;
             text-shadow: none;
+            margin-top: 4px;
+        }
+
+        .low {
+            border-color: #898fa2;
+        }
+
+        .low .notification-default-action::after {
+            background: #898fa2;
+            animation-duration: 5s;
+        }
+
+        .normal {
+            border-color: #98DEF2;
+        }
+
+        .critical {
+            border-color: #f38ba8;
+        }
+
+        .critical .notification-default-action::after {
+            background: #f38ba8;
+            animation: none;
+            width: 100%;
         }
 
         .control-center {
