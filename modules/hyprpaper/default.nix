@@ -1,22 +1,27 @@
 { config, pkgs, lib, ... }:
 let
-  inherit (lib) mkOption mkEnableOption types mkIf;
-  inherit (types) path str;
+  inherit (lib) mkOption mkEnableOption types mkIf concatMapStringsSep;
   cfg = config.module.hyprpaper;
   wallpaperPath = "${config.home.homeDirectory}/${cfg.wallpaper-output-directory}/wallpaper.png";
 in {
   options.module.hyprpaper = {
     enable = mkEnableOption "hyprpaper";
 
+    monitors = mkOption {
+      default = [];
+      type = types.listOf types.str;
+      description = "List of monitor names to apply wallpaper to.";
+    };
+
     wallpaper-source-directory = mkOption {
       default = ./wallpapers;
-      type = path;
+      type = types.path;
       description = "Path to the directory containing wallpapers.";
     };
 
     wallpaper-output-directory = mkOption {
       default = ".config/hyprpaper/wallpapers";
-      type = str;
+      type = types.str;
       description = "Output directory relative to home for wallpapers.";
     };
   };
@@ -29,7 +34,7 @@ in {
     };
     home.file.".config/hypr/hyprpaper.conf".text = ''
       preload = ${wallpaperPath}
-      wallpaper = ,${wallpaperPath}
+      ${concatMapStringsSep "\n" (m: "wallpaper = ${m},${wallpaperPath}") cfg.monitors}
       splash = false
     '';
   };
