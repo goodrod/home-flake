@@ -1,4 +1,4 @@
-{ config, lib, ... }:
+{ config, lib, pkgs, ... }:
 let
   inherit (lib) mkOption mkEnableOption types mkIf;
   cfg = config.module.hyprpaper;
@@ -36,6 +36,7 @@ in {
       preload = ${wallpaperPath}
       wallpaper = ,${wallpaperPath}
     '';
+    home.packages = [ pkgs.hyprpaper ];
     wayland.windowManager.hyprland.settings.exec-once = [ "hyprpaper" ];
   };
 }
