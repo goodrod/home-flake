@@ -201,7 +201,7 @@ in {
         "$gamingRegexp" = "steam";
         "$settingsRegexp" = "com.saivert.pwvucontrol";
         "$devtoolRegexp" = "com.saivert.pwvucontrol|bruno|DBeaver";
-        "$mailRegexp" = "mail-chrome";
+        "$mailRegexp" = "chrome-mail.google.com.*|chrome-calendar.google.com.*";
         "$programmingRegexp" = "code-url-handler|jetbrains-rider|jetbrains-idea|Godot|kiro";
         windowrule = [
           "tag +jb, match:class ^jetbrains-.+$,match:float true"
