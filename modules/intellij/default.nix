@@ -8,6 +8,6 @@ in {
   };
 
   config = mkIf cfg.enable {
-    home.packages = [ pkgs.jetbrains.idea-ultimate ];
+    home.packages = [ pkgs.jetbrains.idea ];
   };
 }
