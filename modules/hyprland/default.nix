@@ -193,7 +193,7 @@ in {
         "$monitor-3" = "${option.monitors.right.name}";
         "$mainMod" = "SUPER";
 
-        "$browserRegexp" = "firefox|Chromium|vivaldi-stable|Mullvad Browser";
+        "$browserRegexp" = "firefox|Chromium|vivaldi-stable|Mullvad Browser|google-chrome|Google-chrome";
         "$chatRegexp" = "discord|vesktop|Slack|.*teams.*|.*outlook.*";
         "$terminalRegexp" = "Alacritty";
         "$productivityRegexp" = "everdo|obsidian";
