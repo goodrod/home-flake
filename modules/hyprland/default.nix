@@ -200,14 +200,17 @@ in {
         "$musicRegexp" = ".*Spotify.*";
         "$gamingRegexp" = "steam";
         "$settingsRegexp" = "com.saivert.pwvucontrol";
-        "$programmingRegexp" = "code-url-handler|jetbrains-rider|Godot|kiro";
+        "$devtoolRegexp" = "com.saivert.pwvucontrol|bruno|DBeaver";
+        "$mailRegexp" = "chrome-mail.google.com.*|chrome-calendar.google.com.*";
+        "$programmingRegexp" = "code-url-handler|jetbrains-rider|jetbrains-idea|Godot|kiro";
         windowrule = [
           "tag +jb, match:class ^jetbrains-.+$,match:float true"
           #"stay_focused on, match:tag jb"
           "no_initial_focus on, match:tag jb"
           "no_focus on,match:class ^$,match:title ^$,match:xwayland true,match:float true,match:fullscreen false, match:pin false"
           "suppress_event maximize center, match:class .*"
-          "tag +setting,match:class $settingsRegexp"
+          "tag +devtool,match:class $devtoolRegexp"
+          "tag +mail,match:class $mailRegexp"
           "tag +music,match:title $musicRegexp"
           "tag +gaming,match:class $gamingRegexp"
           "tag +browser,match:class $browserRegexp"
@@ -216,12 +219,14 @@ in {
           "tag +chat,match:initial_title $chatRegexp"
           "tag +coding,match:class $programmingRegexp"
           "tag +term,match:class $terminalRegexp"
-          "workspace 10 silent,match:tag setting"
-          "group set always,match:tag setting"
+          "workspace 10 silent,match:tag devtool"
+          "group set always,match:tag devtool"
           "workspace 20 silent,match:tag music"
           "group set always,match:tag music"
           "workspace 30 silent,match:tag gaming"
           "group set always,match:tag gaming"
+          "workspace 40 silent,match:tag mail"
+          "group set always,match:tag mail"
           "workspace 50 silent,match:tag productivity"
           "group set always,match:tag productivity"
           "workspace 60 silent,match:tag chat"

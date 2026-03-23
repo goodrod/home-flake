@@ -5,6 +5,7 @@
 
   imports = [
     ./bruno
+    ./dbeaver
     ./default-applications
     ./bluetooth
     ./discord
