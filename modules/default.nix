@@ -4,11 +4,13 @@
   home.stateVersion = "23.11";
 
   imports = [
+    ./bruno
     ./default-applications
     ./bluetooth
     ./discord
     ./game-development
     ./icon-fonts
+    ./intellij
     ./kiro
     ./obsidian
     ./personal-apps
