@@ -12,10 +12,7 @@
     flake-parts.url = "github:hercules-ci/flake-parts";
 
     nvim = {
-      type = "github";
-      host = "github.com";
-      owner = "goodrod";
-      repo = "nvim";
+      url = "git+ssh://git@github.com/goodrod/nvim";
     };
 
     nixvim = {
