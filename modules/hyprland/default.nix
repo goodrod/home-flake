@@ -205,7 +205,8 @@ in {
         "$programmingRegexp" = "code-url-handler|jetbrains-rider|jetbrains-idea|Godot|kiro";
         windowrule = [
           "tag +jb, match:class ^jetbrains-.+$,match:float true"
-          "match:class ^jetbrains-.+$,match:float true, size monitor_w/2 monitor_h/2"
+          "match:tag jb,match:float true size monitor_w/2 monitor_h/2"
+          "match:tag jb,match:float true center on"
 
           #"stay_focused on, match:tag jb"
           "no_focus on,match:class ^$,match:title ^$,match:xwayland true,match:float true,match:fullscreen false, match:pin false"
