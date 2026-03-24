@@ -545,14 +545,25 @@ in {
       text = ''
         font=Sans
         font-size=20
+        color=1a1b26
         indicator-radius=100
         indicator-thickness=7
         ring-color=98def2
+        ring-ver-color=a6e3a1
+        ring-wrong-color=f38ba8
+        ring-clear-color=f9e2af
         key-hl-color=cdd6f4
+        bs-hl-color=f38ba8
         line-color=00000000
-        inside-color=404a6066
+        inside-color=1a1b26cc
+        inside-ver-color=1a1b26cc
+        inside-wrong-color=1a1b26cc
+        inside-clear-color=1a1b26cc
         separator-color=00000000
         text-color=cdd6f4
+        text-ver-color=cdd6f4
+        text-wrong-color=f38ba8
+        text-clear-color=f9e2af
       '';
     };
     services = {
