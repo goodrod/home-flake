@@ -200,7 +200,7 @@ in {
         "$musicRegexp" = ".*Spotify.*";
         "$gamingRegexp" = "steam";
         "$settingsRegexp" = "com.saivert.pwvucontrol";
-        "$devtoolRegexp" = "com.saivert.pwvucontrol|bruno|beekeeper-studio";
+        "$devtoolRegexp" = "com.saivert.pwvucontrol|bruno";
         "$mailRegexp" = "chrome-mail.google.com.*|chrome-calendar.google.com.*";
         "$programmingRegexp" = "code-url-handler|jetbrains-rider|jetbrains-idea|Godot|kiro";
         windowrule = [
