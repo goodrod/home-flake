@@ -541,27 +541,20 @@ in {
         ];
       };
     };
-    programs.swaylock = {
-      enable = option.lockscreen == "swaylock";
-      settings = {
-        image = "";
-        screenshots = true;
-        effect-blur = "10x3";
-        effect-vignette = "0.5:0.5";
-        grace = 2;
-        fade-in = 0.2;
-        font = "Sans";
-        font-size = 20;
-        indicator = true;
-        indicator-radius = 100;
-        indicator-thickness = 7;
-        ring-color = "98def2";
-        key-hl-color = "cdd6f4";
-        line-color = "00000000";
-        inside-color = "404a6066";
-        separator-color = "00000000";
-        text-color = "cdd6f4";
-      };
+    xdg.configFile."swaylock/config" = lib.mkIf (option.lockscreen == "swaylock") {
+      text = ''
+        font=Sans
+        font-size=20
+        indicator
+        indicator-radius=100
+        indicator-thickness=7
+        ring-color=98def2
+        key-hl-color=cdd6f4
+        line-color=00000000
+        inside-color=404a6066
+        separator-color=00000000
+        text-color=cdd6f4
+      '';
     };
     services = {
       hypridle.enable = false;
