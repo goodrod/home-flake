@@ -206,7 +206,7 @@ in {
         windowrule = [
           "tag +jb, match:class ^jetbrains-.+$,match:float true"
           "match:tag jb,match:float true size monitor_w/2 monitor_h/2"
-          "match:tag jb,match:float true center on"
+          "match:tag jb,match:float true move -monitor_w/4 -monitors_h/4"
 
           #"stay_focused on, match:tag jb"
           "no_focus on,match:class ^$,match:title ^$,match:xwayland true,match:float true,match:fullscreen false, match:pin false"
