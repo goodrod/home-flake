@@ -205,9 +205,6 @@ in {
         "$programmingRegexp" = "code-url-handler|jetbrains-rider|jetbrains-idea|Godot|kiro";
         windowrule = [
           "tag +jb, match:class ^jetbrains-.+$,match:float true"
-          "match:tag jb,match:float true size monitor_w/2 monitor_h/2"
-          "match:tag jb,match:float true move -monitor_w/4 -monitors_h/4"
-
           #"stay_focused on, match:tag jb"
           "no_focus on,match:class ^$,match:title ^$,match:xwayland true,match:float true,match:fullscreen false, match:pin false"
           "suppress_event maximize center, match:class .*"
@@ -244,6 +241,8 @@ in {
           "pin on,match:class toggle-window"
           "size monitor_w*0.50 monitor_h*0.50,match:class toggle-window"
           "move monitor_w*0.25 monitor_h*0.25,match:class toggle-window"
+          "size monitor_w*0.50 monitor_h*0.50,match:tag jb,match:float true"
+          "move monitor_w*0.25 monitor_h*0.25,match:tag jb,match:float true"
         ];
         ecosystem = {no_donation_nag = true;};
         group = {
