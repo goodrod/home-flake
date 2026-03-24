@@ -5,7 +5,7 @@
 
   imports = [
     ./bruno
-    ./dbeaver
+    ./beekeeper-studio
     ./default-applications
     ./bluetooth
     ./discord
