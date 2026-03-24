@@ -206,7 +206,6 @@ in {
         windowrule = [
           "tag +jb, match:class ^jetbrains-.+$,match:float true"
           #"stay_focused on, match:tag jb"
-          "no_initial_focus on, match:tag jb"
           "no_focus on,match:class ^$,match:title ^$,match:xwayland true,match:float true,match:fullscreen false, match:pin false"
           "suppress_event maximize center, match:class .*"
           "tag +devtool,match:class $devtoolRegexp"
