@@ -65,7 +65,7 @@ with lib; let
       printf "%s    %s    %s\n", desc, key, cmd
     }'
   '';
-  lockCmd = if option.lockscreen == "swaylock" then "swaylock -f" else "hyprlock";
+  lockCmd = if option.lockscreen == "swaylock" then "/usr/bin/swaylock" else "hyprlock";
 in {
   imports = [
     # Paths to other modules.
@@ -545,7 +545,6 @@ in {
       text = ''
         font=Sans
         font-size=20
-        indicator
         indicator-radius=100
         indicator-thickness=7
         ring-color=98def2
