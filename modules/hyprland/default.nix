@@ -244,6 +244,17 @@ in {
           "size monitor_w*0.50 monitor_h*0.50,match:tag jb,match:float true"
           "move monitor_w*0.25 monitor_h*0.25,match:tag jb,match:float true"
         ];
+        workspace = mkMerge [
+          (mkIf option.monitors.left.enable [
+            "10, monitor:${option.monitors.left.name}, default:true"
+          ])
+          (mkIf option.monitors.middle.enable [
+            "20, monitor:${option.monitors.middle.name}, default:true"
+          ])
+          (mkIf option.monitors.right.enable [
+            "30, monitor:${option.monitors.right.name}, default:true"
+          ])
+        ];
         ecosystem = {no_donation_nag = true;};
         group = {
           groupbar = {
