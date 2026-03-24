@@ -65,6 +65,7 @@ with lib; let
       printf "%s    %s    %s\n", desc, key, cmd
     }'
   '';
+  lockCmd = if option.lockscreen == "swaylock" then "swaylock -f" else "hyprlock";
 in {
   imports = [
     # Paths to other modules.
@@ -76,6 +77,11 @@ in {
     # Declare what settings a user of this module module can set.
     # Usually this includes a global "enable" option which defaults to false.
     enable = mkEnableOption "hyprland";
+    lockscreen = mkOption {
+      type = types.enum [ "hyprlock" "swaylock" ];
+      default = "hyprlock";
+      description = "Which lockscreen to use (hyprlock for NixOS, swaylock for Ubuntu)";
+    };
     startup-commands = mkOption {
       type = listOf str;
       default = [];
@@ -372,7 +378,7 @@ in {
           "$mainMod CTRL, Tab, Toggle lock on active group, lockactivegroup, toggle"
           "$mainMod, C, Kill active window, killactive,"
           "$mainMod, L, Make window leave group to the right, exec, hyprctl dispatch moveoutofgroup; hyprctl dispatch movewindow r; hyprctl dispatch togglegroup; hyprctl dispatch movefocus l"
-          "$mainMod SHIFT, L, Lock screen, exec, playerctl -a pause; hyprlock"
+          "$mainMod SHIFT, L, Lock screen, exec, playerctl -a pause; ${lockCmd}"
           "$mainMod, J, Make window to the right join group, exec, hyprctl dispatch movefocus r; hyprctl dispatch moveintogroup l; hyprctl dispatch focuswindow previous"
           "$mainMod, F12, Exit Hyprland, exit,"
           "$mainMod, F, Open file manager, exec, $fileManager"
@@ -474,7 +480,7 @@ in {
       };
     };
     programs.hyprlock = {
-      enable = true;
+      enable = option.lockscreen == "hyprlock";
       settings = {
         background = {
           monitor = "";
@@ -533,6 +539,28 @@ in {
             valign = "center";
           }
         ];
+      };
+    };
+    programs.swaylock = {
+      enable = option.lockscreen == "swaylock";
+      settings = {
+        image = "";
+        screenshots = true;
+        effect-blur = "10x3";
+        effect-vignette = "0.5:0.5";
+        grace = 2;
+        fade-in = 0.2;
+        font = "Sans";
+        font-size = 20;
+        indicator = true;
+        indicator-radius = 100;
+        indicator-thickness = 7;
+        ring-color = "98def2";
+        key-hl-color = "cdd6f4";
+        line-color = "00000000";
+        inside-color = "404a6066";
+        separator-color = "00000000";
+        text-color = "cdd6f4";
       };
     };
     services = {

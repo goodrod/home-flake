@@ -3,6 +3,9 @@ let
   inherit (lib) mkOption mkEnableOption types mkIf;
   inherit (types) path str;
   cfg = config.module.wlogout;
+  lockCmd = if config.module.hyprland.lockscreen == "swaylock" then "swaylock -f" else "hyprlock";
+  layoutFile = builtins.replaceStrings ["@lockCmd@"] [lockCmd]
+    (builtins.readFile "${cfg.config-source-directory}/layout");
 in {
   options.module.wlogout = {
     enable = mkEnableOption "wlogout";
@@ -22,9 +25,10 @@ in {
 
   config = mkIf cfg.enable {
     home.packages = [ pkgs.wlogout ];
-    home.file."${cfg.config-output-directory}" = {
-      source = "${cfg.config-source-directory}";
-      executable = false;
+    home.file."${cfg.config-output-directory}/layout".text = layoutFile;
+    home.file."${cfg.config-output-directory}/style.css".source = "${cfg.config-source-directory}/style.css";
+    home.file."${cfg.config-output-directory}/icons" = {
+      source = "${cfg.config-source-directory}/icons";
       recursive = true;
     };
   };
