@@ -11,6 +11,26 @@ with lib; let
   inherit (lib) mkOption mkEnableOption types mkIf;
   inherit (types) path str bool listOf;
   option = config.module.hyprland;
+  groupMailScript = pkgs.writeShellScript "group-mail-windows" ''
+    sleep 0.4
+    addrs=$(hyprctl clients -j | ${pkgs.jq}/bin/jq -r '
+      [.[] | select(.workspace.id == 40)
+           | select(.tags != null)
+           | select([.tags[] | startswith("mail")] | any)
+           | .address] | .[]')
+    first="" second=""
+    while IFS= read -r addr; do
+      [ -z "$first" ] && { first=$addr; continue; }
+      [ -z "$second" ] && { second=$addr; break; }
+    done <<< "$addrs"
+    [ -z "$first" ] || [ -z "$second" ] && exit 0
+    g1=$(hyprctl clients -j | ${pkgs.jq}/bin/jq -r ".[] | select(.address == \"$first\") | .grouped")
+    g2=$(hyprctl clients -j | ${pkgs.jq}/bin/jq -r ".[] | select(.address == \"$second\") | .grouped")
+    [ "$g1" = "$g2" ] && exit 0
+    hyprctl dispatch focuswindow "address:$second"
+    sleep 0.05
+    hyprctl dispatch movewindoworgroup "address:$first"
+  '';
   toggleWindowScript = pkgs.writeScript "toggle-window.sh" ''
     #!/usr/bin/env bash
     pgrep fuzzel && pkill fuzzel && exit 0
@@ -225,24 +245,24 @@ in {
           "tag +coding,match:class $programmingRegexp"
           "tag +term,match:class $terminalRegexp"
           "workspace 10 silent,match:tag devtool"
-          "group set always,match:tag devtool"
+          "group set,match:tag devtool"
           "workspace 20 silent,match:tag music"
-          "group set always,match:tag music"
+          "group set,match:tag music"
           "workspace 30 silent,match:tag gaming"
-          "group set always,match:tag gaming"
+          "group set,match:tag gaming"
           "workspace 40 silent,match:tag mail"
-          "group set always,match:tag mail"
+          "group set,match:tag mail"
           "workspace 50 silent,match:tag productivity"
-          "group set always,match:tag productivity"
+          "group set,match:tag productivity"
           "workspace 60 silent,match:tag chat"
-          "group set always,match:tag chat"
+          "group set,match:tag chat"
           "workspace 70 silent,match:tag coding"
-          "group set always,match:tag coding"
+          "group set,match:tag coding"
           "workspace 80 silent,match:tag term"
-          "group set always,match:tag term"
+          "group set,match:tag term"
           "workspace 90 silent,match:tag browser"
-          "group set always,match:tag browser"
-          "group set always"
+          "group set,match:tag browser"
+          "group set"
           "float on,match:class toggle-window"
           "pin on,match:class toggle-window"
           "size monitor_w*0.50 monitor_h*0.50,match:class toggle-window"
@@ -263,6 +283,7 @@ in {
         ];
         ecosystem = {no_donation_nag = true;};
         group = {
+          group_on_movetoworkspace = true;
           groupbar = {
             enabled = true;
             height = 22;
