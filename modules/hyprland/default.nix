@@ -200,7 +200,7 @@ in {
         "$mainMod" = "SUPER";
 
         "$browserRegexp" = "firefox_firefox|firefox|Chromium|vivaldi-stable|Mullvad Browser|google-chrome|Google-chrome";
-        "$chatRegexp" = "discord|vesktop|Slack|.*teams.*|.*outlook.*";
+        "$chatRegexp" = "discord|vesktop|Slack|.*teams.*|.*outlook.*|chrome-chat.google.com.*";
         "$terminalRegexp" = "Alacritty";
         "$productivityRegexp" = "everdo|obsidian";
         "$musicRegexp" = ".*Spotify.*";
