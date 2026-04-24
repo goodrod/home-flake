@@ -200,14 +200,14 @@ in {
         "$mainMod" = "SUPER";
 
         "$browserRegexp" = "firefox_firefox|firefox|Chromium|vivaldi-stable|Mullvad Browser|google-chrome|Google-chrome";
-        "$chatRegexp" = "discord|vesktop|Slack|.*teams.*|.*outlook.*|chrome-chat.google.com.*|chrome-mail.google.com.*Profile_3|chrome-calendar.google.com.*Profile_3";
+        "$chatRegexp" = "discord|vesktop|Slack|.*teams.*|.*outlook.*|chrome-chat.google.com.*";
         "$terminalRegexp" = "Alacritty";
         "$productivityRegexp" = "everdo|obsidian";
         "$musicRegexp" = ".*Spotify.*";
         "$gamingRegexp" = "steam";
         "$settingsRegexp" = "com.saivert.pwvucontrol";
         "$devtoolRegexp" = "com.saivert.pwvucontrol|bruno";
-        "$mailRegexp" = "chrome-mail.google.com.*Default|chrome-calendar.google.com.*Default";
+        "$mailRegexp" = "chrome-mail.google.com.*|chrome-calendar.google.com.*";
         "$programmingRegexp" = "code-url-handler|jetbrains-rider|jetbrains-idea|Godot|kiro";
         windowrule = [
           "tag +jb, match:class ^jetbrains-.+$,match:float true"
