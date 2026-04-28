@@ -6,22 +6,22 @@ $ compose-target: docker compose -f <compose-file> config --services
 
 
 # (start/up)                    Start (up) all containers from a docker compose file
-docker compose --env-file .env -f <compose-file> up -d
+docker compose -f <compose-file> up -d
 
 # (restart)                     Restart (up) all containers from a docker compose file
-docker compose --env-file .env -f <compose-file> restart
+docker compose -f <compose-file> restart
 
 # (start/up)                    Start (up) one container from a docker compose file
-docker compose --env-file .env -f <compose-file> up <compose-target> -d
+docker compose -f <compose-file> up <compose-target> -d
 
 # (restart)                     Restart (up) one container from a docker compose file
-docker compose --env-file .env -f <compose-file> restart <compose-target>
+docker compose -f <compose-file> restart <compose-target>
 
 # (stop/down)                   Take one contaier down for docker compose file
-docker compose --env-file .env -f <compose-file> down <compose-target>
+docker compose -f <compose-file> down <compose-target>
 
 # (stop/down)                   Take all containers down for docker compose file
-docker compose --env-file .env -f <compose-file> down
+docker compose -f <compose-file> down
 
 # (kill/purge)                  Force kill and remove all containers
 docker rm -f $(docker ps -aq)
@@ -31,10 +31,10 @@ docker exec -it <container-id> <command>
 $ command: echo -e "bash\narangosh"
 
 # (build)                       Build a certain service based on a docker compose file
-docker compose --env-file .env -f <compose-file> build <compose-target>
+docker compose -f <compose-file> build <compose-target>
 
 # (build)                       Build all services in docker compose file
-docker compose --env-file .env -f <compose-file> build
+docker compose -f <compose-file> build
 
 # (read/view)                   View logs for certain pod
 docker logs -f <container-name>
