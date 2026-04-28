@@ -15,7 +15,7 @@ style:
 finder:
   command: fzf # equivalent to the --finder option
   overrides: --with-nth 1,2 --nth 1,2 # equivalent to the --fzf-overrides option
-  overrides_var: --print-query # equivalent to the --fzf-overrides-var option
+  # overrides_var: --tac # equivalent to the --fzf-overrides-var option
 
 # cheats:
 #   paths:

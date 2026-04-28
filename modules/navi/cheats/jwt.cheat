@@ -6,12 +6,12 @@ payload=$(printf '{"id":"%s","username":"%s","displayName":"%s","rights":["%s"],
 sig=$(printf '%s' "${header}.${payload}" | openssl dgst -sha256 -hmac '<secret>' -binary | base64 -w0 | tr '+/' '-_' | tr -d '=')
 printf '%s\n' "${header}.${payload}.${sig}"
 
-$ id: echo "00000000-0000-0000-0000-000000000001"
-$ username: echo "user@example.com"
-$ display-name: echo "User Name"
-$ rights: echo "role.permission"
-$ source: echo "INTERNAL"
-$ secret: echo "secret"
+$ id: printf "00000000-0000-0000-0000-000000000001\n\n"
+$ username: printf "user@example.com\n\n"
+$ display-name: printf "User Name\n\n"
+$ rights: printf "role.permission\n\n"
+$ source: printf "INTERNAL\n\n"
+$ secret: printf "secret\n\n"
 
 # (decode/inspect)              Decode JWT claims (no signature verification)
 printf '%s' '<token>' | cut -d'.' -f2 | tr '-_' '+/' | awk '{n=length($0)%4; if(n==2)print $0"=="; else if(n==3)print $0"="; else print $0}' | base64 -d | python3 -m json.tool
