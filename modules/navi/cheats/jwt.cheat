@@ -6,7 +6,7 @@ payload=$(printf '{"id":"%s","username":"%s","displayName":"%s","rights":["%s"],
 sig=$(printf '%s' "${header}.${payload}" | openssl dgst -sha256 -hmac '<secret>' -binary | base64 -w0 | tr '+/' '-_' | tr -d '=')
 printf '%s\n' "${header}.${payload}.${sig}"
 
-$ id: printf "00000000-0000-0000-0000-000000000001\n\n"
+$ id: printf "%s\n\n" "$(uuidgen)"
 $ username: printf "user@example.com\n\n"
 $ display-name: printf "User Name\n\n"
 $ rights: printf "role.permission\n\n"
