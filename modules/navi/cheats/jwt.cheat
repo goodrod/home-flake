@@ -2,11 +2,15 @@
 
 # (generate/encode)              Generate signed HS256 JWT from JSON claims
 header=$(printf '{"alg":"HS256","typ":"JWT"}' | base64 -w0 | tr '+/' '-_' | tr -d '=')
-payload=$(printf '%s' '<claims>' | base64 -w0 | tr '+/' '-_' | tr -d '=')
+payload=$(printf '{"id":"%s","username":"%s","displayName":"%s","rights":["%s"],"externalClientSource":"%s","iat":%s}' '<id>' '<username>' '<display-name>' '<rights>' '<source>' "$(date +%s)" | base64 -w0 | tr '+/' '-_' | tr -d '=')
 sig=$(printf '%s' "${header}.${payload}" | openssl dgst -sha256 -hmac '<secret>' -binary | base64 -w0 | tr '+/' '-_' | tr -d '=')
 printf '%s\n' "${header}.${payload}.${sig}"
 
-$ claims: echo '{"id":"00000000-0000-0000-0000-000000000001","username":"user@example.com","displayName":"User Name","rights":["role.permission"],"externalClientSource":"INTERNAL","iat":1700000000}'
+$ id: echo "00000000-0000-0000-0000-000000000001"
+$ username: echo "user@example.com"
+$ display-name: echo "User Name"
+$ rights: echo "role.permission"
+$ source: echo "INTERNAL"
 $ secret: echo "secret"
 
 # (decode/inspect)               Decode JWT claims (no signature verification)
