@@ -1,0 +1,120 @@
+{ config, pkgs, lib, ... }:
+let
+  option = config.module.hyprland;
+  scripts = import ./scripts.nix { inherit pkgs; };
+  lockCmd = if option.lockscreen == "swaylock" then "/usr/bin/swaylock" else "hyprlock";
+in
+{
+  config = lib.mkIf option.enable {
+    wayland.windowManager.hyprland.settings = {
+      bindd = [
+        "$mainMod, I, Remove master, layoutmsg, removemaster"
+        "$mainMod, space, Launch terminal, exec, $terminal"
+        "$mainMod ALT, space, Launch terminal, exec, [workspace unset] $terminal"
+        "$mainMod, Tab, Change group active, changegroupactive, f"
+        "$mainMod SHIFT, Tab, Change group active, changegroupactive, b"
+        "$mainMod CTRL, Tab, Toggle lock on active group, lockactivegroup, toggle"
+        "$mainMod, C, Kill active window, killactive,"
+        "$mainMod, L, Make window leave group to the right, exec, hyprctl dispatch moveoutofgroup; hyprctl dispatch movewindow r; hyprctl dispatch togglegroup; hyprctl dispatch movefocus l"
+        "$mainMod SHIFT, L, Lock screen, exec, playerctl -a pause; ${lockCmd}"
+        "$mainMod, J, Make window to the right join group, exec, hyprctl dispatch movefocus r; hyprctl dispatch moveintogroup l; hyprctl dispatch focuswindow previous"
+        "$mainMod, F12, Exit Hyprland, exit,"
+        "$mainMod, F, Open file manager, exec, $fileManager"
+        "$mainMod SHIFT, F, Toggle floating, togglefloating,"
+        "$mainMod, D, Toggle menu, exec, ${scripts.toggleMenu}"
+        "$mainMod, escape, Toggle window, exec, ${scripts.toggleWindow} :;"
+        "$mainMod, B, Toggle Bluetooth, exec, ${scripts.toggleWindow} bluetuith"
+        "$mainMod, s, Toggle Spotify player, exec, ${scripts.toggleWindow} spotify_player"
+        "$mainMod, V, Toggle Pulse audio mixer, exec, ${scripts.toggleWindow} pulsemixer"
+        "$mainMod, P, Toggle htop, exec, ${scripts.toggleWindow} htop"
+        "$mainMod, G, Toggle ChatGPT, exec, ${scripts.toggleWindow} chatgpt"
+        ''$mainMod, O, Open my notes in obsidian, exec,  xdg-open "obsidian://open?vault=my-notes"''
+        ''
+          $mainMod, H, Toggle window, exec, ${scripts.toggleWindow} "${scripts.parseHotkeys} | fzf"''
+        ''
+          $mainMod, F7, Take screenshot, exec, grim -g "$(slurp)" - | swappy -f -''
+        ''
+          $mainMod, F8, Toggle record region to clipboard, exec, sh -c 'pidf=/tmp/wf-recorder-clip.pid; outdir=$HOME/Videos; mkdir -p "$outdir"; if [ -s "$pidf" ] && kill -0 "$(cat "$pidf")" 2>/dev/null; then kill -INT "$(cat "$pidf")"; exit; fi; f="$outdir/recording-$(date +%F_%H-%M-%S).mp4"; wf-recorder -g "$(slurp)" -f "$f" & pid=$!; echo "$pid" > "$pidf"; wait "$pid"; rm -f "$pidf"; printf "file://%s\n" "$(realpath "$f")" | wl-copy --type text/uri-list' ''
+        "$mainMod ALT, D, Execute command, exec, bash -c"
+        "$mainMod, P, Toggle pseudo mode, pseudo, # dwindle"
+        "$mainMod, A, Toggle fullscreen, fullscreen, 2"
+        "$mainMod, code:69, Focus monitor $monitor-1, focusmonitor, $monitor-1"
+        "$mainMod, code:70, Focus monitor $monitor-2, focusmonitor, $monitor-2"
+        "$mainMod, code:71, Focus monitor $monitor-3, focusmonitor, $monitor-3"
+        "$mainMod SHIFT, left, Move window l, movewindow, l"
+        "$mainMod SHIFT, right, Move window r, movewindow, r"
+        "$mainMod SHIFT, up, Move window u, movewindow, u"
+        "$mainMod SHIFT, down, Move window d, movewindow, d"
+        "$mainMod, left, Move focus l, movefocus, l"
+        "$mainMod, right, Move focus r, movefocus, r"
+        "$mainMod, up, Move focus u, movefocus, u"
+        "$mainMod, down, Move focus d, movefocus, d"
+        "$mainMod ALT, 1, Toggle special WS 1, togglespecialworkspace, 1"
+        "$mainMod ALT, 2, Toggle special WS 2, togglespecialworkspace, 2"
+        "$mainMod ALT, 3, Toggle special WS 3, togglespecialworkspace, 3"
+        "$mainMod ALT, 4, Toggle special WS 4, togglespecialworkspace, 4"
+        "$mainMod ALT, 5, Toggle special WS 5, togglespecialworkspace, 5"
+        "$mainMod ALT, 6, Toggle special WS 6, togglespecialworkspace, 6"
+        "$mainMod ALT, 7, Toggle special WS 7, togglespecialworkspace, 7"
+        "$mainMod ALT, 8, Toggle special WS 8, togglespecialworkspace, 8"
+        "$mainMod ALT, 9, Toggle special WS 9, togglespecialworkspace, 9"
+        "$mainMod ALT, 0, Toggle special WS 0, togglespecialworkspace, 0"
+        "$mainMod ALT CTRL, 1, Move to WS special:1, movetoworkspace, special:1"
+        "$mainMod ALT CTRL, 2, Move to WS special:2, movetoworkspace, special:2"
+        "$mainMod ALT CTRL, 3, Move to WS special:3, movetoworkspace, special:3"
+        "$mainMod ALT CTRL, 4, Move to WS special:4, movetoworkspace, special:4"
+        "$mainMod ALT CTRL, 5, Move to WS special:5, movetoworkspace, special:5"
+        "$mainMod ALT CTRL, 6, Move to WS special:6, movetoworkspace, special:6"
+        "$mainMod ALT CTRL, 7, Move to WS special:7, movetoworkspace, special:7"
+        "$mainMod ALT CTRL, 8, Move to WS special:8, movetoworkspace, special:8"
+        "$mainMod ALT CTRL, 9, Move to WS special:9, movetoworkspace, special:9"
+        "$mainMod ALT CTRL, 0, Move to WS special:0, movetoworkspace, special:0"
+        "$mainMod, 1, Focus WS 10 on current monitor, focusworkspaceoncurrentmonitor, 10"
+        "$mainMod, 2, Focus WS 20 on current monitor, focusworkspaceoncurrentmonitor, 20"
+        "$mainMod, 3, Focus WS 30 on current monitor, focusworkspaceoncurrentmonitor, 30"
+        "$mainMod, 4, Focus WS 40 on current monitor, focusworkspaceoncurrentmonitor, 40"
+        "$mainMod, 5, Focus WS 50 on current monitor, focusworkspaceoncurrentmonitor, 50"
+        "$mainMod, 6, Focus WS 60 on current monitor, focusworkspaceoncurrentmonitor, 60"
+        "$mainMod, 7, Focus WS 70 on current monitor, focusworkspaceoncurrentmonitor, 70"
+        "$mainMod, 8, Focus WS 80 on current monitor, focusworkspaceoncurrentmonitor, 80"
+        "$mainMod, 9, Focus WS 90 on current monitor, focusworkspaceoncurrentmonitor, 90"
+        "$mainMod, 0, Focus WS 100 on current monitor, focusworkspaceoncurrentmonitor, 100"
+        "$mainMod CTRL, 1, Move to WS 10, movetoworkspacesilent, 10"
+        "$mainMod CTRL, 2, Move to WS 20, movetoworkspacesilent, 20"
+        "$mainMod CTRL, 3, Move to WS 30, movetoworkspacesilent, 30"
+        "$mainMod CTRL, 4, Move to WS 40, movetoworkspacesilent, 40"
+        "$mainMod CTRL, 5, Move to WS 50, movetoworkspacesilent, 50"
+        "$mainMod CTRL, 6, Move to WS 60, movetoworkspacesilent, 60"
+        "$mainMod CTRL, 7, Move to WS 70, movetoworkspacesilent, 70"
+        "$mainMod CTRL, 8, Move to WS 80, movetoworkspacesilent, 80"
+        "$mainMod CTRL, 9, Move to WS 90, movetoworkspacesilent, 90"
+        "$mainMod CTRL, 0, Move to WS 100, movetoworkspacesilent, 100"
+        "$mainMod SHIFT, 1, Focus WS 11 on current monitor, focusworkspaceoncurrentmonitor, 11"
+        "$mainMod SHIFT, 2, Focus WS 21 on current monitor, focusworkspaceoncurrentmonitor, 21"
+        "$mainMod SHIFT, 3, Focus WS 31 on current monitor, focusworkspaceoncurrentmonitor, 31"
+        "$mainMod SHIFT, 4, Focus WS 41 on current monitor, focusworkspaceoncurrentmonitor, 41"
+        "$mainMod SHIFT, 5, Focus WS 51 on current monitor, focusworkspaceoncurrentmonitor, 51"
+        "$mainMod SHIFT, 6, Focus WS 61 on current monitor, focusworkspaceoncurrentmonitor, 61"
+        "$mainMod SHIFT, 7, Focus WS 71 on current monitor, focusworkspaceoncurrentmonitor, 71"
+        "$mainMod SHIFT, 8, Focus WS 81 on current monitor, focusworkspaceoncurrentmonitor, 81"
+        "$mainMod SHIFT, 9, Focus WS 91 on current monitor, focusworkspaceoncurrentmonitor, 91"
+        "$mainMod SHIFT, 0, Focus WS 101 on current monitor, focusworkspaceoncurrentmonitor, 101"
+        "$mainMod SHIFT CTRL, 1, Move to WS 11, movetoworkspacesilent, 11"
+        "$mainMod SHIFT CTRL, 2, Move to WS 21, movetoworkspacesilent, 21"
+        "$mainMod SHIFT CTRL, 3, Move to WS 31, movetoworkspacesilent, 31"
+        "$mainMod SHIFT CTRL, 4, Move to WS 41, movetoworkspacesilent, 41"
+        "$mainMod SHIFT CTRL, 5, Move to WS 51, movetoworkspacesilent, 51"
+        "$mainMod SHIFT CTRL, 6, Move to WS 61, movetoworkspacesilent, 61"
+        "$mainMod SHIFT CTRL, 7, Move to WS 71, movetoworkspacesilent, 71"
+        "$mainMod SHIFT CTRL, 8, Move to WS 81, movetoworkspacesilent, 81"
+        "$mainMod SHIFT CTRL, 9, Move to WS 91, movetoworkspacesilent, 91"
+        "$mainMod SHIFT CTRL, 0, Move to WS 101, movetoworkspacesilent, 101"
+        "$mainMod SHIFT CTRL, C, Execute command, exec, bash -c"
+      ];
+      bindm = [
+        "$mainMod, mouse:272, movewindow"
+        "$mainMod, mouse:273, resizewindow"
+      ];
+    };
+  };
+}
