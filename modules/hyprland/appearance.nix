@@ -27,6 +27,21 @@ in
     };
 
     wayland.windowManager.hyprland.settings = {
+      plugin.hyprbars = {
+        bar_height = 22;
+        bar_color = "rgba(404A60dd)";
+        bar_text_size = 11;
+        bar_text_font = "JetBrains Mono";
+        bar_text_align = "center";
+        bar_part_of_window = true;
+        bar_precedence_over_border = true;
+        "col.text" = "0xffcdd6f4";
+        "hyprbars-button" = [
+          "rgb(ff4040), 12, 󰖭, hyprctl dispatch killactive"
+          "rgb(eeee11), 12, , hyprctl dispatch fullscreen 1"
+        ];
+      };
+
       decoration = {
         rounding = 10;
         active_opacity = 1.0;

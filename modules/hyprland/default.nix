@@ -56,6 +56,7 @@ in
       xwayland.enable = true;
       package = pkgs.hyprland;
       portalPackage = pkgs.xdg-desktop-portal-hyprland;
+      plugins = [ pkgs.hyprbars ];
       settings.exec-once = option.startup-commands;
     };
 
