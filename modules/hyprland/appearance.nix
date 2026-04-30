@@ -26,31 +26,35 @@ in
       };
     };
 
-    wayland.windowManager.hyprland.settings = {
-      decoration = {
-        rounding = 10;
-        active_opacity = 1.0;
-        inactive_opacity = 1.0;
-        blur = {
-          enabled = true;
-          size = 3;
-          passes = 1;
-          vibrancy = 0.1696;
-        };
-      };
+    module.hyprland.luaConfig = lib.mkOrder 200 ''
+      -- ══════════════════════════════════════
+      -- Decoration & Animations
+      -- ══════════════════════════════════════
+      hl.config({
+        decoration = {
+          rounding = 10,
+          active_opacity = 1.0,
+          inactive_opacity = 1.0,
+          blur = {
+            enabled = true,
+            size = 3,
+            passes = 1,
+            vibrancy = 0.1696,
+          },
+        },
+        animations = {
+          enabled = true,
+        },
+      })
 
-      animations = {
-        enabled = true;
-        bezier = "myBezier, 0.05, 0.9, 0.1, 1.05";
-        animation = [
-          "windows, 1, 3, myBezier"
-          "windowsOut, 1, 3, default, popin 80%"
-          "border, 1, 1, default"
-          "borderangle, 1, 3, default"
-          "fade, 1, 1, default"
-          "workspaces, 1, 3, default"
-        ];
-      };
-    };
+      hl.curve("myBezier", { type = "bezier", points = { {0.05, 0.9}, {0.1, 1.05} } })
+
+      hl.animation({ leaf = "windows", enabled = true, speed = 3, bezier = "myBezier" })
+      hl.animation({ leaf = "windowsOut", enabled = true, speed = 3, bezier = "default", style = "popin 80%" })
+      hl.animation({ leaf = "border", enabled = true, speed = 1, bezier = "default" })
+      hl.animation({ leaf = "borderangle", enabled = true, speed = 3, bezier = "default" })
+      hl.animation({ leaf = "fade", enabled = true, speed = 1, bezier = "default" })
+      hl.animation({ leaf = "workspaces", enabled = true, speed = 3, bezier = "default" })
+    '';
   };
 }

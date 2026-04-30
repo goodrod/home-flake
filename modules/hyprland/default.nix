@@ -5,8 +5,8 @@
   ...
 }:
 let
-  inherit (lib) mkOption mkEnableOption types mkIf;
-  inherit (types) str bool listOf;
+  inherit (lib) mkOption mkEnableOption types mkIf concatStringsSep;
+  inherit (types) str bool listOf lines;
   option = config.module.hyprland;
 in
 {
@@ -46,6 +46,11 @@ in
         settings = mkOption { type = str; description = "Settings for monitor"; default = "preferred,2560x0,1.0"; };
       };
     };
+    luaConfig = mkOption {
+      type = lines;
+      default = "";
+      description = "Lua config fragments assembled into hyprland.lua";
+    };
   };
 
   config = mkIf option.enable {
@@ -57,8 +62,9 @@ in
       package = pkgs.hyprland;
       portalPackage = pkgs.xdg-desktop-portal-hyprland;
       plugins = [ ];
-      settings.exec-once = option.startup-commands;
     };
+
+    xdg.configFile."hypr/hyprland.lua".text = option.luaConfig;
 
     services = {
       hypridle.enable = false;

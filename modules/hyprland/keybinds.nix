@@ -3,118 +3,111 @@ let
   option = config.module.hyprland;
   scripts = import ./scripts.nix { inherit pkgs; };
   lockCmd = if option.lockscreen == "swaylock" then "/usr/bin/swaylock" else "hyprlock";
+
+  mon1 = option.monitors.left.name;
+  mon2 = option.monitors.middle.name;
+  mon3 = option.monitors.right.name;
 in
 {
   config = lib.mkIf option.enable {
-    wayland.windowManager.hyprland.settings = {
-      bindd = [
-        "$mainMod, Tab, Scroll window forward, layoutmsg, scrollwindow d"
-        "$mainMod SHIFT, Tab, Scroll window backward, layoutmsg, scrollwindow u"
-        "$mainMod, I, Cycle column width, layoutmsg, colresize +conf"
-        "$mainMod SHIFT, I, Cycle column width back, layoutmsg, colresize -conf"
-        "$mainMod, plus, Fit all visible columns, layoutmsg, fit visible"
-        "$mainMod SHIFT, plus, Fit active column, layoutmsg, fit active"
-        "$mainMod SHIFT CTRL, left, Swap column left, layoutmsg, swapcol l"
-        "$mainMod SHIFT CTRL, right, Swap column right, layoutmsg, swapcol r"
-        "$mainMod SHIFT, P, Promote to own column, layoutmsg, promote"
-        "$mainMod, space, Launch terminal, exec, $terminal"
-        "$mainMod ALT, space, Launch terminal, exec, [workspace unset] $terminal"
-        "$mainMod, C, Kill active window, killactive,"
-        "$mainMod SHIFT, L, Lock screen, exec, playerctl -a pause; ${lockCmd}"
-        "$mainMod, F12, Exit Hyprland, exit,"
-        "$mainMod SHIFT, F, Toggle floating, togglefloating,"
-        "$mainMod, D, Toggle menu, exec, ${scripts.toggleMenu}"
-        "$mainMod, escape, Toggle window, exec, ${scripts.toggleWindow} :;"
-        "$mainMod, B, Toggle Bluetooth, exec, ${scripts.toggleWindow} bluetuith"
-        "$mainMod, s, Toggle Spotify player, exec, ${scripts.toggleWindow} spotify_player"
-        "$mainMod, V, Toggle Pulse audio mixer, exec, ${scripts.toggleWindow} pulsemixer"
-        "$mainMod, M, Toggle htop, exec, ${scripts.toggleWindow} htop"
-        "$mainMod, G, Toggle ChatGPT, exec, ${scripts.toggleWindow} chatgpt"
-        ''$mainMod, O, Open my notes in obsidian, exec,  xdg-open "obsidian://open?vault=my-notes"''
-        ''
-          $mainMod, H, Toggle window, exec, ${scripts.toggleWindow} "${scripts.parseHotkeys} | fzf"''
-        ''
-          $mainMod, F7, Take screenshot, exec, grim -g "$(slurp)" - | swappy -f -''
-        ''
-          $mainMod, F8, Toggle record region to clipboard, exec, sh -c 'pidf=/tmp/wf-recorder-clip.pid; outdir=$HOME/Videos; mkdir -p "$outdir"; if [ -s "$pidf" ] && kill -0 "$(cat "$pidf")" 2>/dev/null; then kill -INT "$(cat "$pidf")"; exit; fi; f="$outdir/recording-$(date +%F_%H-%M-%S).mp4"; wf-recorder -g "$(slurp)" -f "$f" & pid=$!; echo "$pid" > "$pidf"; wait "$pid"; rm -f "$pidf"; printf "file://%s\n" "$(realpath "$f")" | wl-copy --type text/uri-list' ''
-        "$mainMod, A, Toggle fullscreen, fullscreen, 2"
-        "$mainMod, code:69, Focus monitor $monitor-1, focusmonitor, $monitor-1"
-        "$mainMod, code:70, Focus monitor $monitor-2, focusmonitor, $monitor-2"
-        "$mainMod, code:71, Focus monitor $monitor-3, focusmonitor, $monitor-3"
-        "$mainMod CTRL, left, Move window l, movewindow, l"
-        "$mainMod CTRL, right, Move window r, movewindow, r"
-        "$mainMod CTRL, up, Move window u, movewindow, u"
-        "$mainMod CTRL, down, Move window d, movewindow, d"
-        "$mainMod, left, Move focus l, movefocus, l"
-        "$mainMod, right, Move focus r, movefocus, r"
-        "$mainMod, up, Move focus u, movefocus, u"
-        "$mainMod, down, Move focus d, movefocus, d"
-        "$mainMod ALT, 1, Toggle special WS 1, togglespecialworkspace, 1"
-        "$mainMod ALT, 2, Toggle special WS 2, togglespecialworkspace, 2"
-        "$mainMod ALT, 3, Toggle special WS 3, togglespecialworkspace, 3"
-        "$mainMod ALT, 4, Toggle special WS 4, togglespecialworkspace, 4"
-        "$mainMod ALT, 5, Toggle special WS 5, togglespecialworkspace, 5"
-        "$mainMod ALT, 6, Toggle special WS 6, togglespecialworkspace, 6"
-        "$mainMod ALT, 7, Toggle special WS 7, togglespecialworkspace, 7"
-        "$mainMod ALT, 8, Toggle special WS 8, togglespecialworkspace, 8"
-        "$mainMod ALT, 9, Toggle special WS 9, togglespecialworkspace, 9"
-        "$mainMod ALT, 0, Toggle special WS 0, togglespecialworkspace, 0"
-        "$mainMod ALT CTRL, 1, Move to WS special:1, movetoworkspace, special:1"
-        "$mainMod ALT CTRL, 2, Move to WS special:2, movetoworkspace, special:2"
-        "$mainMod ALT CTRL, 3, Move to WS special:3, movetoworkspace, special:3"
-        "$mainMod ALT CTRL, 4, Move to WS special:4, movetoworkspace, special:4"
-        "$mainMod ALT CTRL, 5, Move to WS special:5, movetoworkspace, special:5"
-        "$mainMod ALT CTRL, 6, Move to WS special:6, movetoworkspace, special:6"
-        "$mainMod ALT CTRL, 7, Move to WS special:7, movetoworkspace, special:7"
-        "$mainMod ALT CTRL, 8, Move to WS special:8, movetoworkspace, special:8"
-        "$mainMod ALT CTRL, 9, Move to WS special:9, movetoworkspace, special:9"
-        "$mainMod ALT CTRL, 0, Move to WS special:0, movetoworkspace, special:0"
-        "$mainMod, 1, Focus WS 10 on current monitor, focusworkspaceoncurrentmonitor, 10"
-        "$mainMod, 2, Focus WS 20 on current monitor, focusworkspaceoncurrentmonitor, 20"
-        "$mainMod, 3, Focus WS 30 on current monitor, focusworkspaceoncurrentmonitor, 30"
-        "$mainMod, 4, Focus WS 40 on current monitor, focusworkspaceoncurrentmonitor, 40"
-        "$mainMod, 5, Focus WS 50 on current monitor, focusworkspaceoncurrentmonitor, 50"
-        "$mainMod, 6, Focus WS 60 on current monitor, focusworkspaceoncurrentmonitor, 60"
-        "$mainMod, 7, Focus WS 70 on current monitor, focusworkspaceoncurrentmonitor, 70"
-        "$mainMod, 8, Focus WS 80 on current monitor, focusworkspaceoncurrentmonitor, 80"
-        "$mainMod, 9, Focus WS 90 on current monitor, focusworkspaceoncurrentmonitor, 90"
-        "$mainMod, 0, Focus WS 100 on current monitor, focusworkspaceoncurrentmonitor, 100"
-        "$mainMod CTRL, 1, Move to WS 10, movetoworkspacesilent, 10"
-        "$mainMod CTRL, 2, Move to WS 20, movetoworkspacesilent, 20"
-        "$mainMod CTRL, 3, Move to WS 30, movetoworkspacesilent, 30"
-        "$mainMod CTRL, 4, Move to WS 40, movetoworkspacesilent, 40"
-        "$mainMod CTRL, 5, Move to WS 50, movetoworkspacesilent, 50"
-        "$mainMod CTRL, 6, Move to WS 60, movetoworkspacesilent, 60"
-        "$mainMod CTRL, 7, Move to WS 70, movetoworkspacesilent, 70"
-        "$mainMod CTRL, 8, Move to WS 80, movetoworkspacesilent, 80"
-        "$mainMod CTRL, 9, Move to WS 90, movetoworkspacesilent, 90"
-        "$mainMod CTRL, 0, Move to WS 100, movetoworkspacesilent, 100"
-        "$mainMod SHIFT, 1, Focus WS 11 on current monitor, focusworkspaceoncurrentmonitor, 11"
-        "$mainMod SHIFT, 2, Focus WS 21 on current monitor, focusworkspaceoncurrentmonitor, 21"
-        "$mainMod SHIFT, 3, Focus WS 31 on current monitor, focusworkspaceoncurrentmonitor, 31"
-        "$mainMod SHIFT, 4, Focus WS 41 on current monitor, focusworkspaceoncurrentmonitor, 41"
-        "$mainMod SHIFT, 5, Focus WS 51 on current monitor, focusworkspaceoncurrentmonitor, 51"
-        "$mainMod SHIFT, 6, Focus WS 61 on current monitor, focusworkspaceoncurrentmonitor, 61"
-        "$mainMod SHIFT, 7, Focus WS 71 on current monitor, focusworkspaceoncurrentmonitor, 71"
-        "$mainMod SHIFT, 8, Focus WS 81 on current monitor, focusworkspaceoncurrentmonitor, 81"
-        "$mainMod SHIFT, 9, Focus WS 91 on current monitor, focusworkspaceoncurrentmonitor, 91"
-        "$mainMod SHIFT, 0, Focus WS 101 on current monitor, focusworkspaceoncurrentmonitor, 101"
-        "$mainMod SHIFT CTRL, 1, Move to WS 11, movetoworkspacesilent, 11"
-        "$mainMod SHIFT CTRL, 2, Move to WS 21, movetoworkspacesilent, 21"
-        "$mainMod SHIFT CTRL, 3, Move to WS 31, movetoworkspacesilent, 31"
-        "$mainMod SHIFT CTRL, 4, Move to WS 41, movetoworkspacesilent, 41"
-        "$mainMod SHIFT CTRL, 5, Move to WS 51, movetoworkspacesilent, 51"
-        "$mainMod SHIFT CTRL, 6, Move to WS 61, movetoworkspacesilent, 61"
-        "$mainMod SHIFT CTRL, 7, Move to WS 71, movetoworkspacesilent, 71"
-        "$mainMod SHIFT CTRL, 8, Move to WS 81, movetoworkspacesilent, 81"
-        "$mainMod SHIFT CTRL, 9, Move to WS 91, movetoworkspacesilent, 91"
-        "$mainMod SHIFT CTRL, 0, Move to WS 101, movetoworkspacesilent, 101"
-        "$mainMod SHIFT CTRL, C, Execute command, exec, bash -c"
-      ];
-      bindm = [
-        "$mainMod, mouse:272, movewindow"
-        "$mainMod, mouse:273, resizewindow"
-      ];
-    };
+    module.hyprland.luaConfig = lib.mkOrder 300 ''
+      -- ══════════════════════════════════════
+      -- Keybinds
+      -- ══════════════════════════════════════
+      local mainMod = "SUPER"
+
+      -- Scrolling layout
+      hl.bind(mainMod .. " + Tab", hl.dsp.layout_msg("scrollwindow d"), { description = "Scroll window forward" })
+      hl.bind(mainMod .. " + SHIFT + Tab", hl.dsp.layout_msg("scrollwindow u"), { description = "Scroll window backward" })
+      hl.bind(mainMod .. " + I", hl.dsp.layout_msg("colresize +conf"), { description = "Cycle column width" })
+      hl.bind(mainMod .. " + SHIFT + I", hl.dsp.layout_msg("colresize -conf"), { description = "Cycle column width back" })
+      hl.bind(mainMod .. " + plus", hl.dsp.layout_msg("fit visible"), { description = "Fit all visible columns" })
+      hl.bind(mainMod .. " + SHIFT + plus", hl.dsp.layout_msg("fit active"), { description = "Fit active column" })
+      hl.bind(mainMod .. " + SHIFT + CTRL + left", hl.dsp.layout_msg("swapcol l"), { description = "Swap column left" })
+      hl.bind(mainMod .. " + SHIFT + CTRL + right", hl.dsp.layout_msg("swapcol r"), { description = "Swap column right" })
+      hl.bind(mainMod .. " + SHIFT + P", hl.dsp.layout_msg("promote"), { description = "Promote to own column" })
+
+      -- Launch / kill
+      hl.bind(mainMod .. " + space", hl.dsp.exec_cmd("alacritty"), { description = "Launch terminal" })
+      hl.bind(mainMod .. " + ALT + space", hl.dsp.exec_cmd("[workspace unset] alacritty"), { description = "Launch terminal" })
+      hl.bind(mainMod .. " + C", hl.dsp.kill_active(), { description = "Kill active window" })
+      hl.bind(mainMod .. " + SHIFT + L", function()
+        hl.dispatch(hl.dsp.exec_cmd("playerctl -a pause; ${lockCmd}"))
+      end, { description = "Lock screen" })
+      hl.bind(mainMod .. " + F12", hl.dsp.exit(), { description = "Exit Hyprland" })
+      hl.bind(mainMod .. " + SHIFT + F", hl.dsp.window.float({ action = "toggle" }), { description = "Toggle floating" })
+
+      -- App toggles
+      hl.bind(mainMod .. " + D", hl.dsp.exec_cmd("${scripts.toggleMenu}"), { description = "Toggle menu" })
+      hl.bind(mainMod .. " + escape", hl.dsp.exec_cmd("${scripts.toggleWindow} :;"), { description = "Toggle window" })
+      hl.bind(mainMod .. " + B", hl.dsp.exec_cmd("${scripts.toggleWindow} bluetuith"), { description = "Toggle Bluetooth" })
+      hl.bind(mainMod .. " + s", hl.dsp.exec_cmd("${scripts.toggleWindow} spotify_player"), { description = "Toggle Spotify player" })
+      hl.bind(mainMod .. " + V", hl.dsp.exec_cmd("${scripts.toggleWindow} pulsemixer"), { description = "Toggle Pulse audio mixer" })
+      hl.bind(mainMod .. " + M", hl.dsp.exec_cmd("${scripts.toggleWindow} htop"), { description = "Toggle htop" })
+      hl.bind(mainMod .. " + G", hl.dsp.exec_cmd("${scripts.toggleWindow} chatgpt"), { description = "Toggle ChatGPT" })
+      hl.bind(mainMod .. " + O", hl.dsp.exec_cmd('xdg-open "obsidian://open?vault=my-notes"'), { description = "Open my notes in obsidian" })
+      hl.bind(mainMod .. " + H", hl.dsp.exec_cmd('${scripts.toggleWindow} "${scripts.parseHotkeys} | fzf"'), { description = "Toggle window" })
+
+      -- Screenshot / recording
+      hl.bind(mainMod .. " + F7", hl.dsp.exec_cmd('grim -g "$(slurp)" - | swappy -f -'), { description = "Take screenshot" })
+      hl.bind(mainMod .. " + F8", hl.dsp.exec_cmd([[sh -c 'pidf=/tmp/wf-recorder-clip.pid; outdir=$HOME/Videos; mkdir -p "$outdir"; if [ -s "$pidf" ] && kill -0 "$(cat "$pidf")" 2>/dev/null; then kill -INT "$(cat "$pidf")"; exit; fi; f="$outdir/recording-$(date +%F_%H-%M-%S).mp4"; wf-recorder -g "$(slurp)" -f "$f" & pid=$!; echo "$pid" > "$pidf"; wait "$pid"; rm -f "$pidf"; printf "file://%s\n" "$(realpath "$f")" | wl-copy --type text/uri-list']]), { description = "Toggle record region to clipboard" })
+
+      -- Fullscreen
+      hl.bind(mainMod .. " + A", hl.dsp.fullscreen(2), { description = "Toggle fullscreen" })
+
+      -- Monitor focus
+      hl.bind(mainMod .. " + code:69", hl.dsp.focus_monitor("${mon1}"), { description = "Focus monitor ${mon1}" })
+      hl.bind(mainMod .. " + code:70", hl.dsp.focus_monitor("${mon2}"), { description = "Focus monitor ${mon2}" })
+      hl.bind(mainMod .. " + code:71", hl.dsp.focus_monitor("${mon3}"), { description = "Focus monitor ${mon3}" })
+
+      -- Move window
+      hl.bind(mainMod .. " + CTRL + left", hl.dsp.move_window("l"), { description = "Move window l" })
+      hl.bind(mainMod .. " + CTRL + right", hl.dsp.move_window("r"), { description = "Move window r" })
+      hl.bind(mainMod .. " + CTRL + up", hl.dsp.move_window("u"), { description = "Move window u" })
+      hl.bind(mainMod .. " + CTRL + down", hl.dsp.move_window("d"), { description = "Move window d" })
+
+      -- Move focus
+      hl.bind(mainMod .. " + left", hl.dsp.move_focus("l"), { description = "Move focus l" })
+      hl.bind(mainMod .. " + right", hl.dsp.move_focus("r"), { description = "Move focus r" })
+      hl.bind(mainMod .. " + up", hl.dsp.move_focus("u"), { description = "Move focus u" })
+      hl.bind(mainMod .. " + down", hl.dsp.move_focus("d"), { description = "Move focus d" })
+
+      -- Special workspaces (ALT + 0-9)
+      ${lib.concatStringsSep "\n" (map (n: ''hl.bind(mainMod .. " + ALT + ${toString n}", hl.dsp.toggle_special_workspace("${toString n}"), { description = "Toggle special WS ${toString n}" })'') (lib.range 0 9))}
+
+      -- Move to special workspaces (ALT + CTRL + 0-9)
+      ${lib.concatStringsSep "\n" (map (n: ''hl.bind(mainMod .. " + ALT + CTRL + ${toString n}", hl.dsp.move_to_workspace("special:${toString n}"), { description = "Move to WS special:${toString n}" })'') (lib.range 0 9))}
+
+      -- Workspaces (1-0 -> 10,20..100)
+      ${lib.concatStringsSep "\n" (map (n:
+        let ws = toString (n * 10); key = toString (lib.mod n 10);
+        in ''hl.bind(mainMod .. " + ${key}", hl.dsp.focus_workspace_on_current_monitor(${ws}), { description = "Focus WS ${ws} on current monitor" })''
+      ) (lib.range 1 10))}
+
+      -- Move to workspaces (CTRL + 1-0 -> 10,20..100)
+      ${lib.concatStringsSep "\n" (map (n:
+        let ws = toString (n * 10); key = toString (lib.mod n 10);
+        in ''hl.bind(mainMod .. " + CTRL + ${key}", hl.dsp.move_to_workspace_silent(${ws}), { description = "Move to WS ${ws}" })''
+      ) (lib.range 1 10))}
+
+      -- Shift workspaces (SHIFT + 1-0 -> 11,21..101)
+      ${lib.concatStringsSep "\n" (map (n:
+        let ws = toString (n * 10 + 1); key = toString (lib.mod n 10);
+        in ''hl.bind(mainMod .. " + SHIFT + ${key}", hl.dsp.focus_workspace_on_current_monitor(${ws}), { description = "Focus WS ${ws} on current monitor" })''
+      ) (lib.range 1 10))}
+
+      -- Move to shift workspaces (SHIFT + CTRL + 1-0 -> 11,21..101)
+      ${lib.concatStringsSep "\n" (map (n:
+        let ws = toString (n * 10 + 1); key = toString (lib.mod n 10);
+        in ''hl.bind(mainMod .. " + SHIFT + CTRL + ${key}", hl.dsp.move_to_workspace_silent(${ws}), { description = "Move to WS ${ws}" })''
+      ) (lib.range 1 10))}
+
+      -- Execute command
+      hl.bind(mainMod .. " + SHIFT + CTRL + C", hl.dsp.exec_cmd("bash -c"), { description = "Execute command" })
+
+      -- Mouse binds
+      hl.bind(mainMod .. " + mouse:272", hl.dsp.window.drag(), { mouse = true })
+      hl.bind(mainMod .. " + mouse:273", hl.dsp.window.resize(), { mouse = true })
+    '';
   };
 }

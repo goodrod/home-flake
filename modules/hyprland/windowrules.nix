@@ -1,63 +1,73 @@
 { config, lib, ... }:
 let
   option = config.module.hyprland;
+
+  browserRegexp = "firefox_firefox|firefox|Chromium|vivaldi-stable|Mullvad Browser|google-chrome|Google-chrome";
+  chatRegexp = "discord|vesktop|Slack|.*teams.*|.*outlook.*|chrome-chat.google.com.*";
+  terminalRegexp = "Alacritty";
+  productivityRegexp = "everdo|obsidian";
+  musicRegexp = ".*Spotify.*";
+  gamingRegexp = "steam";
+  settingsRegexp = "com.saivert.pwvucontrol";
+  devtoolRegexp = "com.saivert.pwvucontrol|bruno";
+  mailRegexp = "chrome-mail.google.com.*|chrome-calendar.google.com.*";
+  programmingRegexp = "code-url-handler|jetbrains-rider|jetbrains-idea|Godot|kiro";
 in
 {
   config = lib.mkIf option.enable {
-    wayland.windowManager.hyprland.settings = {
-      "$browserRegexp" = "firefox_firefox|firefox|Chromium|vivaldi-stable|Mullvad Browser|google-chrome|Google-chrome";
-      "$chatRegexp" = "discord|vesktop|Slack|.*teams.*|.*outlook.*|chrome-chat.google.com.*";
-      "$terminalRegexp" = "Alacritty";
-      "$productivityRegexp" = "everdo|obsidian";
-      "$musicRegexp" = ".*Spotify.*";
-      "$gamingRegexp" = "steam";
-      "$settingsRegexp" = "com.saivert.pwvucontrol";
-      "$devtoolRegexp" = "com.saivert.pwvucontrol|bruno";
-      "$mailRegexp" = "chrome-mail.google.com.*|chrome-calendar.google.com.*";
-      "$programmingRegexp" = "code-url-handler|jetbrains-rider|jetbrains-idea|Godot|kiro";
+    module.hyprland.luaConfig = lib.mkOrder 400 ''
+      -- ══════════════════════════════════════
+      -- Window Rules
+      -- ══════════════════════════════════════
 
-      windowrule = [
-        "tag +jb, match:class ^jetbrains-.+$,match:float true"
-        "no_focus on,match:class ^$,match:title ^$,match:xwayland true,match:float true,match:fullscreen false, match:pin false"
-        "suppress_event maximize center, match:class .*"
-        "tag +devtool,match:class $devtoolRegexp"
-        "tag +mail,match:class $mailRegexp"
-        "tag +music,match:title $musicRegexp"
-        "tag +gaming,match:class $gamingRegexp"
-        "tag +browser,match:class $browserRegexp"
-        "tag +productivity,match:class $productivityRegexp"
-        "tag +chat,match:class $chatRegexp"
-        "tag +chat,match:initial_title $chatRegexp"
-        "tag +coding,match:class $programmingRegexp"
-        "tag +term,match:class $terminalRegexp"
-        "workspace 10 silent,match:tag devtool"
-        "workspace 20 silent,match:tag music"
-        "workspace 30 silent,match:tag gaming"
-        "workspace 40 silent,match:tag mail"
-        "workspace 50 silent,match:tag productivity"
-        "workspace 60 silent,match:tag chat"
-        "workspace 70 silent,match:tag coding"
-        "workspace 80 silent,match:tag term"
-        "workspace 90 silent,match:tag browser"
-        "float on,match:class toggle-window"
-        "pin on,match:class toggle-window"
-        "size monitor_w*0.50 monitor_h*0.50,match:class toggle-window"
-        "move monitor_w*0.25 monitor_h*0.25,match:class toggle-window"
-        "size monitor_w*0.50 monitor_h*0.50,match:tag jb,match:float true"
-        "move monitor_w*0.25 monitor_h*0.25,match:tag jb,match:float true"
-      ];
+      -- JetBrains floating popups
+      hl.window_rule({ match = { class = "^jetbrains-.+$", float = true }, tag = "+jb" })
 
-      workspace = lib.mkMerge [
-        (lib.mkIf option.monitors.left.enable [
-          "10, monitor:${option.monitors.left.name}, default:true"
-        ])
-        (lib.mkIf option.monitors.middle.enable [
-          "20, monitor:${option.monitors.middle.name}, default:true"
-        ])
-        (lib.mkIf option.monitors.right.enable [
-          "30, monitor:${option.monitors.right.name}, default:true"
-        ])
-      ];
-    };
+      -- Ignore empty xwayland windows
+      hl.window_rule({ match = { class = "^$", title = "^$", xwayland = true, float = true, fullscreen = false, pin = false }, no_focus = true })
+
+      -- Suppress maximize/center for all
+      hl.window_rule({ match = { class = ".*" }, suppress_event = "maximize center" })
+
+      -- Tags for app categories
+      hl.window_rule({ match = { class = "${devtoolRegexp}" }, tag = "+devtool" })
+      hl.window_rule({ match = { class = "${mailRegexp}" }, tag = "+mail" })
+      hl.window_rule({ match = { title = "${musicRegexp}" }, tag = "+music" })
+      hl.window_rule({ match = { class = "${gamingRegexp}" }, tag = "+gaming" })
+      hl.window_rule({ match = { class = "${browserRegexp}" }, tag = "+browser" })
+      hl.window_rule({ match = { class = "${productivityRegexp}" }, tag = "+productivity" })
+      hl.window_rule({ match = { class = "${chatRegexp}" }, tag = "+chat" })
+      hl.window_rule({ match = { initial_title = "${chatRegexp}" }, tag = "+chat" })
+      hl.window_rule({ match = { class = "${programmingRegexp}" }, tag = "+coding" })
+      hl.window_rule({ match = { class = "${terminalRegexp}" }, tag = "+term" })
+
+      -- Workspace assignments by tag
+      hl.window_rule({ match = { tag = "devtool" }, workspace = "10 silent" })
+      hl.window_rule({ match = { tag = "music" }, workspace = "20 silent" })
+      hl.window_rule({ match = { tag = "gaming" }, workspace = "30 silent" })
+      hl.window_rule({ match = { tag = "mail" }, workspace = "40 silent" })
+      hl.window_rule({ match = { tag = "productivity" }, workspace = "50 silent" })
+      hl.window_rule({ match = { tag = "chat" }, workspace = "60 silent" })
+      hl.window_rule({ match = { tag = "coding" }, workspace = "70 silent" })
+      hl.window_rule({ match = { tag = "term" }, workspace = "80 silent" })
+      hl.window_rule({ match = { tag = "browser" }, workspace = "90 silent" })
+
+      -- Toggle window rules
+      hl.window_rule({ match = { class = "toggle-window" }, float = true })
+      hl.window_rule({ match = { class = "toggle-window" }, pin = true })
+      hl.window_rule({ match = { class = "toggle-window" }, size = {"monitor_w*0.50", "monitor_h*0.50"} })
+      hl.window_rule({ match = { class = "toggle-window" }, move = {"monitor_w*0.25", "monitor_h*0.25"} })
+
+      -- JetBrains floating popup sizing
+      hl.window_rule({ match = { tag = "jb", float = true }, size = {"monitor_w*0.50", "monitor_h*0.50"} })
+      hl.window_rule({ match = { tag = "jb", float = true }, move = {"monitor_w*0.25", "monitor_h*0.25"} })
+
+      -- ══════════════════════════════════════
+      -- Workspace Rules (monitor binding)
+      -- ══════════════════════════════════════
+      ${lib.optionalString option.monitors.left.enable ''hl.workspace_rule("10", { monitor = "${option.monitors.left.name}", default = true })''}
+      ${lib.optionalString option.monitors.middle.enable ''hl.workspace_rule("20", { monitor = "${option.monitors.middle.name}", default = true })''}
+      ${lib.optionalString option.monitors.right.enable ''hl.workspace_rule("30", { monitor = "${option.monitors.right.name}", default = true })''}
+    '';
   };
 }
