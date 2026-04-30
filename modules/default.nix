@@ -1,7 +1,9 @@
-{ pkgs, config, ... }:
-
 {
-  home.stateVersion = "23.11";
+  pkgs,
+  config,
+  ...
+}: {
+  home.stateVersion = "26.05";
 
   imports = [
     ./bruno
