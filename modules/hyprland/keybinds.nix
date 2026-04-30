@@ -17,93 +17,93 @@ in
       local mainMod = "SUPER"
 
       -- Scrolling layout
-      hl.bind(mainMod .. " + Tab", hl.dsp.layout_msg("scrollwindow d"), { description = "Scroll window forward" })
-      hl.bind(mainMod .. " + SHIFT + Tab", hl.dsp.layout_msg("scrollwindow u"), { description = "Scroll window backward" })
-      hl.bind(mainMod .. " + I", hl.dsp.layout_msg("colresize +conf"), { description = "Cycle column width" })
-      hl.bind(mainMod .. " + SHIFT + I", hl.dsp.layout_msg("colresize -conf"), { description = "Cycle column width back" })
-      hl.bind(mainMod .. " + plus", hl.dsp.layout_msg("fit visible"), { description = "Fit all visible columns" })
-      hl.bind(mainMod .. " + SHIFT + plus", hl.dsp.layout_msg("fit active"), { description = "Fit active column" })
-      hl.bind(mainMod .. " + SHIFT + CTRL + left", hl.dsp.layout_msg("swapcol l"), { description = "Swap column left" })
-      hl.bind(mainMod .. " + SHIFT + CTRL + right", hl.dsp.layout_msg("swapcol r"), { description = "Swap column right" })
-      hl.bind(mainMod .. " + SHIFT + P", hl.dsp.layout_msg("promote"), { description = "Promote to own column" })
+      hl.bind(mainMod .. " + Tab", hl.dsp.layout("move +col"), { description = "Scroll window forward" })
+      hl.bind(mainMod .. " + SHIFT + Tab", hl.dsp.layout("move -col"), { description = "Scroll window backward" })
+      hl.bind(mainMod .. " + I", hl.dsp.layout("colresize +conf"), { description = "Cycle column width" })
+      hl.bind(mainMod .. " + SHIFT + I", hl.dsp.layout("colresize -conf"), { description = "Cycle column width back" })
+      hl.bind(mainMod .. " + plus", hl.dsp.layout("fit visible"), { description = "Fit all visible columns" })
+      hl.bind(mainMod .. " + SHIFT + plus", hl.dsp.layout("fit active"), { description = "Fit active column" })
+      hl.bind(mainMod .. " + SHIFT + CTRL + left", hl.dsp.layout("swapcol l"), { description = "Swap column left" })
+      hl.bind(mainMod .. " + SHIFT + CTRL + right", hl.dsp.layout("swapcol r"), { description = "Swap column right" })
+      hl.bind(mainMod .. " + SHIFT + P", hl.dsp.layout("promote"), { description = "Promote to own column" })
 
       -- Launch / kill
-      hl.bind(mainMod .. " + space", hl.dsp.exec_cmd("alacritty"), { description = "Launch terminal" })
-      hl.bind(mainMod .. " + ALT + space", hl.dsp.exec_cmd("[workspace unset] alacritty"), { description = "Launch terminal" })
-      hl.bind(mainMod .. " + C", hl.dsp.kill_active(), { description = "Kill active window" })
+      hl.bind(mainMod .. " + space", hl.dsp.exec_cmd({cmd = "alacritty"}), { description = "Launch terminal" })
+      hl.bind(mainMod .. " + ALT + space", hl.dsp.exec_cmd({cmd = "[workspace unset] alacritty"}), { description = "Launch terminal" })
+      hl.bind(mainMod .. " + C", hl.dsp.window.kill(), { description = "Kill active window" })
       hl.bind(mainMod .. " + SHIFT + L", function()
-        hl.dispatch(hl.dsp.exec_cmd("playerctl -a pause; ${lockCmd}"))
+        hl.dispatch(hl.dsp.exec_cmd({cmd = "playerctl -a pause; ${lockCmd}"}))
       end, { description = "Lock screen" })
       hl.bind(mainMod .. " + F12", hl.dsp.exit(), { description = "Exit Hyprland" })
       hl.bind(mainMod .. " + SHIFT + F", hl.dsp.window.float({ action = "toggle" }), { description = "Toggle floating" })
 
       -- App toggles
-      hl.bind(mainMod .. " + D", hl.dsp.exec_cmd("${scripts.toggleMenu}"), { description = "Toggle menu" })
-      hl.bind(mainMod .. " + escape", hl.dsp.exec_cmd("${scripts.toggleWindow} :;"), { description = "Toggle window" })
-      hl.bind(mainMod .. " + B", hl.dsp.exec_cmd("${scripts.toggleWindow} bluetuith"), { description = "Toggle Bluetooth" })
-      hl.bind(mainMod .. " + s", hl.dsp.exec_cmd("${scripts.toggleWindow} spotify_player"), { description = "Toggle Spotify player" })
-      hl.bind(mainMod .. " + V", hl.dsp.exec_cmd("${scripts.toggleWindow} pulsemixer"), { description = "Toggle Pulse audio mixer" })
-      hl.bind(mainMod .. " + M", hl.dsp.exec_cmd("${scripts.toggleWindow} htop"), { description = "Toggle htop" })
-      hl.bind(mainMod .. " + G", hl.dsp.exec_cmd("${scripts.toggleWindow} chatgpt"), { description = "Toggle ChatGPT" })
-      hl.bind(mainMod .. " + O", hl.dsp.exec_cmd('xdg-open "obsidian://open?vault=my-notes"'), { description = "Open my notes in obsidian" })
-      hl.bind(mainMod .. " + H", hl.dsp.exec_cmd('${scripts.toggleWindow} "${scripts.parseHotkeys} | fzf"'), { description = "Toggle window" })
+      hl.bind(mainMod .. " + D", hl.dsp.exec_cmd({cmd = "${scripts.toggleMenu}"}), { description = "Toggle menu" })
+      hl.bind(mainMod .. " + escape", hl.dsp.exec_cmd({cmd = "${scripts.toggleWindow} :;"}), { description = "Toggle window" })
+      hl.bind(mainMod .. " + B", hl.dsp.exec_cmd({cmd = "${scripts.toggleWindow} bluetuith"}), { description = "Toggle Bluetooth" })
+      hl.bind(mainMod .. " + s", hl.dsp.exec_cmd({cmd = "${scripts.toggleWindow} spotify_player"}), { description = "Toggle Spotify player" })
+      hl.bind(mainMod .. " + V", hl.dsp.exec_cmd({cmd = "${scripts.toggleWindow} pulsemixer"}), { description = "Toggle Pulse audio mixer" })
+      hl.bind(mainMod .. " + M", hl.dsp.exec_cmd({cmd = "${scripts.toggleWindow} htop"}), { description = "Toggle htop" })
+      hl.bind(mainMod .. " + G", hl.dsp.exec_cmd({cmd = "${scripts.toggleWindow} chatgpt"}), { description = "Toggle ChatGPT" })
+      hl.bind(mainMod .. " + O", hl.dsp.exec_cmd({cmd = 'xdg-open "obsidian://open?vault=my-notes"'}), { description = "Open my notes in obsidian" })
+      hl.bind(mainMod .. " + H", hl.dsp.exec_cmd({cmd = '${scripts.toggleWindow} "${scripts.parseHotkeys} | fzf"'}), { description = "Toggle window" })
 
       -- Screenshot / recording
-      hl.bind(mainMod .. " + F7", hl.dsp.exec_cmd('grim -g "$(slurp)" - | swappy -f -'), { description = "Take screenshot" })
-      hl.bind(mainMod .. " + F8", hl.dsp.exec_cmd([[sh -c 'pidf=/tmp/wf-recorder-clip.pid; outdir=$HOME/Videos; mkdir -p "$outdir"; if [ -s "$pidf" ] && kill -0 "$(cat "$pidf")" 2>/dev/null; then kill -INT "$(cat "$pidf")"; exit; fi; f="$outdir/recording-$(date +%F_%H-%M-%S).mp4"; wf-recorder -g "$(slurp)" -f "$f" & pid=$!; echo "$pid" > "$pidf"; wait "$pid"; rm -f "$pidf"; printf "file://%s\n" "$(realpath "$f")" | wl-copy --type text/uri-list']]), { description = "Toggle record region to clipboard" })
+      hl.bind(mainMod .. " + F7", hl.dsp.exec_cmd({cmd = 'grim -g "$(slurp)" - | swappy -f -'}), { description = "Take screenshot" })
+      hl.bind(mainMod .. " + F8", hl.dsp.exec_cmd({cmd = [[sh -c 'pidf=/tmp/wf-recorder-clip.pid; outdir=$HOME/Videos; mkdir -p "$outdir"; if [ -s "$pidf" ] && kill -0 "$(cat "$pidf")" 2>/dev/null; then kill -INT "$(cat "$pidf")"; exit; fi; f="$outdir/recording-$(date +%F_%H-%M-%S).mp4"; wf-recorder -g "$(slurp)" -f "$f" & pid=$!; echo "$pid" > "$pidf"; wait "$pid"; rm -f "$pidf"; printf "file://%s\n" "$(realpath "$f")" | wl-copy --type text/uri-list']]}), { description = "Toggle record region to clipboard" })
 
       -- Fullscreen
-      hl.bind(mainMod .. " + A", hl.dsp.fullscreen(2), { description = "Toggle fullscreen" })
+      hl.bind(mainMod .. " + A", hl.dsp.window.fullscreen({mode = "fullscreen"}), { description = "Toggle fullscreen" })
 
       -- Monitor focus
-      hl.bind(mainMod .. " + code:69", hl.dsp.focus_monitor("${mon1}"), { description = "Focus monitor ${mon1}" })
-      hl.bind(mainMod .. " + code:70", hl.dsp.focus_monitor("${mon2}"), { description = "Focus monitor ${mon2}" })
-      hl.bind(mainMod .. " + code:71", hl.dsp.focus_monitor("${mon3}"), { description = "Focus monitor ${mon3}" })
+      hl.bind(mainMod .. " + code:69", hl.dsp.focus({monitor = "${mon1}"}), { description = "Focus monitor ${mon1}" })
+      hl.bind(mainMod .. " + code:70", hl.dsp.focus({monitor = "${mon2}"}), { description = "Focus monitor ${mon2}" })
+      hl.bind(mainMod .. " + code:71", hl.dsp.focus({monitor = "${mon3}"}), { description = "Focus monitor ${mon3}" })
 
       -- Move window
-      hl.bind(mainMod .. " + CTRL + left", hl.dsp.move_window("l"), { description = "Move window l" })
-      hl.bind(mainMod .. " + CTRL + right", hl.dsp.move_window("r"), { description = "Move window r" })
-      hl.bind(mainMod .. " + CTRL + up", hl.dsp.move_window("u"), { description = "Move window u" })
-      hl.bind(mainMod .. " + CTRL + down", hl.dsp.move_window("d"), { description = "Move window d" })
+      hl.bind(mainMod .. " + CTRL + left", hl.dsp.window.move({direction = "l"}), { description = "Move window l" })
+      hl.bind(mainMod .. " + CTRL + right", hl.dsp.window.move({direction = "r"}), { description = "Move window r" })
+      hl.bind(mainMod .. " + CTRL + up", hl.dsp.window.move({direction = "u"}), { description = "Move window u" })
+      hl.bind(mainMod .. " + CTRL + down", hl.dsp.window.move({direction = "d"}), { description = "Move window d" })
 
       -- Move focus
-      hl.bind(mainMod .. " + left", hl.dsp.move_focus("l"), { description = "Move focus l" })
-      hl.bind(mainMod .. " + right", hl.dsp.move_focus("r"), { description = "Move focus r" })
-      hl.bind(mainMod .. " + up", hl.dsp.move_focus("u"), { description = "Move focus u" })
-      hl.bind(mainMod .. " + down", hl.dsp.move_focus("d"), { description = "Move focus d" })
+      hl.bind(mainMod .. " + left", hl.dsp.focus({direction = "l"}), { description = "Move focus l" })
+      hl.bind(mainMod .. " + right", hl.dsp.focus({direction = "r"}), { description = "Move focus r" })
+      hl.bind(mainMod .. " + up", hl.dsp.focus({direction = "u"}), { description = "Move focus u" })
+      hl.bind(mainMod .. " + down", hl.dsp.focus({direction = "d"}), { description = "Move focus d" })
 
       -- Special workspaces (ALT + 0-9)
-      ${lib.concatStringsSep "\n" (map (n: ''hl.bind(mainMod .. " + ALT + ${toString n}", hl.dsp.toggle_special_workspace("${toString n}"), { description = "Toggle special WS ${toString n}" })'') (lib.range 0 9))}
+      ${lib.concatStringsSep "\n" (map (n: ''hl.bind(mainMod .. " + ALT + ${toString n}", hl.dsp.workspace.toggle_special("${toString n}"), { description = "Toggle special WS ${toString n}" })'') (lib.range 0 9))}
 
       -- Move to special workspaces (ALT + CTRL + 0-9)
-      ${lib.concatStringsSep "\n" (map (n: ''hl.bind(mainMod .. " + ALT + CTRL + ${toString n}", hl.dsp.move_to_workspace("special:${toString n}"), { description = "Move to WS special:${toString n}" })'') (lib.range 0 9))}
+      ${lib.concatStringsSep "\n" (map (n: ''hl.bind(mainMod .. " + ALT + CTRL + ${toString n}", hl.dsp.window.move({workspace = "special:${toString n}"}), { description = "Move to WS special:${toString n}" })'') (lib.range 0 9))}
 
       -- Workspaces (1-0 -> 10,20..100)
       ${lib.concatStringsSep "\n" (map (n:
         let ws = toString (n * 10); key = toString (lib.mod n 10);
-        in ''hl.bind(mainMod .. " + ${key}", hl.dsp.focus_workspace_on_current_monitor(${ws}), { description = "Focus WS ${ws} on current monitor" })''
+        in ''hl.bind(mainMod .. " + ${key}", hl.dsp.focus({workspace = ${ws}, on_current_monitor = true}), { description = "Focus WS ${ws} on current monitor" })''
       ) (lib.range 1 10))}
 
       -- Move to workspaces (CTRL + 1-0 -> 10,20..100)
       ${lib.concatStringsSep "\n" (map (n:
         let ws = toString (n * 10); key = toString (lib.mod n 10);
-        in ''hl.bind(mainMod .. " + CTRL + ${key}", hl.dsp.move_to_workspace_silent(${ws}), { description = "Move to WS ${ws}" })''
+        in ''hl.bind(mainMod .. " + CTRL + ${key}", hl.dsp.window.move({workspace = ${ws}, follow = false}), { description = "Move to WS ${ws}" })''
       ) (lib.range 1 10))}
 
       -- Shift workspaces (SHIFT + 1-0 -> 11,21..101)
       ${lib.concatStringsSep "\n" (map (n:
         let ws = toString (n * 10 + 1); key = toString (lib.mod n 10);
-        in ''hl.bind(mainMod .. " + SHIFT + ${key}", hl.dsp.focus_workspace_on_current_monitor(${ws}), { description = "Focus WS ${ws} on current monitor" })''
+        in ''hl.bind(mainMod .. " + SHIFT + ${key}", hl.dsp.focus({workspace = ${ws}, on_current_monitor = true}), { description = "Focus WS ${ws} on current monitor" })''
       ) (lib.range 1 10))}
 
       -- Move to shift workspaces (SHIFT + CTRL + 1-0 -> 11,21..101)
       ${lib.concatStringsSep "\n" (map (n:
         let ws = toString (n * 10 + 1); key = toString (lib.mod n 10);
-        in ''hl.bind(mainMod .. " + SHIFT + CTRL + ${key}", hl.dsp.move_to_workspace_silent(${ws}), { description = "Move to WS ${ws}" })''
+        in ''hl.bind(mainMod .. " + SHIFT + CTRL + ${key}", hl.dsp.window.move({workspace = ${ws}, follow = false}), { description = "Move to WS ${ws}" })''
       ) (lib.range 1 10))}
 
       -- Execute command
-      hl.bind(mainMod .. " + SHIFT + CTRL + C", hl.dsp.exec_cmd("bash -c"), { description = "Execute command" })
+      hl.bind(mainMod .. " + SHIFT + CTRL + C", hl.dsp.exec_cmd({cmd = "bash -c"}), { description = "Execute command" })
 
       -- Mouse binds
       hl.bind(mainMod .. " + mouse:272", hl.dsp.window.drag(), { mouse = true })

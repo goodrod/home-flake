@@ -65,9 +65,9 @@ in
       -- ══════════════════════════════════════
       -- Workspace Rules (monitor binding)
       -- ══════════════════════════════════════
-      ${lib.optionalString option.monitors.left.enable ''hl.workspace_rule("10", { monitor = "${option.monitors.left.name}", default = true })''}
-      ${lib.optionalString option.monitors.middle.enable ''hl.workspace_rule("20", { monitor = "${option.monitors.middle.name}", default = true })''}
-      ${lib.optionalString option.monitors.right.enable ''hl.workspace_rule("30", { monitor = "${option.monitors.right.name}", default = true })''}
+      ${lib.optionalString option.monitors.left.enable ''hl.workspace_rule({ workspace = "10", monitor = "${option.monitors.left.name}", default = true })''}
+      ${lib.optionalString option.monitors.middle.enable ''hl.workspace_rule({ workspace = "20", monitor = "${option.monitors.middle.name}", default = true })''}
+      ${lib.optionalString option.monitors.right.enable ''hl.workspace_rule({ workspace = "30", monitor = "${option.monitors.right.name}", default = true })''}
     '';
   };
 }

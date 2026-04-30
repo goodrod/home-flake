@@ -25,13 +25,13 @@ let
     ++ [ ''
       hl.monitor({
         output = "Unknown-1",
-        mode = "disable",
+        disabled = true,
       })
     '' ]
   );
 
   startupLines = lib.concatStringsSep "\n" (
-    map (cmd: ''  hl.exec_cmd("${cmd}")'') option.startup-commands
+    map (cmd: ''  hl.dispatch(hl.dsp.exec_cmd({cmd = "${cmd}"}))'') option.startup-commands
   );
 in
 {
