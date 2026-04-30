@@ -28,29 +28,29 @@ in
       hl.bind(mainMod .. " + SHIFT + P", hl.dsp.layout("promote"), { description = "Promote to own column" })
 
       -- Launch / kill
-      hl.bind(mainMod .. " + space", hl.dsp.exec_cmd({cmd = "alacritty"}), { description = "Launch terminal" })
-      hl.bind(mainMod .. " + ALT + space", hl.dsp.exec_cmd({cmd = "[workspace unset] alacritty"}), { description = "Launch terminal" })
+      hl.bind(mainMod .. " + space", hl.dsp.exec_cmd("alacritty"), { description = "Launch terminal" })
+      hl.bind(mainMod .. " + ALT + space", hl.dsp.exec_cmd("[workspace unset] alacritty"), { description = "Launch terminal" })
       hl.bind(mainMod .. " + C", hl.dsp.window.kill(), { description = "Kill active window" })
       hl.bind(mainMod .. " + SHIFT + L", function()
-        hl.dispatch(hl.dsp.exec_cmd({cmd = "playerctl -a pause; ${lockCmd}"}))
+        hl.dispatch(hl.dsp.exec_cmd("playerctl -a pause; ${lockCmd}"))
       end, { description = "Lock screen" })
       hl.bind(mainMod .. " + F12", hl.dsp.exit(), { description = "Exit Hyprland" })
       hl.bind(mainMod .. " + SHIFT + F", hl.dsp.window.float({ action = "toggle" }), { description = "Toggle floating" })
 
       -- App toggles
-      hl.bind(mainMod .. " + D", hl.dsp.exec_cmd({cmd = "${scripts.toggleMenu}"}), { description = "Toggle menu" })
-      hl.bind(mainMod .. " + escape", hl.dsp.exec_cmd({cmd = "${scripts.toggleWindow} :;"}), { description = "Toggle window" })
-      hl.bind(mainMod .. " + B", hl.dsp.exec_cmd({cmd = "${scripts.toggleWindow} bluetuith"}), { description = "Toggle Bluetooth" })
-      hl.bind(mainMod .. " + s", hl.dsp.exec_cmd({cmd = "${scripts.toggleWindow} spotify_player"}), { description = "Toggle Spotify player" })
-      hl.bind(mainMod .. " + V", hl.dsp.exec_cmd({cmd = "${scripts.toggleWindow} pulsemixer"}), { description = "Toggle Pulse audio mixer" })
-      hl.bind(mainMod .. " + M", hl.dsp.exec_cmd({cmd = "${scripts.toggleWindow} htop"}), { description = "Toggle htop" })
-      hl.bind(mainMod .. " + G", hl.dsp.exec_cmd({cmd = "${scripts.toggleWindow} chatgpt"}), { description = "Toggle ChatGPT" })
-      hl.bind(mainMod .. " + O", hl.dsp.exec_cmd({cmd = 'xdg-open "obsidian://open?vault=my-notes"'}), { description = "Open my notes in obsidian" })
-      hl.bind(mainMod .. " + H", hl.dsp.exec_cmd({cmd = '${scripts.toggleWindow} "${scripts.parseHotkeys} | fzf"'}), { description = "Toggle window" })
+      hl.bind(mainMod .. " + D", hl.dsp.exec_cmd("${scripts.toggleMenu}"), { description = "Toggle menu" })
+      hl.bind(mainMod .. " + escape", hl.dsp.exec_cmd("${scripts.toggleWindow} :;"), { description = "Toggle window" })
+      hl.bind(mainMod .. " + B", hl.dsp.exec_cmd("${scripts.toggleWindow} bluetuith"), { description = "Toggle Bluetooth" })
+      hl.bind(mainMod .. " + s", hl.dsp.exec_cmd("${scripts.toggleWindow} spotify_player"), { description = "Toggle Spotify player" })
+      hl.bind(mainMod .. " + V", hl.dsp.exec_cmd("${scripts.toggleWindow} pulsemixer"), { description = "Toggle Pulse audio mixer" })
+      hl.bind(mainMod .. " + M", hl.dsp.exec_cmd("${scripts.toggleWindow} htop"), { description = "Toggle htop" })
+      hl.bind(mainMod .. " + G", hl.dsp.exec_cmd("${scripts.toggleWindow} chatgpt"), { description = "Toggle ChatGPT" })
+      hl.bind(mainMod .. " + O", hl.dsp.exec_cmd('xdg-open "obsidian://open?vault=my-notes"'), { description = "Open my notes in obsidian" })
+      hl.bind(mainMod .. " + H", hl.dsp.exec_cmd('${scripts.toggleWindow} "${scripts.parseHotkeys} | fzf"'), { description = "Toggle window" })
 
       -- Screenshot / recording
-      hl.bind(mainMod .. " + F7", hl.dsp.exec_cmd({cmd = 'grim -g "$(slurp)" - | swappy -f -'}), { description = "Take screenshot" })
-      hl.bind(mainMod .. " + F8", hl.dsp.exec_cmd({cmd = [[sh -c 'pidf=/tmp/wf-recorder-clip.pid; outdir=$HOME/Videos; mkdir -p "$outdir"; if [ -s "$pidf" ] && kill -0 "$(cat "$pidf")" 2>/dev/null; then kill -INT "$(cat "$pidf")"; exit; fi; f="$outdir/recording-$(date +%F_%H-%M-%S).mp4"; wf-recorder -g "$(slurp)" -f "$f" & pid=$!; echo "$pid" > "$pidf"; wait "$pid"; rm -f "$pidf"; printf "file://%s\n" "$(realpath "$f")" | wl-copy --type text/uri-list']]}), { description = "Toggle record region to clipboard" })
+      hl.bind(mainMod .. " + F7", hl.dsp.exec_cmd('grim -g "$(slurp)" - | swappy -f -'), { description = "Take screenshot" })
+      hl.bind(mainMod .. " + F8", hl.dsp.exec_cmd([[sh -c 'pidf=/tmp/wf-recorder-clip.pid; outdir=$HOME/Videos; mkdir -p "$outdir"; if [ -s "$pidf" ] && kill -0 "$(cat "$pidf")" 2>/dev/null; then kill -INT "$(cat "$pidf")"; exit; fi; f="$outdir/recording-$(date +%F_%H-%M-%S).mp4"; wf-recorder -g "$(slurp)" -f "$f" & pid=$!; echo "$pid" > "$pidf"; wait "$pid"; rm -f "$pidf"; printf "file://%s\n" "$(realpath "$f")" | wl-copy --type text/uri-list']]), { description = "Toggle record region to clipboard" })
 
       -- Fullscreen
       hl.bind(mainMod .. " + A", hl.dsp.window.fullscreen({mode = "fullscreen"}), { description = "Toggle fullscreen" })
@@ -103,7 +103,7 @@ in
       ) (lib.range 1 10))}
 
       -- Execute command
-      hl.bind(mainMod .. " + SHIFT + CTRL + C", hl.dsp.exec_cmd({cmd = "bash -c"}), { description = "Execute command" })
+      hl.bind(mainMod .. " + SHIFT + CTRL + C", hl.dsp.exec_cmd("bash -c"), { description = "Execute command" })
 
       -- Mouse binds
       hl.bind(mainMod .. " + mouse:272", hl.dsp.window.drag(), { mouse = true })
