@@ -41,6 +41,7 @@ in
         "workspace 90 silent,match:tag browser"
         "float on,match:class toggle-window"
         "pin on,match:class toggle-window"
+        "hyprbars:no_bar on,match:class toggle-window"
         "size monitor_w*0.50 monitor_h*0.50,match:class toggle-window"
         "move monitor_w*0.25 monitor_h*0.25,match:class toggle-window"
         "size monitor_w*0.50 monitor_h*0.50,match:tag jb,match:float true"
