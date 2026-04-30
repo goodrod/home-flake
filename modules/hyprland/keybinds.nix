@@ -8,7 +8,16 @@ in
   config = lib.mkIf option.enable {
     wayland.windowManager.hyprland.settings = {
       bindd = [
-        "$mainMod, I, Remove master, layoutmsg, removemaster"
+        "$mainMod, period, Scroll layout right, layoutmsg, move +col"
+        "$mainMod, comma, Scroll layout left, layoutmsg, move -col"
+        "$mainMod, I, Cycle column width, layoutmsg, colresize +conf"
+        "$mainMod SHIFT, I, Cycle column width back, layoutmsg, colresize -conf"
+        "$mainMod, equal, Fit all visible columns, layoutmsg, fit visible"
+        "$mainMod, minus, Fit active column, layoutmsg, fit active"
+        "$mainMod CTRL, period, Swap column right, layoutmsg, swapcol r"
+        "$mainMod CTRL, comma, Swap column left, layoutmsg, swapcol l"
+        "$mainMod SHIFT, P, Promote to own column, layoutmsg, promote"
+        "$mainMod, T, Toggle fit method, layoutmsg, togglefit"
         "$mainMod, space, Launch terminal, exec, $terminal"
         "$mainMod ALT, space, Launch terminal, exec, [workspace unset] $terminal"
         "$mainMod, Tab, Change group active, changegroupactive, f"

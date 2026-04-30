@@ -32,12 +32,12 @@ in
         "col.inactive_border" = "rgba(404A60aa)";
         resize_on_border = false;
         allow_tearing = false;
-        layout = "master";
+        layout = "scrolling";
       };
 
-      master = {
-        orientation = "left";
-        new_status = "master";
+      scrolling = {
+        column_width = 0.5;
+        focus_fit_method = 0;
       };
 
       cursor = { no_hardware_cursors = true; };
