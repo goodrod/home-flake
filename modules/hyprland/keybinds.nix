@@ -8,6 +8,8 @@ in
   config = lib.mkIf option.enable {
     wayland.windowManager.hyprland.settings = {
       bindd = [
+        "$mainMod, Tab, Scroll window forward, layoutmsg, scrollwindow d"
+        "$mainMod SHIFT, Tab, Scroll window backward, layoutmsg, scrollwindow u"
         "$mainMod, I, Cycle column width, layoutmsg, colresize +conf"
         "$mainMod SHIFT, I, Cycle column width back, layoutmsg, colresize -conf"
         "$mainMod, plus, Fit all visible columns, layoutmsg, fit visible"

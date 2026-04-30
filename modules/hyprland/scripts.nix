@@ -1,29 +1,8 @@
 { pkgs }:
 let
-  inherit (pkgs) jq writeShellScript writeScript;
+  inherit (pkgs) writeScript;
 in
 {
-  groupMailWindows = writeShellScript "group-mail-windows" ''
-    sleep 0.4
-    addrs=$(hyprctl clients -j | ${jq}/bin/jq -r '
-      [.[] | select(.workspace.id == 40)
-           | select(.tags != null)
-           | select([.tags[] | startswith("mail")] | any)
-           | .address] | .[]')
-    first="" second=""
-    while IFS= read -r addr; do
-      [ -z "$first" ] && { first=$addr; continue; }
-      [ -z "$second" ] && { second=$addr; break; }
-    done <<< "$addrs"
-    [ -z "$first" ] || [ -z "$second" ] && exit 0
-    g1=$(hyprctl clients -j | ${jq}/bin/jq -r ".[] | select(.address == \"$first\") | .grouped")
-    g2=$(hyprctl clients -j | ${jq}/bin/jq -r ".[] | select(.address == \"$second\") | .grouped")
-    [ "$g1" = "$g2" ] && exit 0
-    hyprctl dispatch focuswindow "address:$second"
-    sleep 0.05
-    hyprctl dispatch movewindoworgroup "address:$first"
-  '';
-
   toggleWindow = writeScript "toggle-window.sh" ''
     #!/usr/bin/env bash
     pgrep fuzzel && pkill fuzzel && exit 0
