@@ -17,6 +17,8 @@ in
       local mainMod = "SUPER"
 
       -- Scrolling layout
+      local colWidths = { 0.333, 0.5, 0.667, 1.0 }
+      local colWidthIdx = 1
       hl.bind(mainMod .. " + Tab", hl.dsp.layout("move +col"), { description = "Scroll window forward" })
       hl.bind(mainMod .. " + SHIFT + Tab", hl.dsp.layout("move -col"), { description = "Scroll window backward" })
       hl.bind(mainMod .. " + I", hl.dsp.layout("colresize +conf"), { description = "Cycle column width" })
@@ -46,8 +48,18 @@ in
       hl.bind(mainMod .. " + M", hl.dsp.exec_cmd("${scripts.toggleWindow} htop"), { description = "Toggle htop" })
       hl.bind(mainMod .. " + G", hl.dsp.exec_cmd("${scripts.toggleWindow} chatgpt"), { description = "Toggle ChatGPT" })
 
-      hl.bind(mainMod .. " + O", hl.dsp.exec_cmd("${scripts.cycleAllColWidths} next"), { description = "Cycle all column widths forward" })
-      hl.bind(mainMod .. " + SHIFT + O", hl.dsp.exec_cmd("${scripts.cycleAllColWidths} prev"), { description = "Cycle all column widths back" })
+      hl.bind(mainMod .. " + O", function()
+        colWidthIdx = (colWidthIdx % #colWidths) + 1
+        local w = hl.get_active_window()
+        hl.dispatch(hl.dsp.layout("colresize all " .. colWidths[colWidthIdx]))
+        if w ~= nil then hl.dispatch(hl.dsp.focus({ window = "address:" .. w.address })) end
+      end, { description = "Cycle all column widths forward" })
+      hl.bind(mainMod .. " + SHIFT + O", function()
+        colWidthIdx = ((colWidthIdx - 2) % #colWidths) + 1
+        local w = hl.get_active_window()
+        hl.dispatch(hl.dsp.layout("colresize all " .. colWidths[colWidthIdx]))
+        if w ~= nil then hl.dispatch(hl.dsp.focus({ window = "address:" .. w.address })) end
+      end, { description = "Cycle all column widths back" })
       hl.bind(mainMod .. " + H", hl.dsp.exec_cmd('${scripts.toggleWindow} "${scripts.parseHotkeys} | fzf"'), { description = "Toggle window" })
 
       -- Screenshot / recording
