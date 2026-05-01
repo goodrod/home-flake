@@ -19,12 +19,25 @@ in
       -- Scrolling layout
       local colWidths = { 0.333, 0.5, 0.667, 1.0 }
       local colWidthIdx = 1
+      local fitVisible = false
       hl.bind(mainMod .. " + Tab", hl.dsp.layout("move +col"), { description = "Scroll window forward" })
       hl.bind(mainMod .. " + SHIFT + Tab", hl.dsp.layout("move -col"), { description = "Scroll window backward" })
       hl.bind(mainMod .. " + I", hl.dsp.layout("colresize +conf"), { description = "Cycle column width" })
       hl.bind(mainMod .. " + SHIFT + I", hl.dsp.layout("colresize -conf"), { description = "Cycle column width back" })
       hl.bind(mainMod .. " + plus", hl.dsp.layout("fit visible"), { description = "Fit all visible columns" })
       hl.bind(mainMod .. " + SHIFT + plus", hl.dsp.layout("fit active"), { description = "Fit active column" })
+      hl.bind(mainMod .. " + U", function()
+        fitVisible = not fitVisible
+        if fitVisible then
+          hl.dispatch(hl.dsp.layout("fit visible"))
+        else
+          local w = hl.get_active_window()
+          hl.dispatch(hl.dsp.layout("colresize all " .. colWidths[colWidthIdx]))
+          if w ~= nil then
+            hl.timer(function() hl.dispatch(hl.dsp.focus({ window = "address:" .. w.address })) end, { timeout = 50, type = "oneshot" })
+          end
+        end
+      end, { description = "Toggle fit visible / normal column widths" })
       hl.bind(mainMod .. " + SHIFT + CTRL + left", hl.dsp.layout("swapcol l"), { description = "Swap column left" })
       hl.bind(mainMod .. " + SHIFT + CTRL + right", hl.dsp.layout("swapcol r"), { description = "Swap column right" })
       hl.bind(mainMod .. " + SHIFT + P", hl.dsp.layout("promote"), { description = "Promote to own column" })
@@ -49,6 +62,7 @@ in
       hl.bind(mainMod .. " + G", hl.dsp.exec_cmd("${scripts.toggleWindow} chatgpt"), { description = "Toggle ChatGPT" })
 
       local function cycleColWidth(dir)
+        fitVisible = false
         colWidthIdx = ((colWidthIdx - 1 + dir + #colWidths) % #colWidths) + 1
         local w = hl.get_active_window()
         hl.dispatch(hl.dsp.layout("colresize all " .. colWidths[colWidthIdx]))
