@@ -48,18 +48,16 @@ in
       hl.bind(mainMod .. " + M", hl.dsp.exec_cmd("${scripts.toggleWindow} htop"), { description = "Toggle htop" })
       hl.bind(mainMod .. " + G", hl.dsp.exec_cmd("${scripts.toggleWindow} chatgpt"), { description = "Toggle ChatGPT" })
 
-      hl.bind(mainMod .. " + O", function()
-        colWidthIdx = (colWidthIdx % #colWidths) + 1
+      local function cycleColWidth(dir)
+        colWidthIdx = ((colWidthIdx - 1 + dir + #colWidths) % #colWidths) + 1
         local w = hl.get_active_window()
         hl.dispatch(hl.dsp.layout("colresize all " .. colWidths[colWidthIdx]))
-        if w ~= nil then hl.dispatch(hl.dsp.focus({ window = "address:" .. w.address })) end
-      end, { description = "Cycle all column widths forward" })
-      hl.bind(mainMod .. " + SHIFT + O", function()
-        colWidthIdx = ((colWidthIdx - 2) % #colWidths) + 1
-        local w = hl.get_active_window()
-        hl.dispatch(hl.dsp.layout("colresize all " .. colWidths[colWidthIdx]))
-        if w ~= nil then hl.dispatch(hl.dsp.focus({ window = "address:" .. w.address })) end
-      end, { description = "Cycle all column widths back" })
+        if w ~= nil then
+          hl.timer(function() hl.dispatch(hl.dsp.focus({ window = "address:" .. w.address })) end, { timeout = 50 })
+        end
+      end
+      hl.bind(mainMod .. " + O", function() cycleColWidth(1) end, { description = "Cycle all column widths forward" })
+      hl.bind(mainMod .. " + SHIFT + O", function() cycleColWidth(-1) end, { description = "Cycle all column widths back" })
       hl.bind(mainMod .. " + H", hl.dsp.exec_cmd('${scripts.toggleWindow} "${scripts.parseHotkeys} | fzf"'), { description = "Toggle window" })
 
       -- Screenshot / recording
