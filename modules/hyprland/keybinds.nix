@@ -53,7 +53,7 @@ in
         local w = hl.get_active_window()
         hl.dispatch(hl.dsp.layout("colresize all " .. colWidths[colWidthIdx]))
         if w ~= nil then
-          hl.timer(function() hl.dispatch(hl.dsp.focus({ window = "address:" .. w.address })) end, { timeout = 50 })
+          hl.timer(function() hl.dispatch(hl.dsp.focus({ window = "address:" .. w.address })) end, { timeout = 50, type = "oneshot" })
         end
       end
       hl.bind(mainMod .. " + O", function() cycleColWidth(1) end, { description = "Cycle all column widths forward" })
