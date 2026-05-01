@@ -56,9 +56,9 @@ in
       hl.bind(mainMod .. " + A", hl.dsp.window.fullscreen({mode = "fullscreen"}), { description = "Toggle fullscreen" })
 
       -- Monitor focus
-      hl.bind(mainMod .. " + code:69", hl.dsp.focus({monitor = "${mon1}"}), { description = "Focus monitor ${mon1}" })
-      hl.bind(mainMod .. " + code:70", hl.dsp.focus({monitor = "${mon2}"}), { description = "Focus monitor ${mon2}" })
-      hl.bind(mainMod .. " + code:71", hl.dsp.focus({monitor = "${mon3}"}), { description = "Focus monitor ${mon3}" })
+      hl.bind(mainMod .. " + F3", hl.dsp.focus({monitor = "${mon1}"}), { description = "Focus monitor ${mon1}" })
+      hl.bind(mainMod .. " + F4", hl.dsp.focus({monitor = "${mon2}"}), { description = "Focus monitor ${mon2}" })
+      hl.bind(mainMod .. " + F5", hl.dsp.focus({monitor = "${mon3}"}), { description = "Focus monitor ${mon3}" })
 
       -- Move window
       hl.bind(mainMod .. " + CTRL + left", hl.dsp.window.move({direction = "l"}), { description = "Move window l" })
