@@ -38,7 +38,7 @@ in
       end, { description = "Toggle fit visible / normal column widths" })
       hl.bind(mainMod .. " + SHIFT + CTRL + left", hl.dsp.layout("swapcol l"), { description = "Swap column left" })
       hl.bind(mainMod .. " + SHIFT + CTRL + right", hl.dsp.layout("swapcol r"), { description = "Swap column right" })
-      hl.bind(mainMod .. " + SHIFT + P", hl.dsp.layout("promote"), { description = "Promote to own column" })
+      hl.bind(mainMod .. " + P", hl.dsp.layout("promote"), { description = "Promote to own column" })
 
       -- Launch / kill
       hl.bind(mainMod .. " + space", hl.dsp.exec_cmd("alacritty"), { description = "Launch terminal" })
