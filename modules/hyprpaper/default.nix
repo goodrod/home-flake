@@ -1,6 +1,6 @@
 { config, lib, pkgs, ... }:
 let
-  inherit (lib) mkOption mkEnableOption types mkIf;
+  inherit (lib) mkOption mkEnableOption mkAfter types mkIf;
   cfg = config.module.hyprpaper;
   wallpaperPath = "${config.home.homeDirectory}/${cfg.wallpaper-output-directory}/${cfg.wallpaper}";
 in {
@@ -33,12 +33,10 @@ in {
     };
     xdg.configFile."hypr/hyprpaper.conf".text = ''
       splash = false
-      wallpaper {
-        monitor =
-        path = ${wallpaperPath}
-      }
+      preload = ${wallpaperPath}
+      wallpaper = ,${wallpaperPath}
     '';
     home.packages = [ pkgs.hyprpaper ];
-    wayland.windowManager.hyprland.settings.exec-once = [ "hyprpaper" ];
+    module.hyprland.startup-commands = lib.mkAfter [ "hyprpaper &" ];
   };
 }
