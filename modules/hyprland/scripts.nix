@@ -3,6 +3,19 @@ let
   inherit (pkgs) writeScript;
 in
 {
+  cycleAllColWidths = writeScript "cycle-all-col-widths.sh" ''
+    #!/usr/bin/env bash
+    widths=(0.333 0.5 0.667 1.0)
+    state_file="/tmp/hypr-col-width-idx"
+    idx=$(cat "$state_file" 2>/dev/null || echo 0)
+    if [[ "$1" == "prev" ]]; then
+      idx=$(( (idx - 1 + ''${#widths[@]}) % ''${#widths[@]} ))
+    else
+      idx=$(( (idx + 1) % ''${#widths[@]} ))
+    fi
+    echo "$idx" > "$state_file"
+    hyprctl dispatch layoutmsg "colresize all ''${widths[$idx]}"
+  '';
   toggleWindow = writeScript "toggle-window.sh" ''
     #!/usr/bin/env bash
     pgrep fuzzel && pkill fuzzel && exit 0

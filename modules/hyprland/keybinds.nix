@@ -45,7 +45,9 @@ in
       hl.bind(mainMod .. " + V", hl.dsp.exec_cmd("${scripts.toggleWindow} pulsemixer"), { description = "Toggle Pulse audio mixer" })
       hl.bind(mainMod .. " + M", hl.dsp.exec_cmd("${scripts.toggleWindow} htop"), { description = "Toggle htop" })
       hl.bind(mainMod .. " + G", hl.dsp.exec_cmd("${scripts.toggleWindow} chatgpt"), { description = "Toggle ChatGPT" })
-      hl.bind(mainMod .. " + O", hl.dsp.exec_cmd('xdg-open "obsidian://open?vault=my-notes"'), { description = "Open my notes in obsidian" })
+
+      hl.bind(mainMod .. " + O", hl.dsp.exec_cmd("${scripts.cycleAllColWidths} next"), { description = "Cycle all column widths forward" })
+      hl.bind(mainMod .. " + SHIFT + O", hl.dsp.exec_cmd("${scripts.cycleAllColWidths} prev"), { description = "Cycle all column widths back" })
       hl.bind(mainMod .. " + H", hl.dsp.exec_cmd('${scripts.toggleWindow} "${scripts.parseHotkeys} | fzf"'), { description = "Toggle window" })
 
       -- Screenshot / recording
