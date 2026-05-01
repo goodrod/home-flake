@@ -33,9 +33,7 @@ in
         else
           local w = hl.get_active_window()
           hl.dispatch(hl.dsp.layout("colresize all " .. colWidths[colWidthIdx]))
-          if w ~= nil then
-            hl.timer(function() hl.dispatch(hl.dsp.focus({ window = "address:" .. w.address })) end, { timeout = 50, type = "oneshot" })
-          end
+          if w ~= nil then hl.dispatch(hl.dsp.focus({ window = "address:" .. w.address })) end
         end
       end, { description = "Toggle fit visible / normal column widths" })
       hl.bind(mainMod .. " + SHIFT + CTRL + left", hl.dsp.layout("swapcol l"), { description = "Swap column left" })
@@ -66,9 +64,7 @@ in
         colWidthIdx = ((colWidthIdx - 1 + dir + #colWidths) % #colWidths) + 1
         local w = hl.get_active_window()
         hl.dispatch(hl.dsp.layout("colresize all " .. colWidths[colWidthIdx]))
-        if w ~= nil then
-          hl.timer(function() hl.dispatch(hl.dsp.focus({ window = "address:" .. w.address })) end, { timeout = 50, type = "oneshot" })
-        end
+        if w ~= nil then hl.dispatch(hl.dsp.focus({ window = "address:" .. w.address })) end
       end
       hl.bind(mainMod .. " + O", function() cycleColWidth(1) end, { description = "Cycle all column widths forward" })
       hl.bind(mainMod .. " + SHIFT + O", function() cycleColWidth(-1) end, { description = "Cycle all column widths back" })
