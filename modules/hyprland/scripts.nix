@@ -14,7 +14,7 @@ in
       idx=$(( (idx + 1) % ''${#widths[@]} ))
     fi
     echo "$idx" > "$state_file"
-    hyprctl dispatch layoutmsg "colresize all ''${widths[$idx]}"
+    hyprctl dispatch "hl.dsp.layout(\"colresize all ''${widths[$idx]}\")"
   '';
   toggleWindow = writeScript "toggle-window.sh" ''
     #!/usr/bin/env bash
