@@ -14,7 +14,9 @@ in
       idx=$(( (idx + 1) % ''${#widths[@]} ))
     fi
     echo "$idx" > "$state_file"
+    addr=$(hyprctl activewindow -j | jq -r '.address')
     hyprctl dispatch "hl.dsp.layout(\"colresize all ''${widths[$idx]}\")"
+    hyprctl dispatch "hl.dsp.focus({window=\"address:$addr\"})"
   '';
   toggleWindow = writeScript "toggle-window.sh" ''
     #!/usr/bin/env bash
