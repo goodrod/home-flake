@@ -95,7 +95,7 @@ in {
             "91" = "󰈹 +";
             "default" = "";
           };
-          on-click = "hyprctl dispatch focusworkspaceoncurrentmonitor {id}";
+          on-click = "hyprctl dispatch \"hl.dsp.focus({workspace = {id}, on_current_monitor = true})\"";
           persistent-workspaces = {
             "*" = [10 20 30 40 50];
           };
