@@ -50,6 +50,7 @@ in {
       grim
       tree
       pkgs.custom-nvim
+      thunar
     ];
   };
 }
