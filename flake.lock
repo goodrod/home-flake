@@ -1269,11 +1269,11 @@
         "nvf": "nvf"
       },
       "locked": {
-        "lastModified": 1777628682,
-        "narHash": "sha256-WopYgkz1RcK2of0qi8E7r8v7xcYmQbvEKsq9UBHV8hM=",
+        "lastModified": 1777733340,
+        "narHash": "sha256-D1ojEFskAKA/zdSbHwQmD/17+O/0d68SvkcDnMUgwTI=",
         "ref": "refs/heads/main",
-        "rev": "38c83a8907008617c436f190d59e8af5250147bd",
-        "revCount": 5,
+        "rev": "fd32fd56f9f848b2bd72682af96db1b27c4f19d0",
+        "revCount": 6,
         "type": "git",
         "url": "ssh://git@github.com/goodrod/nvim"
       },
