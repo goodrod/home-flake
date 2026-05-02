@@ -1,17 +1,28 @@
 { config, lib, pkgs, ... }:
 let
-  inherit (lib) mkOption mkEnableOption mkAfter types mkIf optional concatStringsSep;
+  inherit (lib) mkOption mkEnableOption types mkIf optional concatStringsSep;
   cfg = config.module.hyprpaper;
   monitors = config.module.hyprland.monitors;
   wallpaperPath = "${config.home.homeDirectory}/${cfg.wallpaper-output-directory}/${cfg.wallpaper}";
-  enabledMonitorNames =
+  enabledMonitors =
     optional monitors.left.enable monitors.left.name
     ++ optional monitors.middle.enable monitors.middle.name
     ++ optional monitors.right.enable monitors.right.name;
-  wallpaperLines =
-    if enabledMonitorNames == []
-    then "wallpaper = ,${wallpaperPath}"
-    else concatStringsSep "\n" (map (m: "wallpaper = ${m},${wallpaperPath}") enabledMonitorNames);
+  wallpaperBlocks =
+    if enabledMonitors == []
+    then ''
+      wallpaper {
+        path = ${wallpaperPath}
+        fit_mode = cover
+      }
+    ''
+    else concatStringsSep "\n" (map (m: ''
+      wallpaper {
+        monitor = ${m}
+        path = ${wallpaperPath}
+        fit_mode = cover
+      }
+    '') enabledMonitors);
 in {
   options.module.hyprpaper = {
     enable = mkEnableOption "hyprpaper";
@@ -42,8 +53,8 @@ in {
     };
     xdg.configFile."hypr/hyprpaper.conf".text = ''
       splash = false
-      preload = ${wallpaperPath}
-      ${wallpaperLines}
+      ipc = off
+      ${wallpaperBlocks}
     '';
     home.packages = [ pkgs.hyprpaper ];
     module.hyprland.startup-commands = lib.mkAfter [ "hyprpaper &" ];
