@@ -67,7 +67,7 @@ in
         },
         scrolling = {
           column_width = 0.5,
-          focus_fit_method = 0,
+          focus_fit_method = 1,
         },
         cursor = {
           no_hardware_cursors = true,

@@ -17,7 +17,7 @@ in
       local mainMod = "SUPER"
 
       -- Scrolling layout
-      local colWidths = { 0.333, 0.5, 0.667, 1.0 }
+      local colWidths = { 0.25, 0.333, 0.5, 1.0 }
       local colWidthIdx = 1
       local fitVisible = false
       hl.bind(mainMod .. " + Tab", hl.dsp.layout("move +col"), { description = "Scroll window forward" })
