@@ -62,6 +62,7 @@ in
       package = pkgs.hyprland;
       portalPackage = pkgs.xdg-desktop-portal-hyprland;
       plugins = [ ];
+      extraConfig = "# Real configuration lives in xdg.configFile \"hypr/hyprland.lua\"";
     };
 
     xdg.configFile."hypr/hyprland.lua".text = option.luaConfig;
