@@ -12,7 +12,7 @@
     flake-parts.url = "github:hercules-ci/flake-parts";
 
     nvim = {
-      url = "git+ssh://git@github.com/goodrod/nvim";
+      url = "github:goodrod/nvim";
     };
 
     nixvim = {
