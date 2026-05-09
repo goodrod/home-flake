@@ -48,6 +48,7 @@ in {
       slurp
       swappy
       grim
+      wf-recorder
       tree
       pkgs.custom-nvim
       thunar
