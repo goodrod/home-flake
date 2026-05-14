@@ -1166,11 +1166,11 @@
         "nixpkgs": "nixpkgs_5"
       },
       "locked": {
-        "lastModified": 1778780532,
-        "narHash": "sha256-Dar5TEJ1FLJ/ngYBL50msvctlhl4buk3pxg/EifpEIo=",
+        "lastModified": 1778781484,
+        "narHash": "sha256-k/TFfc7RGnUTbh6hwCHeXwAEhJGG4y3qQL2XORpD47M=",
         "owner": "goodrod",
         "repo": "nvim",
-        "rev": "13d5809966f0c35081a7fea1ee816c5196546334",
+        "rev": "c1bd2e0dd905901d81db0cba0f54ec248d047c0b",
         "type": "github"
       },
       "original": {
