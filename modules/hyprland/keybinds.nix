@@ -43,7 +43,7 @@ in
       -- Launch / kill
       hl.bind(mainMod .. " + space", hl.dsp.exec_cmd("alacritty"), { description = "Launch terminal" })
       hl.bind(mainMod .. " + ALT + space", hl.dsp.exec_cmd("[workspace unset] alacritty"), { description = "Launch terminal" })
-      hl.bind(mainMod .. " + C", hl.dsp.window.kill(), { description = "Kill active window" })
+      hl.bind(mainMod .. " + C", hl.dsp.window.close(), { description = "Close active window" })
       hl.bind(mainMod .. " + SHIFT + L", function()
         hl.dispatch(hl.dsp.exec_cmd("playerctl -a pause; ${lockCmd}"))
       end, { description = "Lock screen" })
