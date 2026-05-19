@@ -1,4 +1,4 @@
-{ config, lib, ... }:
+{ config, lib, pkgs, ... }:
 let
   inherit (lib) mkEnableOption mkIf;
   option = config.module.bash;
@@ -6,6 +6,8 @@ in {
   options.module.bash = { enable = mkEnableOption "bash"; };
 
   config = mkIf option.enable {
+    home.packages = with pkgs; [ xorg.xauth util-linux ];
+
     programs.bash = {
       enable = true;
       initExtra = ''
@@ -15,6 +17,13 @@ in {
         __title_prefix=""
         [ -n "$SSH_CONNECTION" ] && __title_prefix="\h:"
         PS1="\n\[\033[$PROMPT_COLOR\][\[\e]0;''${__title_prefix}\W\a\]\u@\h:\w]\$\[\033[0m\] "
+      '';
+      profileExtra = ''
+        export XAUTHORITY="$HOME/.Xauthority"
+        [ -f "$XAUTHORITY" ] || touch "$XAUTHORITY"
+        if command -v xauth >/dev/null && command -v mcookie >/dev/null; then
+          xauth -f "$XAUTHORITY" add :0 . "$(mcookie)" 2>/dev/null || true
+        fi
       '';
       shellAliases = {
         ls = "ls --color=auto";
