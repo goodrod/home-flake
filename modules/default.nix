@@ -10,6 +10,7 @@
     ./default-applications
     ./bluetooth
     ./discord
+    ./everdo
     ./game-development
     ./icon-fonts
     ./intellij

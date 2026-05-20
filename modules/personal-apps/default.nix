@@ -27,7 +27,6 @@ in {
     home.packages = with pkgs; [
       plantuml
       bitwarden-desktop
-      everdo
       chatgpt-cli
       gsimplecal
     ];
