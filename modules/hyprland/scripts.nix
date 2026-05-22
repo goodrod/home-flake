@@ -7,7 +7,7 @@ in
     #!/usr/bin/env bash
     pgrep fuzzel && pkill fuzzel && exit 0
     if hyprctl clients | grep -q "toggle-window"; then
-        hyprctl dispatch closewindow class:toggle-window
+        hyprctl dispatch 'hl.dsp.window.close("class:toggle-window")'
     else
         alacritty --class=toggle-window -e bash -c "$@"
     fi
