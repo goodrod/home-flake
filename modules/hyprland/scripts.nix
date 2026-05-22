@@ -16,11 +16,7 @@ in
   toggleMenu = writeScript "toggle-menu.sh" ''
     #!/usr/bin/env bash
     pgrep fuzzel && pkill fuzzel && exit 0
-    if hyprctl clients | grep -q "toggle-window"; then
-        hyprctl dispatch closewindow class:toggle-window
-    else
-        fuzzel
-    fi
+    fuzzel
   '';
 
   parseHotkeys = writeScript "parseHotkeys.sh" ''
