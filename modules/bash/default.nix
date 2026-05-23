@@ -1,12 +1,16 @@
-{ config, lib, pkgs, ... }:
-let
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}: let
   inherit (lib) mkEnableOption mkIf;
   option = config.module.bash;
 in {
-  options.module.bash = { enable = mkEnableOption "bash"; };
+  options.module.bash = {enable = mkEnableOption "bash";};
 
   config = mkIf option.enable {
-    home.packages = with pkgs; [ xorg.xauth util-linux ];
+    home.packages = with pkgs; [xauth util-linux];
 
     programs.bash = {
       enable = true;
