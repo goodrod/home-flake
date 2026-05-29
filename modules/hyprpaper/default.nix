@@ -5,9 +5,7 @@ let
   monitors = config.module.hyprland.monitors;
   wallpaperPath = "${config.home.homeDirectory}/${cfg.wallpaper-output-directory}/${cfg.wallpaper}";
   enabledMonitors =
-    optional monitors.left.enable monitors.left.name
-    ++ optional monitors.middle.enable monitors.middle.name
-    ++ optional monitors.right.enable monitors.right.name;
+    map (m: m.name) (lib.filter (m: m.enable) (lib.attrValues monitors));
   wallpaperBlocks =
     if enabledMonitors == []
     then ''

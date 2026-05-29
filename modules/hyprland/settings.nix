@@ -15,13 +15,10 @@ let
       })
     '';
 
+  enabledMonitors = lib.filter (m: m.enable) (lib.attrValues option.monitors);
+
   monitorLines = lib.concatStringsSep "\n" (
-    lib.optional option.monitors.left.enable
-      (parseMonitorSettings option.monitors.left.name option.monitors.left.settings)
-    ++ lib.optional option.monitors.middle.enable
-      (parseMonitorSettings option.monitors.middle.name option.monitors.middle.settings)
-    ++ lib.optional option.monitors.right.enable
-      (parseMonitorSettings option.monitors.right.name option.monitors.right.settings)
+    map (m: parseMonitorSettings m.name m.settings) enabledMonitors
     ++ [ ''
       hl.monitor({
         output = "Unknown-1",

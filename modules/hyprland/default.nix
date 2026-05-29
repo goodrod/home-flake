@@ -6,7 +6,7 @@
 }:
 let
   inherit (lib) mkOption mkEnableOption types mkIf concatStringsSep;
-  inherit (types) str bool listOf lines;
+  inherit (types) str bool listOf lines attrsOf submodule nullOr int;
   option = config.module.hyprland;
 in
 {
@@ -29,22 +29,38 @@ in
       type = listOf str;
       default = [];
     };
-    monitors = {
-      left = {
-        enable = mkOption { type = bool; default = false; };
-        name = mkOption { type = str; description = "Left monitor"; default = ""; };
-        settings = mkOption { type = str; description = "Settings for monitor"; default = "preferred,0x0,1.0"; };
-      };
-      middle = {
-        enable = mkOption { type = bool; default = false; };
-        name = mkOption { type = str; description = "Middle monitor"; default = "DP-3"; };
-        settings = mkOption { type = str; description = "Settings for monitor"; default = "preferred,0x0,1.0"; };
-      };
-      right = {
-        enable = mkOption { type = bool; default = false; };
-        name = mkOption { type = str; description = "Right monitor"; default = "HDMI-A-2"; };
-        settings = mkOption { type = str; description = "Settings for monitor"; default = "preferred,2560x0,1.0"; };
-      };
+    monitors = mkOption {
+      default = {};
+      description = ''
+        Monitors keyed by an arbitrary name. The attribute key is used as the
+        Hyprland output name unless `name` is set explicitly. Declare as many as
+        you like.
+      '';
+      type = attrsOf (submodule ({ name, ... }: {
+        options = {
+          enable = mkOption { type = bool; default = true; };
+          name = mkOption {
+            type = str;
+            default = name;
+            description = "Hyprland output name (e.g. \"DP-1\"). Defaults to the attribute key.";
+          };
+          settings = mkOption {
+            type = str;
+            default = "preferred,0x0,1.0";
+            description = "Monitor settings as \"mode,position,scale\" (e.g. \"preferred,2560x0,1.0\").";
+          };
+          workspace = mkOption {
+            type = nullOr int;
+            default = null;
+            description = "Default workspace number bound to this monitor (e.g. 10). null = no binding.";
+          };
+          focusKey = mkOption {
+            type = nullOr str;
+            default = null;
+            description = "Key that focuses this monitor (e.g. \"F3\"). null = no focus bind.";
+          };
+        };
+      }));
     };
     luaConfig = mkOption {
       type = lines;

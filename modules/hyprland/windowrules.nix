@@ -2,6 +2,11 @@
 let
   option = config.module.hyprland;
 
+  workspaceRuleLines = lib.concatStringsSep "\n      " (
+    map (m: ''hl.workspace_rule({ workspace = "${toString m.workspace}", monitor = "${m.name}", default = true })'')
+      (lib.filter (m: m.enable && m.workspace != null) (lib.attrValues option.monitors))
+  );
+
   browserRegexp = "firefox_firefox|firefox|Chromium|vivaldi-stable|Mullvad Browser|google-chrome|Google-chrome";
   chatRegexp = "discord|vesktop|Slack|.*teams.*|.*outlook.*|chrome-chat.google.com.*";
   terminalRegexp = "Alacritty";
@@ -65,9 +70,7 @@ in
       -- ══════════════════════════════════════
       -- Workspace Rules (monitor binding)
       -- ══════════════════════════════════════
-      ${lib.optionalString option.monitors.left.enable ''hl.workspace_rule({ workspace = "10", monitor = "${option.monitors.left.name}", default = true })''}
-      ${lib.optionalString option.monitors.middle.enable ''hl.workspace_rule({ workspace = "20", monitor = "${option.monitors.middle.name}", default = true })''}
-      ${lib.optionalString option.monitors.right.enable ''hl.workspace_rule({ workspace = "30", monitor = "${option.monitors.right.name}", default = true })''}
+      ${workspaceRuleLines}
     '';
   };
 }
