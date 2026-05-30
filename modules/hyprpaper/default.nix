@@ -52,6 +52,7 @@ in {
     xdg.configFile."hypr/hyprpaper.conf".text = ''
       splash = false
       ipc = off
+      preload = ${wallpaperPath}
       ${wallpaperBlocks}
     '';
     home.packages = [ pkgs.hyprpaper ];
