@@ -25,8 +25,14 @@ in {
       profileExtra = ''
         export XAUTHORITY="$HOME/.Xauthority"
         [ -f "$XAUTHORITY" ] || touch "$XAUTHORITY"
+        # Hyprland 0.54 starts XWayland without -auth; XWayland reads $XAUTHORITY
+        # at launch. Seed a cookie ONCE before the session's XWayland starts.
+        # Must be idempotent: profileExtra runs on every login shell, and
+        # regenerating the cookie after XWayland is up clobbers the live server
+        # cookie -> "Invalid MIT-MAGIC-COOKIE-1 key" for all X11 clients.
         if command -v xauth >/dev/null && command -v mcookie >/dev/null; then
-          xauth -f "$XAUTHORITY" add :0 . "$(mcookie)" 2>/dev/null || true
+          xauth -f "$XAUTHORITY" list :0 2>/dev/null | grep -q . \
+            || xauth -f "$XAUTHORITY" add :0 . "$(mcookie)" 2>/dev/null || true
         fi
       '';
       shellAliases = {
