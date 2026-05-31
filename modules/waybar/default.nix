@@ -7,6 +7,28 @@
   inherit (lib) mkOption mkEnableOption types mkIf;
   inherit (types) path str;
   waybarConfig = config.module.waybar;
+
+  # Single source of truth for workspaces lives in module.workspaces.
+  workspaces = config.module.workspaces.entries;
+
+  # Sort by numeric id so the icon map and persistent list are deterministic
+  # (independent of attr-key iteration order).
+  sortedWs = lib.sort (a: b: a.id < b.id) (lib.attrValues workspaces);
+
+  # "<id>" -> icon and "<id+1>" -> shifted icon (auto "icon +", or explicit override),
+  # plus the "default" fallback.
+  workspaceFormatIcons =
+    lib.listToAttrs (lib.concatMap (ws: [
+      { name = toString ws.id; value = ws.icon; }
+      {
+        name = toString (ws.id + 1);
+        value = if ws.shiftedIcon != null then ws.shiftedIcon else ws.icon + " +";
+      }
+    ]) sortedWs)
+    // { "default" = ""; };
+
+  # Ints (waybar expects numbers here), in id order, only those flagged persistent.
+  persistentWorkspaceIds = map (ws: ws.id) (lib.filter (ws: ws.persistent) sortedWs);
 in {
   options.module.waybar = {
     enable = mkEnableOption "waybar";
@@ -74,30 +96,10 @@ in {
           disable-scroll = false;
           all-outputs = true;
           format = "{icon}";
-          format-icons = {
-            "10" = "󱁤";
-            "11" = "󱁤 +";
-            "20" = "󰎆";
-            "21" = "󰎆 +";
-            "30" = "󰊗";
-            "31" = "󰊗 +";
-            "40" = "󰇮";
-            "41" = "󰇮 +";
-            "50" = "󰠮";
-            "51" = "󰠮 +";
-            "60" = "󰭹";
-            "61" = "󰭹 +";
-            "70" = "󰅩";
-            "71" = "󰅩 +";
-            "80" = "󰆍";
-            "81" = "󰆍 +";
-            "90" = "󰈹";
-            "91" = "󰈹 +";
-            "default" = "";
-          };
+          format-icons = workspaceFormatIcons;
           on-click = "hyprctl dispatch \"hl.dsp.focus({workspace = {id}, on_current_monitor = true})\"";
           persistent-workspaces = {
-            "*" = [10 20 30 40 50];
+            "*" = persistentWorkspaceIds;
           };
         };
         network = {

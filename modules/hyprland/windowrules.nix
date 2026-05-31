@@ -7,16 +7,43 @@ let
       (lib.filter (m: m.enable && m.workspace != null) (lib.attrValues option.monitors))
   );
 
-  browserRegexp = "firefox_firefox|firefox|Chromium|vivaldi-stable|Mullvad Browser|google-chrome|Google-chrome";
-  chatRegexp = "discord|vesktop|Slack|.*teams.*|.*outlook.*|chrome-chat.google.com.*";
-  terminalRegexp = "Alacritty";
-  productivityRegexp = "everdo|obsidian";
-  musicRegexp = ".*Spotify.*";
-  gamingRegexp = "steam";
-  settingsRegexp = "com.saivert.pwvucontrol";
-  devtoolRegexp = "com.saivert.pwvucontrol|bruno";
-  mailRegexp = "chrome-mail.google.com.*|chrome-calendar.google.com.*";
-  programmingRegexp = "code-url-handler|jetbrains-rider|jetbrains-idea|Godot|kiro";
+  # Single source of truth for workspaces lives in module.workspaces.
+  workspaces = config.module.workspaces.entries;
+
+  # Map Nix match-field name -> Hyprland Lua match key.
+  matchFields = [
+    { attr = "class"; lua = "class"; }
+    { attr = "title"; lua = "title"; }
+    { attr = "initialTitle"; lua = "initial_title"; }
+  ];
+
+  # Escape a regexp for embedding in a Lua double-quoted string.
+  luaEscape = lib.replaceStrings [ ''\'' ''"'' ] [ ''\\'' ''\"'' ];
+
+  hasMatch = ws: lib.any (f: let v = ws.match.${f.attr}; in v != null && v != "") matchFields;
+
+  # Tag rules: one hl.window_rule per non-null/non-empty match field. Order-independent.
+  tagRuleLines = lib.concatStringsSep "\n      " (
+    lib.concatLists (lib.mapAttrsToList (tag: ws:
+      lib.concatMap (f:
+        let v = ws.match.${f.attr}; in
+        if v == null || v == "" then [ ]
+        else [ ''hl.window_rule({ match = { ${f.lua} = "${luaEscape v}" }, tag = "+${tag}" })'' ]
+      ) matchFields
+    ) workspaces)
+  );
+
+  # Assignment rules: tag -> workspace "<id> silent", in id order. Skip waybar-only
+  # workspaces (no match fields), which have no tag to assign.
+  wsList = lib.mapAttrsToList (tag: ws: ws // { _tagName = tag; }) workspaces;
+  sortedWsWithNames = lib.sort (a: b: a.id < b.id) wsList;
+  assignmentRuleLines = lib.concatStringsSep "\n      " (
+    lib.concatMap (ws:
+      if hasMatch ws
+      then [ ''hl.window_rule({ match = { tag = "${ws._tagName}" }, workspace = "${toString ws.id} silent" })'' ]
+      else [ ]
+    ) sortedWsWithNames
+  );
 in
 {
   config = lib.mkIf option.enable {
@@ -35,27 +62,10 @@ in
       hl.window_rule({ match = { class = ".*" }, suppress_event = "maximize center" })
 
       -- Tags for app categories
-      hl.window_rule({ match = { class = "${devtoolRegexp}" }, tag = "+devtool" })
-      hl.window_rule({ match = { class = "${mailRegexp}" }, tag = "+mail" })
-      hl.window_rule({ match = { title = "${musicRegexp}" }, tag = "+music" })
-      hl.window_rule({ match = { class = "${gamingRegexp}" }, tag = "+gaming" })
-      hl.window_rule({ match = { class = "${browserRegexp}" }, tag = "+browser" })
-      hl.window_rule({ match = { class = "${productivityRegexp}" }, tag = "+productivity" })
-      hl.window_rule({ match = { class = "${chatRegexp}" }, tag = "+chat" })
-      hl.window_rule({ match = { initial_title = "${chatRegexp}" }, tag = "+chat" })
-      hl.window_rule({ match = { class = "${programmingRegexp}" }, tag = "+coding" })
-      hl.window_rule({ match = { class = "${terminalRegexp}" }, tag = "+term" })
+      ${tagRuleLines}
 
       -- Workspace assignments by tag
-      hl.window_rule({ match = { tag = "devtool" }, workspace = "10 silent" })
-      hl.window_rule({ match = { tag = "music" }, workspace = "20 silent" })
-      hl.window_rule({ match = { tag = "gaming" }, workspace = "30 silent" })
-      hl.window_rule({ match = { tag = "mail" }, workspace = "40 silent" })
-      hl.window_rule({ match = { tag = "productivity" }, workspace = "50 silent" })
-      hl.window_rule({ match = { tag = "chat" }, workspace = "60 silent" })
-      hl.window_rule({ match = { tag = "coding" }, workspace = "70 silent" })
-      hl.window_rule({ match = { tag = "term" }, workspace = "80 silent" })
-      hl.window_rule({ match = { tag = "browser" }, workspace = "90 silent" })
+      ${assignmentRuleLines}
 
       -- Toggle window rules
       hl.window_rule({ match = { class = "toggle-window" }, float = true })

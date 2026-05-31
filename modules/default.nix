@@ -22,6 +22,7 @@
     ./dunst
     ./default-home-dirs
     ./navi
+    ./workspaces
     ./waybar
     ./wlogout
     ./swaync

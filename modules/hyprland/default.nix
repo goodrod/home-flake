@@ -94,8 +94,6 @@ in
       playerctl
     ];
 
-    programs.waybar.enable = true;
-
     home.sessionVariables = {
       NIXOS_OZONE_WL = "1";
       HYPERLAND_LOG_WLR = "1";
