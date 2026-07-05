@@ -78,6 +78,9 @@ in
       -- Fullscreen
       hl.bind(mainMod .. " + A", hl.dsp.window.fullscreen({mode = "fullscreen"}), { description = "Toggle fullscreen" })
 
+      -- Privacy
+      hl.bind(mainMod .. " + SHIFT + S", hl.dsp.exec_cmd("hyprctl dispatch setprop activewindow noscreenshare toggle"), { description = "Toggle screen-share exclusion for focused window" })
+
       -- Monitor focus
       ${monitorFocusLines}
 
