@@ -79,16 +79,29 @@ in
       hl.bind(mainMod .. " + A", hl.dsp.window.fullscreen({mode = "fullscreen"}), { description = "Toggle fullscreen" })
 
       -- Privacy
-      -- Tag drives everything: the "noshare" window_rule (windowrules.nix) sets
-      -- no_screen_share + border color for any window carrying this tag.
+      -- Plain runtime props, not a window_rule: a rule-based default would be
+      -- a dynamic effect and get continuously reasserted, fighting any toggle
+      -- on the same window (this is what happened when discord's default was
+      -- a rule-driven tag). Tracked per-address so the hotkey knows which way
+      -- to flip; resets on Hyprland config reload, which is fine here.
+      local noShareState = {}
+      local noShareDefaults = { discord = true, vesktop = true, Slack = true }
+      local function setNoShare(address, hide)
+        noShareState[address] = hide
+        local target = "address:" .. address
+        hl.dispatch(hl.dsp.window.set_prop({ window = target, prop = "no_screen_share", value = hide and "true" or "false" }))
+        hl.dispatch(hl.dsp.window.set_prop({ window = target, prop = "active_border_color", value = hide and "rgb(f38ba8)" or "unset" }))
+        hl.dispatch(hl.dsp.window.set_prop({ window = target, prop = "inactive_border_color", value = hide and "rgba(f38ba888)" or "unset" }))
+      end
+      hl.on("window.open", function(w)
+        if w ~= nil and noShareDefaults[w.class] then
+          setNoShare(w.address, true)
+        end
+      end)
       hl.bind(mainMod .. " + SHIFT + S", function()
         local w = hl.get_active_window()
         if w == nil then return end
-        local hasTag = false
-        for _, t in ipairs(w.tags) do
-          if t == "noshare" or t == "noshare*" then hasTag = true end
-        end
-        hl.dispatch(hl.dsp.window.tag({ tag = (hasTag and "-" or "+") .. "noshare" }))
+        setNoShare(w.address, not (noShareState[w.address] or false))
       end, { description = "Toggle screen-share exclusion for focused window" })
 
       -- Monitor focus
