@@ -26,7 +26,6 @@ in {
     # Options for modules imported in "imports" can be set here.
     home.packages = with pkgs; [
       plantuml
-      bitwarden-desktop
       chatgpt-cli
       gsimplecal
     ];
