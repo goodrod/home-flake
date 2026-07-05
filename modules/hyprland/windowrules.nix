@@ -78,7 +78,8 @@ in
       -- windows, so they need layer_rule/namespace, not window_rule/class.
       hl.layer_rule({ match = { namespace = "swaync-notification-window" }, no_screen_share = true })
       hl.layer_rule({ match = { namespace = "swaync-control-center" }, no_screen_share = true })
-      hl.window_rule({ match = { class = "discord|vesktop|Slack" }, no_screen_share = true })
+      hl.window_rule({ match = { class = "discord|vesktop|Slack" }, tag = "+noshare" })
+      hl.window_rule({ match = { tag = "noshare" }, no_screen_share = true, active_border_color = "rgb(f38ba8)", inactive_border_color = "rgb(f38ba8)" })
 
       -- JetBrains floating popup sizing
       hl.window_rule({ match = { tag = "jb", float = true }, size = {"monitor_w*0.50", "monitor_h*0.50"} })

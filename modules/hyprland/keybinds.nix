@@ -79,7 +79,17 @@ in
       hl.bind(mainMod .. " + A", hl.dsp.window.fullscreen({mode = "fullscreen"}), { description = "Toggle fullscreen" })
 
       -- Privacy
-      hl.bind(mainMod .. " + SHIFT + S", hl.dsp.window.set_prop({ window = "activewindow", prop = "no_screen_share", value = "toggle" }), { description = "Toggle screen-share exclusion for focused window" })
+      -- Tag drives everything: the "noshare" window_rule (windowrules.nix) sets
+      -- no_screen_share + border color for any window carrying this tag.
+      hl.bind(mainMod .. " + SHIFT + S", function()
+        local w = hl.get_active_window()
+        if w == nil then return end
+        local hasTag = false
+        for _, t in ipairs(w.tags) do
+          if t == "noshare" or t == "noshare*" then hasTag = true end
+        end
+        hl.dispatch(hl.dsp.window.tag({ tag = (hasTag and "-" or "+") .. "noshare" }))
+      end, { description = "Toggle screen-share exclusion for focused window" })
 
       -- Monitor focus
       ${monitorFocusLines}
