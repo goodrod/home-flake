@@ -67,6 +67,10 @@ in {
             font-weight: bold;
         }
 
+        notificationwindow, blankwindow {
+            background: transparent;
+        }
+
         .control-center .notification-row:focus,
         .control-center .notification-row:hover {
             opacity: 1;
