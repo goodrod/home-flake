@@ -26,6 +26,7 @@ in {
         control-center-width = 500;
         control-center-height = 1033;
         notification-window-width = 500;
+        notification-window-height = 600;
         keyboard-shortcuts = true;
         image-visibility = "when-available";
         transition-time = 50;
