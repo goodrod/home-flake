@@ -36,6 +36,8 @@
 
     ashell.url = "github:MalpenZibo/ashell";
 
+    nixpkgs-aseprite.url = "github:nixos/nixpkgs/nixos-unstable";
+
     import-tree.url = "github:vic/import-tree";
   };
 
