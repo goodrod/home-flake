@@ -28,10 +28,17 @@ nvim <nixos-module-path> ; find <nixos-module-path> | grep nix | xargs -I{} nixf
 # (upgrade/update)              Update flake
 nix flake update --flake <nixos-config-path>
 
-# (upgrade/update/pin)          Pin hyprland to a specific commit (last 14 days, one per day)
+# (upgrade/update)              Update home-flake's own flake inputs
+nix flake update --flake <home-flake-config-path>
+
+# (upgrade/update)              Update home-configs' own flake inputs
+nix flake update --flake <home-configs-path>
+
+# (upgrade/update/pin)          Pin hyprland to a specific commit
 cd <home-flake-config-path> && nix flake lock --override-input hyprland "git+https://github.com/hyprwm/Hyprland?rev=<hyprland-commit>&submodules=1"
 
-$ hyprland-commit: curl -s "https://api.github.com/repos/hyprwm/Hyprland/commits?per_page=200" | jq -r '.[] | [.sha, .commit.committer.date[:10], (.commit.message | split("\n")[0])] | join(" ")' | awk '!seen[$2]++' | head -14 --- --column 1 --delimiter ' ' --with-nth '2..' --header 'Pick Hyprland commit (date / message)'
+$ weeks: printf '1\n2\n3\n4\n6\n8\n12' --- --header 'How many weeks back?'
+$ hyprland-commit: curl -s "https://api.github.com/repos/hyprwm/Hyprland/commits?per_page=100&since=$(date -d '<weeks> weeks ago' +%Y-%m-%dT%H:%M:%SZ)" | jq -r '.[] | [.sha, .commit.committer.date[:10], (.commit.message | split("\n")[0])] | join(" ")' --- --column 1 --delimiter ' ' --with-nth '2..' --header 'Pick Hyprland commit'
 
 # (upgrade/update/pin)          Pin Aseprite's nixpkgs to a specific commit (not cached - choose when you want to eat the rebuild)
 cd <home-flake-config-path> && nix flake lock --override-input nixpkgs-aseprite "github:nixos/nixpkgs/<nixpkgs-commit>"
