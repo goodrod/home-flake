@@ -26,8 +26,8 @@ in {
     # Options for modules imported in "imports" can be set here.
     home.packages = with pkgs; [
       plantuml
-      chatgpt-cli
       gsimplecal
+      nodejs # needed by claude-code plugin hooks (e.g. caveman)
     ];
   };
 }
