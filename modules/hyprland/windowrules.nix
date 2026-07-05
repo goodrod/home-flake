@@ -78,8 +78,12 @@ in
       -- windows, so they need layer_rule/namespace, not window_rule/class.
       hl.layer_rule({ match = { namespace = "swaync-notification-window" }, no_screen_share = true })
       hl.layer_rule({ match = { namespace = "swaync-control-center" }, no_screen_share = true })
-      hl.window_rule({ match = { class = "discord|vesktop|Slack" }, tag = "+noshare" })
-      hl.window_rule({ match = { tag = "noshare" }, no_screen_share = true, border_color = {{colors = {"rgb(f38ba8)"}}, {colors = {"rgba(f38ba888)"}}} })
+      -- Permanently-excluded apps and the ad-hoc hotkey tag are kept independent:
+      -- if the class rule kept reasserting the same tag, toggling it off via the
+      -- hotkey would just get overwritten back on by this rule on every re-match.
+      local noShareBorder = {{colors = {"rgb(f38ba8)"}}, {colors = {"rgba(f38ba888)"}}}
+      hl.window_rule({ match = { class = "discord|vesktop|Slack" }, no_screen_share = true, border_color = noShareBorder })
+      hl.window_rule({ match = { tag = "noshare" }, no_screen_share = true, border_color = noShareBorder })
 
       -- JetBrains floating popup sizing
       hl.window_rule({ match = { tag = "jb", float = true }, size = {"monitor_w*0.50", "monitor_h*0.50"} })
