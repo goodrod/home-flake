@@ -73,6 +73,11 @@ in
       hl.window_rule({ match = { class = "toggle-window" }, size = {"monitor_w*0.50", "monitor_h*0.50"} })
       hl.window_rule({ match = { class = "toggle-window" }, move = {"monitor_w*0.25", "monitor_h*0.25"} })
 
+      -- Hide from screen sharing
+      hl.window_rule({ match = { class = "swaync-notification-window" }, no_screen_share = true })
+      hl.window_rule({ match = { class = "swaync-control-center" }, no_screen_share = true })
+      hl.window_rule({ match = { class = "discord|vesktop|Slack" }, no_screen_share = true })
+
       -- JetBrains floating popup sizing
       hl.window_rule({ match = { tag = "jb", float = true }, size = {"monitor_w*0.50", "monitor_h*0.50"} })
       hl.window_rule({ match = { tag = "jb", float = true }, move = {"monitor_w*0.25", "monitor_h*0.25"} })
