@@ -74,8 +74,10 @@ in
       hl.window_rule({ match = { class = "toggle-window" }, move = {"monitor_w*0.25", "monitor_h*0.25"} })
 
       -- Hide from screen sharing
-      hl.window_rule({ match = { class = "swaync-notification-window" }, no_screen_share = true })
-      hl.window_rule({ match = { class = "swaync-control-center" }, no_screen_share = true })
+      -- swaync popups are layer-shell surfaces (gtk_layer_set_namespace), not toplevel
+      -- windows, so they need layer_rule/namespace, not window_rule/class.
+      hl.layer_rule({ match = { namespace = "swaync-notification-window" }, no_screen_share = true })
+      hl.layer_rule({ match = { namespace = "swaync-control-center" }, no_screen_share = true })
       hl.window_rule({ match = { class = "discord|vesktop|Slack" }, no_screen_share = true })
 
       -- JetBrains floating popup sizing
