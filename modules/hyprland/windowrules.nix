@@ -79,7 +79,7 @@ in
       hl.layer_rule({ match = { namespace = "swaync-notification-window" }, no_screen_share = true })
       hl.layer_rule({ match = { namespace = "swaync-control-center" }, no_screen_share = true })
       hl.window_rule({ match = { class = "discord|vesktop|Slack" }, tag = "+noshare" })
-      hl.window_rule({ match = { tag = "noshare" }, no_screen_share = true, border_color = {"rgb(f38ba8)", "rgba(f38ba888)"} })
+      hl.window_rule({ match = { tag = "noshare" }, no_screen_share = true, border_color = {{colors = {"rgb(f38ba8)"}}, {colors = {"rgba(f38ba888)"}}} })
 
       -- JetBrains floating popup sizing
       hl.window_rule({ match = { tag = "jb", float = true }, size = {"monitor_w*0.50", "monitor_h*0.50"} })
