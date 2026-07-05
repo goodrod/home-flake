@@ -31,7 +31,12 @@ nix flake update --flake <nixos-config-path>
 # (upgrade/update/pin)          Pin hyprland to a specific commit (last 14 days, one per day)
 cd <home-flake-config-path> && nix flake lock --override-input hyprland "git+https://github.com/hyprwm/Hyprland?rev=<hyprland-commit>&submodules=1"
 
-$ hyprland-commit: curl -s "https://api.github.com/repos/hyprwm/Hyprland/commits?per_page=200" | jq -r '.[] | [.sha, .commit.committer.date[:10], (.commit.message | split("\n")[0])] | join("|")' | awk -F'|' '!seen[$2]++' | head -14 --- --column 1 --delimiter '|' --with-nth '2,3' --header 'Pick Hyprland commit (date / message)'
+$ hyprland-commit: curl -s "https://api.github.com/repos/hyprwm/Hyprland/commits?per_page=200" | jq -r '.[] | [.sha, .commit.committer.date[:10], (.commit.message | split("\n")[0])] | join(" ")' | awk '!seen[$2]++' | head -14 --- --column 1 --delimiter ' ' --with-nth '2..' --header 'Pick Hyprland commit (date / message)'
+
+# (upgrade/update/pin)          Pin Aseprite's nixpkgs to a specific commit (not cached - choose when you want to eat the rebuild)
+cd <home-flake-config-path> && nix flake lock --override-input nixpkgs-aseprite "github:nixos/nixpkgs/<nixpkgs-commit>"
+
+$ nixpkgs-commit: curl -s "https://api.github.com/repos/NixOS/nixpkgs/commits?sha=nixos-unstable&per_page=200" | jq -r '.[] | [.sha, .commit.committer.date[:10], (.commit.message | split("\n")[0])] | join("|")' | awk -F'|' '!seen[$2]++' | head -30 --- --column 1 --delimiter '|' --with-nth '2,3' --header 'Pick nixpkgs commit for Aseprite (date / message)'
 
 # (format/reformat)             Format all nix files
 find <nixos-config-path> | grep nix | xargs -I{} nixfmt {}
