@@ -28,6 +28,11 @@ nvim <nixos-module-path> ; find <nixos-module-path> | grep nix | xargs -I{} nixf
 # (upgrade/update)              Update flake
 nix flake update --flake <nixos-config-path>
 
+# (upgrade/update/pin)          Pin hyprland to a specific commit (last 14 days, one per day)
+cd <home-flake-config-path> && nix flake lock --override-input hyprland "git+https://github.com/hyprwm/Hyprland?rev=<hyprland-commit>&submodules=1"
+
+$ hyprland-commit: curl -s "https://api.github.com/repos/hyprwm/Hyprland/commits?per_page=200" | jq -r '.[] | [.commit.committer.date[:10], .sha, (.commit.message | split("\n")[0])] | @tsv' | awk -F'\t' '!seen[$1]++' | head -14 --- --column 2 --delimiter $'\t' --with-nth '1,3' --header 'Pick Hyprland commit (date / message)'
+
 # (format/reformat)             Format all nix files
 find <nixos-config-path> | grep nix | xargs -I{} nixfmt {}
 
