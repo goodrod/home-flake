@@ -81,7 +81,7 @@ in
       -- Permanently-excluded apps and the ad-hoc hotkey tag are kept independent:
       -- if the class rule kept reasserting the same tag, toggling it off via the
       -- hotkey would just get overwritten back on by this rule on every re-match.
-      local noShareBorder = {{colors = {"rgb(f38ba8)"}}, {colors = {"rgba(f38ba888)"}}}
+      local noShareBorder = "rgb(f38ba8) rgba(f38ba888)"
       hl.window_rule({ match = { class = "discord|vesktop|Slack" }, no_screen_share = true, border_color = noShareBorder })
       hl.window_rule({ match = { tag = "noshare" }, no_screen_share = true, border_color = noShareBorder })
 
