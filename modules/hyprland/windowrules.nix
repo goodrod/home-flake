@@ -70,8 +70,8 @@ in
       -- Toggle window rules
       hl.window_rule({ match = { class = "toggle-window" }, float = true })
       hl.window_rule({ match = { class = "toggle-window" }, pin = true })
-      hl.window_rule({ match = { class = "toggle-window" }, size = {"monitor_w*0.50", "monitor_h*0.50"} })
-      hl.window_rule({ match = { class = "toggle-window" }, move = {"monitor_w*0.25", "monitor_h*0.25"} })
+      hl.window_rule({ match = { class = "toggle-window" }, size = {"monitor_w*0.70", "monitor_h*0.70"} })
+      hl.window_rule({ match = { class = "toggle-window" }, move = {"monitor_w*0.15", "monitor_h*0.15"} })
 
       -- Hide from screen sharing
       -- swaync popups are layer-shell surfaces (gtk_layer_set_namespace), not toplevel

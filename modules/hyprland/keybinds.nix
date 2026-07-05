@@ -26,7 +26,7 @@ in
       hl.bind(mainMod .. " + I", hl.dsp.layout("colresize +conf"), { description = "Cycle column width" })
       hl.bind(mainMod .. " + SHIFT + I", hl.dsp.layout("colresize -conf"), { description = "Cycle column width back" })
       hl.bind(mainMod .. " + plus", hl.dsp.layout("fit visible"), { description = "Fit all visible columns" })
-      hl.bind(mainMod .. " + SHIFT + plus", hl.dsp.layout("fit active"), { description = "Fit active column" })
+      hl.bind(mainMod .. " + SHIFT + U", hl.dsp.layout("fit active"), { description = "Fit active column" })
       hl.bind(mainMod .. " + U", function()
         fitVisible = not fitVisible
         if fitVisible then
