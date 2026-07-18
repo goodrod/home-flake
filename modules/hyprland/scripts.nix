@@ -22,14 +22,17 @@ in
   notifAppWatcher = writeScript "notif-app-watcher.sh" ''
     #!/usr/bin/env bash
     # Eavesdrops org.freedesktop.Notifications.Notify calls on the session bus
-    # and records the sending app's name plus its sender-pid hint, so a hotkey
-    # can jump to it later. Daemon-agnostic: this sees the raw Notify call
-    # before swaync/dunst/etc ever handles it.
+    # and records which window sent it, so a hotkey can jump to it later.
+    # Daemon-agnostic: this sees the raw Notify call before swaync/dunst/etc
+    # ever handles it.
     #
     # app name alone isn't enough: CLI tools like notify-send report their own
     # name ("notify-send"), not whatever shell/terminal invoked them. The
-    # sender-pid hint gives the actual PID that made the call, which the focus
-    # script walks up (pid -> parent -> ...) to find a real window.
+    # sender-pid hint gives the actual PID that made the call, so we walk its
+    # process ancestry (pid -> parent -> ...) to find a window. That walk has
+    # to happen HERE, immediately, while the sender is still alive: a CLI like
+    # notify-send exits within milliseconds, so by the time a hotkey is
+    # pressed later `ps` can no longer see it or its parents at all.
     set -euo pipefail
     state_file="''${XDG_RUNTIME_DIR:-/tmp}/hypr-last-notif-app"
 
@@ -54,7 +57,39 @@ in
         }
       ' |
       while IFS=$'\t' read -r app pid; do
-        [ -n "$app" ] && printf "%s\t%s\n" "$app" "$pid" > "$state_file"
+        [ -z "$app" ] && continue
+
+        # Collect the whole ancestor chain via ps FIRST, as fast as possible:
+        # a CLI sender like notify-send can exit within milliseconds of
+        # making its call, and the hyprctl clients -j lookup below is slow
+        # enough (forks hyprctl, serializes every window) that by the time
+        # we'd get to it the sender (and even its parent) may already be
+        # gone, making `ps` on it useless. Collecting pids up front and
+        # matching against the window list afterwards sidesteps that: the
+        # window's own pid is long-lived regardless of how slow the lookup is.
+        pids="$pid"
+        cur="$pid"
+        if [ -n "$cur" ]; then
+          for _ in $(seq 1 15); do
+            parent=$(ps -o ppid= -p "$cur" 2>/dev/null | tr -d ' ') || true
+            [ -z "$parent" ] || [ "$parent" = "1" ] && break
+            pids="$pids $parent"
+            cur="$parent"
+          done
+        fi
+
+        resolved_pid=""
+        if [ -n "$pids" ]; then
+          clients_json=$(hyprctl clients -j)
+          for p in $pids; do
+            if jq -e --arg p "$p" 'any(.[]; (.pid|tostring)==$p)' <<< "$clients_json" >/dev/null; then
+              resolved_pid="$p"
+              break
+            fi
+          done
+        fi
+
+        printf "%s\t%s\n" "$app" "$resolved_pid" > "$state_file"
       done
   '';
 
@@ -68,20 +103,13 @@ in
       exit 0
     fi
 
-    IFS=$'\t' read -r app pid < "$state_file" || true
+    IFS=$'\t' read -r app resolved_pid < "$state_file" || true
     clients_json=$(hyprctl clients -j)
     addr=""
 
-    # Walk the sender's process ancestry: a CLI like notify-send reports its
-    # own pid, not the terminal's, so climb parents until one matches a
-    # window's pid (2 hops for a plain shell: notify-send -> bash -> terminal).
-    cur="$pid"
-    for _ in $(seq 1 15); do
-      [ -z "$cur" ] || [ "$cur" = "1" ] && break
-      addr=$(jq -r --arg p "$cur" '[.[] | select((.pid|tostring)==$p)] | .[0].address // empty' <<< "$clients_json")
-      [ -n "$addr" ] && break
-      cur=$(ps -o ppid= -p "$cur" 2>/dev/null | tr -d ' ') || true
-    done
+    if [ -n "$resolved_pid" ]; then
+      addr=$(jq -r --arg p "$resolved_pid" '[.[] | select((.pid|tostring)==$p)] | .[0].address // empty' <<< "$clients_json")
+    fi
 
     if [ -z "$addr" ]; then
       app_lower=$(tr '[:upper:]' '[:lower:]' <<< "$app")
