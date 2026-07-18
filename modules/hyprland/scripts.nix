@@ -54,7 +54,7 @@ in
         }
       ' |
       while IFS=$'\t' read -r app pid; do
-        [ -n "$app" ] && printf "%s\t%s" "$app" "$pid" > "$state_file"
+        [ -n "$app" ] && printf "%s\t%s\n" "$app" "$pid" > "$state_file"
       done
   '';
 
@@ -68,7 +68,7 @@ in
       exit 0
     fi
 
-    IFS=$'\t' read -r app pid < "$state_file"
+    IFS=$'\t' read -r app pid < "$state_file" || true
     clients_json=$(hyprctl clients -j)
     addr=""
 

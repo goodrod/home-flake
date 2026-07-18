@@ -33,8 +33,8 @@ in
       hl.bind(mainMod .. " + SHIFT + down", hl.dsp.window.resize({ x = 0, y = 80,  relative = true }), { description = "Grow window height" })
 
       -- Launch / kill
-      hl.bind(mainMod .. " + space", hl.dsp.exec_cmd("[workspace unset] alacritty"), { description = "Launch terminal" })
-      hl.bind(mainMod .. " + ALT + space", hl.dsp.exec_cmd("[workspace unset] alacritty"), { description = "Launch terminal" })
+      hl.bind(mainMod .. " + space", hl.dsp.exec_cmd("alacritty"), { description = "Launch terminal on console workspace" })
+      hl.bind(mainMod .. " + CTRL + space", hl.dsp.exec_cmd("[workspace unset] alacritty"), { description = "Launch terminal on current workspace" })
       hl.bind(mainMod .. " + C", hl.dsp.window.close(), { description = "Close active window" })
       hl.bind(mainMod .. " + SHIFT + L", function()
         hl.dispatch(hl.dsp.exec_cmd("playerctl -a pause; ${lockCmd}"))
