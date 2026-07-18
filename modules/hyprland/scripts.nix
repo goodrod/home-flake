@@ -80,7 +80,7 @@ in
       [ -z "$cur" ] || [ "$cur" = "1" ] && break
       addr=$(jq -r --arg p "$cur" '[.[] | select((.pid|tostring)==$p)] | .[0].address // empty' <<< "$clients_json")
       [ -n "$addr" ] && break
-      cur=$(ps -o ppid= -p "$cur" 2>/dev/null | tr -d ' ')
+      cur=$(ps -o ppid= -p "$cur" 2>/dev/null | tr -d ' ') || true
     done
 
     if [ -z "$addr" ]; then
