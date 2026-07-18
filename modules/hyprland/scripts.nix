@@ -19,6 +19,57 @@ in
     fuzzel
   '';
 
+  notifAppWatcher = writeScript "notif-app-watcher.sh" ''
+    #!/usr/bin/env bash
+    # Eavesdrops org.freedesktop.Notifications.Notify calls on the session bus
+    # and records the sending app's name, so a hotkey can jump to it later.
+    # Daemon-agnostic: this sees the raw Notify call before swaync/dunst/etc
+    # ever handles it.
+    set -euo pipefail
+    state_file="''${XDG_RUNTIME_DIR:-/tmp}/hypr-last-notif-app"
+
+    stdbuf -oL dbus-monitor --session "interface='org.freedesktop.Notifications',member='Notify'" |
+      stdbuf -oL awk '
+        /member=Notify/ { want=1; next }
+        want==1 {
+          if (match($0, /^ *string "(.*)"$/, arr)) { print arr[1]; fflush(); }
+          want=0
+        }
+      ' |
+      while IFS= read -r app; do
+        [ -n "$app" ] && printf "%s" "$app" > "$state_file"
+      done
+  '';
+
+  focusLastNotifApp = writeScript "focus-last-notif-app.sh" ''
+    #!/usr/bin/env bash
+    set -euo pipefail
+    state_file="''${XDG_RUNTIME_DIR:-/tmp}/hypr-last-notif-app"
+
+    if [ ! -s "$state_file" ]; then
+      notify-send "Focus last notifier" "No notification seen yet"
+      exit 0
+    fi
+
+    app=$(cat "$state_file")
+    app_lower=$(tr '[:upper:]' '[:lower:]' <<< "$app")
+
+    addr=$(hyprctl clients -j | jq -r --arg a "$app_lower" '
+      [.[] | select(
+        ((.class // "") | ascii_downcase | contains($a)) or
+        ($a | contains((.class // "") | ascii_downcase)) or
+        ((.initialClass // "") | ascii_downcase | contains($a)) or
+        ((.title // "") | ascii_downcase | contains($a))
+      )] | .[0].address // empty
+    ')
+
+    if [ -n "$addr" ]; then
+      hyprctl dispatch focuswindow "address:$addr"
+    else
+      notify-send "Focus last notifier" "No window found for: $app"
+    fi
+  '';
+
   parseHotkeys = writeScript "parseHotkeys.sh" ''
     #!/usr/bin/env bash
 

@@ -16,6 +16,7 @@ in
     ./windowrules.nix
     ./settings.nix
     ./lockscreen.nix
+    ./notif-focus.nix
   ];
 
   options.module.hyprland = {

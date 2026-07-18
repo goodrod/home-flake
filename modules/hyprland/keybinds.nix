@@ -20,23 +20,12 @@ in
       -- Scrolling layout
       local colWidths = { 0.25, 0.333, 0.5, 1.0 }
       local colWidthIdx = 1
-      local fitVisible = false
       hl.bind(mainMod .. " + Tab", hl.dsp.layout("move +col"), { description = "Scroll window forward" })
       hl.bind(mainMod .. " + SHIFT + Tab", hl.dsp.layout("move -col"), { description = "Scroll window backward" })
       hl.bind(mainMod .. " + I", hl.dsp.layout("colresize +conf"), { description = "Cycle column width" })
       hl.bind(mainMod .. " + SHIFT + I", hl.dsp.layout("colresize -conf"), { description = "Cycle column width back" })
       hl.bind(mainMod .. " + plus", hl.dsp.layout("fit visible"), { description = "Fit all visible columns" })
-      hl.bind(mainMod .. " + SHIFT + U", hl.dsp.layout("fit active"), { description = "Fit active column" })
-      hl.bind(mainMod .. " + U", function()
-        fitVisible = not fitVisible
-        if fitVisible then
-          hl.dispatch(hl.dsp.layout("fit visible"))
-        else
-          local w = hl.get_active_window()
-          hl.dispatch(hl.dsp.layout("colresize all " .. colWidths[colWidthIdx]))
-          if w ~= nil then hl.dispatch(hl.dsp.focus({ window = "address:" .. w.address })) end
-        end
-      end, { description = "Toggle fit visible / normal column widths" })
+      hl.bind(mainMod .. " + U", hl.dsp.window.center(), { description = "Center focused window" })
       hl.bind(mainMod .. " + SHIFT + CTRL + left", hl.dsp.layout("swapcol l"), { description = "Swap column left" })
       hl.bind(mainMod .. " + SHIFT + CTRL + right", hl.dsp.layout("swapcol r"), { description = "Swap column right" })
       hl.bind(mainMod .. " + P", hl.dsp.layout("promote"), { description = "Promote to own column" })
@@ -59,9 +48,9 @@ in
       hl.bind(mainMod .. " + B", hl.dsp.exec_cmd("${scripts.toggleWindow} bluetuith"), { description = "Toggle Bluetooth" })
       hl.bind(mainMod .. " + V", hl.dsp.exec_cmd("${scripts.toggleWindow} pulsemixer"), { description = "Toggle Pulse audio mixer" })
       hl.bind(mainMod .. " + M", hl.dsp.exec_cmd("${scripts.toggleWindow} htop"), { description = "Toggle htop" })
+      hl.bind(mainMod .. " + N", hl.dsp.exec_cmd("${scripts.focusLastNotifApp}"), { description = "Focus app that sent last notification" })
 
       local function cycleColWidth(dir)
-        fitVisible = false
         colWidthIdx = ((colWidthIdx - 1 + dir + #colWidths) % #colWidths) + 1
         local w = hl.get_active_window()
         hl.dispatch(hl.dsp.layout("colresize all " .. colWidths[colWidthIdx]))
