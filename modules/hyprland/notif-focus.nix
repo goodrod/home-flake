@@ -1,7 +1,7 @@
 { config, pkgs, lib, ... }:
 let
   option = config.module.hyprland;
-  scripts = import ./scripts.nix { inherit pkgs; };
+  scripts = import ./notif-focus-scripts.nix { inherit pkgs; };
 in
 {
   config = lib.mkIf option.enable {
