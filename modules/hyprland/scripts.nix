@@ -55,16 +55,16 @@ in
     app_lower=$(tr '[:upper:]' '[:lower:]' <<< "$app")
 
     addr=$(hyprctl clients -j | jq -r --arg a "$app_lower" '
-      [.[] | select(
-        ((.class // "") | ascii_downcase | contains($a)) or
-        ($a | contains((.class // "") | ascii_downcase)) or
-        ((.initialClass // "") | ascii_downcase | contains($a)) or
-        ((.title // "") | ascii_downcase | contains($a))
-      )] | .[0].address // empty
+      [.[] | . as $w
+        | (($w.class // "") | ascii_downcase) as $cl
+        | (($w.initialClass // "") | ascii_downcase) as $icl
+        | (($w.title // "") | ascii_downcase) as $tl
+        | select(($cl|contains($a)) or ($a|contains($cl)) or ($icl|contains($a)) or ($tl|contains($a)))
+      ] | .[0].address // empty
     ')
 
     if [ -n "$addr" ]; then
-      hyprctl dispatch focuswindow "address:$addr"
+      hyprctl dispatch "hl.dsp.focus({ window = \"address:$addr\" })"
     else
       notify-send "Focus last notifier" "No window found for: $app"
     fi
