@@ -17,6 +17,7 @@ in
     ./settings.nix
     ./lockscreen.nix
     ./notif-focus.nix
+    ./pending-move.nix
   ];
 
   options.module.hyprland = {

@@ -23,12 +23,19 @@ let
   idAssignLines = lib.concatMapStringsSep "\n    "
     (t: "[${t.name}]=${toString t.id}") taskList;
 
+  # Sets the pending-move target (see pending-move.nix's window.open hook)
+  # before each exec instead of using Hyprland's exec-time "[workspace N]"
+  # prefix, which only affects the freshly spawned process's own window -
+  # singleton apps (Firefox etc) open their "new window" via IPC in their
+  # existing process, so the prefix never reaches it. Each app's eval call
+  # renews the grace period, covering a task's whole app list.
   launchCaseLines = lib.concatMapStringsSep "\n"
     (t: ''
       ${t.name})
-        ${lib.concatMapStringsSep "\n    " (cmd:
-          ''hyprctl dispatch "hl.dsp.exec_cmd(\"[workspace ${toString t.id}] ${luaEscape cmd}\")"''
-        ) t.apps}
+        ${lib.concatMapStringsSep "\n    " (cmd: ''
+          hyprctl eval "hl_pending_move_ws = ${toString t.id}; hl_pending_move_until = os.time() + 5"
+          hyprctl dispatch "hl.dsp.exec_cmd(\"${luaEscape cmd}\")"
+        '') t.apps}
         ;;
     '') taskList;
 
@@ -105,6 +112,13 @@ rec {
   # matching). Typing a name that matches neither is passed through
   # unmodified by fuzzel (--only-match is NOT set) straight to
   # taskLaunchOrFocus, which is what creates it on the fly.
+  #
+  # Extracts the name column ourselves (bash-side, after the last tab)
+  # rather than via fuzzel's --accept-nth: with --with-nth set alongside it,
+  # --accept-nth was observed to sometimes return the literal, unresolved
+  # "{1}" placeholder instead of the actual column value. --with-nth alone
+  # (no --accept-nth) reliably returns the full raw input line, tabs
+  # included, per fuzzel's own docs - so we just split that ourselves.
   taskPicker = writeScript "task-workspace-picker.sh" ''
     #!/usr/bin/env bash
     set -euo pipefail
@@ -117,9 +131,38 @@ rec {
       {
         printf '%s\t%s\n' ${pickerPairs}
         jq -r 'to_entries[] | "${adhocIcon}  \(.key)\t\(.key)"' "$state_file"
-      } | fuzzel --dmenu --with-nth=1 --accept-nth=2 --placeholder="Task workspace"
+      } | fuzzel --dmenu --with-nth=1 --placeholder="Task workspace"
     ) || true
-    [ -n "$selection" ] && exec ${taskLaunchOrFocus} "$selection"
+    task="''${selection##*$'\t'}"
+    [ -n "$task" ] && exec ${taskLaunchOrFocus} "$task"
+  '';
+
+  # SUPER+CTRL+T: pick an ad-hoc (on-the-fly created) task workspace to
+  # forget. Predefined tasks aren't listed here - they're Nix-managed, not
+  # something a runtime picker can remove. This only forgets the name -> id
+  # mapping in the state file; it does not close any windows already on
+  # that workspace (matches the launch+jump-only, no-teardown design).
+  # --only-match: there's nothing sensible to "create" here, only pick from
+  # what already exists.
+  taskRemovePicker = writeScript "task-workspace-remove-picker.sh" ''
+    #!/usr/bin/env bash
+    set -euo pipefail
+    pgrep fuzzel && pkill fuzzel && exit 0
+    state_file="''${XDG_STATE_HOME:-$HOME/.local/state}/hypr-task-workspaces.json"
+    mkdir -p "$(dirname "$state_file")"
+    [ -s "$state_file" ] || printf '{}' > "$state_file"
+
+    if [ "$(jq 'length' "$state_file")" -eq 0 ]; then
+      notify-send "Task workspace" "No ad-hoc task workspaces to remove"
+      exit 0
+    fi
+
+    task=$(jq -r 'keys[]' "$state_file" | fuzzel --dmenu --only-match --placeholder="Remove task workspace") || true
+    [ -z "$task" ] && exit 0
+
+    jq --arg n "$task" 'del(.[$n])' "$state_file" > "$state_file.tmp"
+    mv "$state_file.tmp" "$state_file"
+    notify-send "Task workspace" "Removed: $task"
   '';
 
   # Waybar custom-module status: icons of currently-active predefined +

@@ -19,19 +19,27 @@ rec {
     fuzzel
   '';
 
-  # Re-dispatches whatever fuzzel is about to exec through Hyprland's
-  # "[workspace unset]" exec prefix instead of letting fuzzel exec it
-  # directly, so window-rule auto-routing (e.g. browser -> its own tagged
-  # workspace) is bypassed and the app opens on the current workspace
-  # instead - same trick already used for mod+CTRL+space's terminal bind.
-  # Lua-escapes the joined argv (backslash then double-quote, same idiom as
-  # windowrules.nix's luaEscape) since this is a runtime value Nix can't
-  # pre-escape.
+  # Re-dispatches whatever fuzzel is about to exec so it opens on the
+  # current workspace instead of wherever its window-rule tag would
+  # normally route it (e.g. a browser -> its own tagged workspace).
+  #
+  # Originally used Hyprland's exec-time "[workspace unset]" prefix (same
+  # trick as mod+CTRL+space's terminal bind), but that only affects the
+  # window opened by the freshly spawned process - singleton apps (Firefox,
+  # Chrome, etc) that are already running open their "new window" via IPC in
+  # their EXISTING process, so the prefix never reached it (verified live).
+  # Now sets the pending-move target (see pending-move.nix's window.open
+  # hook) instead, which catches the window regardless of which process
+  # created it. Lua-escapes the joined argv (backslash then double-quote,
+  # same idiom as windowrules.nix's luaEscape) since this is a runtime value
+  # Nix can't pre-escape.
   execCurrentWs = writeScript "exec-current-ws.sh" ''
     #!/usr/bin/env bash
     set -euo pipefail
+    ws=$(hyprctl activeworkspace -j | jq -r '.id')
+    hyprctl eval "hl_pending_move_ws = $ws; hl_pending_move_until = os.time() + 5"
     escaped=$(printf '%s' "$*" | sed 's/\\/\\\\/g; s/"/\\"/g')
-    hyprctl dispatch "hl.dsp.exec_cmd(\"[workspace unset] $escaped\")"
+    hyprctl dispatch "hl.dsp.exec_cmd(\"$escaped\")"
   '';
 
   toggleMenuCurrentWs = writeScript "toggle-menu-current-ws.sh" ''
