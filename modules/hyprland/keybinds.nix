@@ -53,7 +53,8 @@ in
       hl.bind(mainMod .. " + M", hl.dsp.exec_cmd("${scripts.toggleWindow} htop"), { description = "Toggle htop" })
       hl.bind(mainMod .. " + N", hl.dsp.exec_cmd("${notifFocusScripts.focusLastNotifApp}"), { description = "Focus app that sent last notification" })
       hl.bind(mainMod .. " + T", hl.dsp.exec_cmd("${taskScripts.taskPicker}"), { description = "Task workspace picker" })
-      hl.bind(mainMod .. " + CTRL + T", hl.dsp.exec_cmd("${taskScripts.taskRemovePicker}"), { description = "Remove an ad-hoc task workspace" })
+      hl.bind(mainMod .. " + CTRL + T", hl.dsp.exec_cmd("${taskScripts.taskMoveWindowPicker}"), { description = "Send focused window to a task workspace" })
+      hl.bind(mainMod .. " + SHIFT + T", hl.dsp.exec_cmd("${taskScripts.taskRemovePicker}"), { description = "Remove an ad-hoc task workspace" })
 
       local function cycleColWidth(dir)
         colWidthIdx = ((colWidthIdx - 1 + dir + #colWidths) % #colWidths) + 1

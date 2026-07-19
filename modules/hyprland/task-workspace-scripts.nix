@@ -137,6 +137,65 @@ rec {
     [ -n "$task" ] && exec ${taskLaunchOrFocus} "$task"
   '';
 
+  # Resolve a task name to a workspace id (predefined, known ad-hoc, or
+  # create a new ad-hoc one on the fly - same resolution as
+  # taskLaunchOrFocus, duplicated locally rather than shelling out to it
+  # since this needs the id back to move a window, not to launch/focus)
+  # then move the currently focused window there. Doesn't follow - the
+  # window moves, focus stays put, matching this repo's existing
+  # move-to-workspace binds (mainMod+CTRL+<n>).
+  taskMoveWindow = writeScript "task-workspace-move-window.sh" ''
+    #!/usr/bin/env bash
+    set -euo pipefail
+    task="''${1:-}"
+    declare -A task_id=(
+      ${idAssignLines}
+    )
+    id="''${task_id[$task]:-}"
+
+    state_file="''${XDG_STATE_HOME:-$HOME/.local/state}/hypr-task-workspaces.json"
+    mkdir -p "$(dirname "$state_file")"
+    [ -s "$state_file" ] || printf '{}' > "$state_file"
+
+    if [ -z "$id" ]; then
+      id=$(jq -r --arg n "$task" '.[$n] // empty' "$state_file")
+    fi
+
+    if [ -z "$id" ]; then
+      taken=" ${reservedIdsSpace} $(jq -r '.[]' "$state_file" | tr '\n' ' ')"
+      id=500
+      while [[ "$taken" == *" $id "* ]]; do
+        id=$((id + 1))
+      done
+      jq --arg n "$task" --argjson id "$id" '. + {($n): $id}' "$state_file" > "$state_file.tmp"
+      mv "$state_file.tmp" "$state_file"
+      notify-send "Task workspace" "Created: $task"
+    fi
+
+    hyprctl dispatch "hl.dsp.window.move({workspace = $id, follow = false})"
+  '';
+
+  # SUPER+SHIFT+T: same merged fuzzy picker as taskPicker, but moves the
+  # currently focused window into whichever task workspace you pick instead
+  # of launching/focusing it.
+  taskMoveWindowPicker = writeScript "task-workspace-move-window-picker.sh" ''
+    #!/usr/bin/env bash
+    set -euo pipefail
+    pgrep fuzzel && pkill fuzzel && exit 0
+    state_file="''${XDG_STATE_HOME:-$HOME/.local/state}/hypr-task-workspaces.json"
+    mkdir -p "$(dirname "$state_file")"
+    [ -s "$state_file" ] || printf '{}' > "$state_file"
+
+    selection=$(
+      {
+        printf '%s\t%s\n' ${pickerPairs}
+        jq -r 'to_entries[] | "${adhocIcon}  \(.key)\t\(.key)"' "$state_file"
+      } | fuzzel --dmenu --with-nth=1 --placeholder="Move window to task workspace"
+    ) || true
+    task="''${selection##*$'\t'}"
+    [ -n "$task" ] && exec ${taskMoveWindow} "$task"
+  '';
+
   # SUPER+CTRL+T: pick an ad-hoc (on-the-fly created) task workspace to
   # forget. Predefined tasks aren't listed here - they're Nix-managed, not
   # something a runtime picker can remove. This only forgets the name -> id
