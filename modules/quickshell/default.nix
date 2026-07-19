@@ -34,9 +34,18 @@
     inherit pkgs lib config;
   };
 
+  # Same lock-command resolution modules/wlogout's layout file uses
+  # (duplicated locally rather than shared - matches this repo's existing
+  # convention, see task-workspace-scripts.nix's luaEscape comment).
+  lockCmd =
+    if config.module.hyprland.lockscreen == "swaylock"
+    then "swaylock -f"
+    else "hyprlock";
+
   scriptsJson = pkgs.writeText "quickshell-bar-scripts.json" (builtins.toJSON {
     taskStatus = "${taskScripts.taskWaybarStatus}";
     taskPicker = "${taskScripts.taskPicker}";
+    lockCmd = lockCmd;
   });
 
   # Merge the static QML config with the Nix-generated data so the whole
@@ -65,7 +74,14 @@ in {
   };
 
   config = mkIf quickshellConfig.enable {
-    home.packages = [pkgs.quickshell pkgs.qt6Packages.qt6ct];
+    # Nerd-font glyphs are used throughout shell.qml (workspaces, tray,
+    # network/battery icons, session screen) - install these directly
+    # rather than relying on module.waybar also being enabled to pull
+    # them in.
+    fonts.fontconfig.enable = true;
+    home.packages = with pkgs;
+      [quickshell qt6Packages.qt6ct]
+      ++ builtins.filter lib.attrsets.isDerivation (builtins.attrValues pkgs.nerd-fonts);
 
     home.file."${quickshellConfig.config-output-directory}" = {
       source = mergedConfigDir;

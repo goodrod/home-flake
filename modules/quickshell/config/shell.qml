@@ -128,7 +128,10 @@ ShellRoot {
   }
 
   Process { id: focusProc }
-  Process { id: powerProc; command: ["wlogout", "-b", "4"] }
+
+  // Session/logout screen (SessionScreen.qml) replaces wlogout for the
+  // power button - single instance, not per-monitor.
+  SessionScreen { id: sessionScreen }
 
   // Task-workspaces widget (waybar's custom/task-workspaces): icons of
   // currently-active predefined/ad-hoc tasks, polled every 3s same as waybar.
@@ -285,14 +288,23 @@ ShellRoot {
       radius: 16
       color: root.islandBg
 
-      Chip {
-        label: Qt.formatDateTime(new Date(), "ddd dd MMM  HH:mm")
+      // WrapperRectangle manages (and positions) its direct child itself -
+      // putting anchors on that child directly conflicts with it (per
+      // WrapperRectangle's own docs), which is what was throwing the clock
+      // text's vertical centering off compared to the other islands. A
+      // single-item Row as the direct child sidesteps that: the Row is
+      // wrapper-managed with no anchors of its own, and Chip's anchor
+      // targets the Row instead, which is fine.
+      Row {
+        Chip {
+          label: Qt.formatDateTime(new Date(), "ddd dd MMM  HH:mm")
 
-        Timer {
-          interval: 1000
-          running: true
-          repeat: true
-          onTriggered: parent.label = Qt.formatDateTime(new Date(), "ddd dd MMM  HH:mm")
+          Timer {
+            interval: 1000
+            running: true
+            repeat: true
+            onTriggered: parent.label = Qt.formatDateTime(new Date(), "ddd dd MMM  HH:mm")
+          }
         }
       }
     }
@@ -358,9 +370,9 @@ ShellRoot {
       }
     }
 
-    // ---------------- center island: notification + workspaces + power ----------------
+    // ---------------- workspaces island (the true bar-center anchor) ----------------
     WrapperRectangle {
-      id: centerIsland
+      id: workspacesIsland
       anchors.horizontalCenter: parent.horizontalCenter
       anchors.verticalCenter: parent.verticalCenter
       margin: 16
@@ -369,14 +381,51 @@ ShellRoot {
       color: root.islandBg
 
       Row {
-        spacing: 14
+        spacing: 10
 
+        Repeater {
+          model: mergedWorkspaceIds()
+          delegate: Rectangle {
+            readonly property int wsId: modelData
+            readonly property bool focused: wsId === focusedWorkspaceId()
+            width: 42
+            height: 36
+            radius: 12
+            color: focused ? root.accentColor : root.chipBg
+
+            Text {
+              anchors.centerIn: parent
+              text: workspaceIcon(wsId)
+              font.pixelSize: 20
+              color: focused ? "#ffffff" : root.mutedTextColor
+            }
+
+            MouseArea {
+              anchors.fill: parent
+              onClicked: focusWorkspace(wsId)
+            }
+          }
+        }
+      }
+    }
+
+    // ---------------- notification island - separate from workspaces so it ----------------
+    // ---------------- doesn't visually read as just another workspace pill ----------------
+    WrapperRectangle {
+      anchors.right: workspacesIsland.left
+      anchors.rightMargin: 14
+      anchors.verticalCenter: parent.verticalCenter
+      margin: 16
+      implicitHeight: root.islandHeight
+      radius: 16
+      color: root.islandBg
+
+      Row {
         Rectangle {
           width: 34
           height: 34
           radius: 10
           color: root.chipBg
-          anchors.verticalCenter: parent.verticalCenter
 
           Text {
             anchors.centerIn: parent
@@ -394,42 +443,26 @@ ShellRoot {
             }
           }
         }
+      }
+    }
 
-        Row {
-          spacing: 12
-          anchors.verticalCenter: parent.verticalCenter
+    // ---------------- power island ----------------
+    WrapperRectangle {
+      id: powerIsland
+      anchors.left: workspacesIsland.right
+      anchors.leftMargin: 14
+      anchors.verticalCenter: parent.verticalCenter
+      margin: 16
+      implicitHeight: root.islandHeight
+      radius: 16
+      color: root.islandBg
 
-          Repeater {
-            model: mergedWorkspaceIds()
-            delegate: Rectangle {
-              readonly property int wsId: modelData
-              readonly property bool focused: wsId === focusedWorkspaceId()
-              width: 42
-              height: 36
-              radius: 12
-              color: focused ? root.accentColor : root.chipBg
-
-              Text {
-                anchors.centerIn: parent
-                text: workspaceIcon(wsId)
-                font.pixelSize: 20
-                color: focused ? "#ffffff" : root.mutedTextColor
-              }
-
-              MouseArea {
-                anchors.fill: parent
-                onClicked: focusWorkspace(wsId)
-              }
-            }
-          }
-        }
-
+      Row {
         Rectangle {
           width: 34
           height: 34
           radius: 10
           color: root.chipBg
-          anchors.verticalCenter: parent.verticalCenter
 
           Text {
             anchors.centerIn: parent
@@ -440,7 +473,7 @@ ShellRoot {
 
           MouseArea {
             anchors.fill: parent
-            onClicked: powerProc.running = true
+            onClicked: sessionScreen.toggle()
           }
         }
       }
@@ -448,7 +481,7 @@ ShellRoot {
 
     // ---------------- tasks island: "Tasks: N" launcher/status ----------------
     WrapperRectangle {
-      anchors.left: centerIsland.right
+      anchors.left: powerIsland.right
       anchors.leftMargin: 14
       anchors.verticalCenter: parent.verticalCenter
       margin: 16
@@ -456,12 +489,18 @@ ShellRoot {
       radius: 16
       color: root.islandBg
 
-      Chip {
-        label: "Tasks: " + activeTaskCount()
+      // Chip as WrapperRectangle's direct child would fight the wrapper's
+      // own positioning (same issue the clock island had) - the MouseArea's
+      // hit area ended up not lining up with the rendered text, so clicks
+      // landed nowhere. Single-item Row sidesteps it.
+      Row {
+        Chip {
+          label: "Tasks: " + activeTaskCount()
 
-        MouseArea {
-          anchors.fill: parent
-          onClicked: taskPickerProc.running = true
+          MouseArea {
+            anchors.fill: parent
+            onClicked: taskPickerProc.running = true
+          }
         }
       }
     }
@@ -477,7 +516,7 @@ ShellRoot {
       color: root.islandBg
 
       Row {
-        spacing: 12
+        spacing: 20
 
         Chip {
           readonly property var device: connectedNetworkDevice()
