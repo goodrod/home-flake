@@ -43,9 +43,9 @@ ShellRoot {
 
   PanelWindow {
     anchors {
-      left: parent.left
-      right: parent.right
-      top: parent.top
+      left: true
+      right: true
+      top: true
     }
     implicitHeight: 32
     color: "transparent"
