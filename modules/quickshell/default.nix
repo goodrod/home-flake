@@ -50,13 +50,24 @@ in {
   };
 
   config = mkIf quickshellConfig.enable {
-    home.packages = [pkgs.quickshell];
+    home.packages = [pkgs.quickshell pkgs.qt6Packages.qt6ct];
 
     home.file."${quickshellConfig.config-output-directory}" = {
       source = mergedConfigDir;
       executable = false;
       recursive = true;
     };
+
+    # Tray context menus (QsMenuAnchor/SystemTrayItem.display) are native Qt
+    # platform popups, so they ignore the QML bar's colors entirely - they
+    # follow whatever Qt platform theme is configured. qt6ct + one of its
+    # bundled dark color schemes gets them out of the default light style.
+    home.file.".config/qt6ct/qt6ct.conf".text = ''
+      [Appearance]
+      custom_palette=true
+      color_scheme_path=${pkgs.qt6Packages.qt6ct}/share/qt6ct/colors/darker.conf
+      style=Fusion
+    '';
 
     systemd.user.services.quickshell = {
       Unit = {
@@ -67,6 +78,7 @@ in {
       Service = {
         ExecStart = "${pkgs.quickshell}/bin/qs -c bar";
         Restart = "on-failure";
+        Environment = ["QT_QPA_PLATFORMTHEME=qt6ct"];
       };
       Install.WantedBy = ["graphical-session.target"];
     };
