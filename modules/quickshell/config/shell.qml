@@ -11,31 +11,23 @@ import Quickshell.Networking
 
 // Quickshell bar, run alongside/instead of waybar (module.quickshell.enable).
 // "Islands" layout: separate floating pill clusters instead of one continuous
-// strip. UseQApplication above is required for SystemTrayItem.display() (the
-// native right-click/menu-only popup) to work at all - without it quickshell
-// throws "Cannot display PlatformMenuEntry ... not started in QApplication
-// mode" and every menu-only tray click silently does nothing.
+// strip. UseQApplication above is required for tray context menus (QsMenuAnchor)
+// to render at all - without it quickshell throws "Cannot display
+// PlatformMenuEntry ... not started in QApplication mode" and every
+// menu-only tray click silently does nothing. The menu is a native Qt
+// platform popup, so it follows the Qt platform theme, not this file's
+// colors - it won't be dark-themed unless Qt itself is configured for it.
 
 ShellRoot {
   id: root
 
-  // A small colored pill with centered text - the "module chip" look from
-  // the original waybar css (each widget gets its own background color).
-  component Chip: Rectangle {
-    property alias label: chipText.text
-    property color fg: "#181825"
-    radius: 8
-    implicitHeight: 26
-    implicitWidth: chipText.implicitWidth + 16
-    height: implicitHeight
-    width: implicitWidth
-
-    Text {
-      id: chipText
-      anchors.centerIn: parent
-      color: parent.fg
-      font.pixelSize: 13
-    }
+  // Flat colored text, no background pill - just a plain Text with a
+  // `label` alias so call sites read the same as before.
+  component Chip: Text {
+    id: chipRoot
+    property alias label: chipRoot.text
+    font.pixelSize: 14
+    anchors.verticalCenter: parent.verticalCenter
   }
 
   // ---------------------------------------------------------------------
@@ -182,6 +174,7 @@ ShellRoot {
 
     PanelWindow {
       id: bar
+      property var modelData
       screen: modelData
       anchors { left: true; right: true; top: true }
       implicitHeight: 50
@@ -224,6 +217,7 @@ ShellRoot {
         Repeater {
           model: SystemTray.items
           delegate: Rectangle {
+            id: trayDelegate
             width: 30
             height: 30
             radius: 8
@@ -236,16 +230,31 @@ ShellRoot {
               source: modelData.icon
             }
 
+            // Anchored to this specific icon (not raw mouse coordinates,
+            // which were relative to the icon, not the window - the menu
+            // was opening at the bar's top-left every time).
+            QsMenuAnchor {
+              id: trayMenuAnchor
+              anchor {
+                item: trayDelegate
+                gravity: Edges.Bottom | Edges.Right
+                edges: Edges.Bottom | Edges.Right
+              }
+            }
+
             MouseArea {
               anchors.fill: parent
               acceptedButtons: Qt.LeftButton | Qt.RightButton
               onClicked: (mouse) => {
                 if (mouse.button === Qt.RightButton) {
-                  if (modelData.hasMenu) modelData.display(bar, mouse.x, mouse.y);
-                  else modelData.secondaryActivate();
+                  if (modelData.menu) {
+                    trayMenuAnchor.menu = modelData.menu;
+                    trayMenuAnchor.open();
+                  } else {
+                    modelData.secondaryActivate();
+                  }
                 } else {
-                  if (modelData.onlyMenu && modelData.hasMenu) modelData.display(bar, mouse.x, mouse.y);
-                  else modelData.activate();
+                  modelData.activate();
                 }
               }
             }
