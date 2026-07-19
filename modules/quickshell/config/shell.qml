@@ -33,7 +33,7 @@ ShellRoot {
   function focusWorkspace(id) {
     focusProc.command = [
       "hyprctl", "dispatch",
-      `hl.dsp.focus({workspace = {id = ${id}}, on_current_monitor = true})`
+      `hl.dsp.focus({workspace = ${id}, on_current_monitor = true})`
     ];
     focusProc.running = true;
   }
