@@ -36,8 +36,7 @@
   # the data to the generated scripts, so the bash-generation logic isn't
   # duplicated between the keybind and waybar consumers.
   taskScripts = import ../hyprland/task-workspace-scripts.nix {
-    inherit pkgs lib;
-    tasks = config.module.taskWorkspaces.tasks;
+    inherit pkgs lib config;
   };
 in {
   options.module.waybar = {

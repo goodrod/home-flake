@@ -1,14 +1,24 @@
-{ pkgs, lib, tasks }:
+{ pkgs, lib, config }:
 let
   inherit (pkgs) writeScript;
 
-  # Escape a string for embedding in a Lua double-quoted string (same idiom as
-  # windowrules.nix's luaEscape - duplicated locally per this repo's convention
-  # of no shared lib helpers between module files).
+  tasks = config.module.taskWorkspaces.tasks;
+
+  # Lua-escape idiom (see windowrules.nix's luaEscape) - duplicated locally
+  # per this repo's convention of no shared lib helpers between module files.
   luaEscape = lib.replaceStrings [ ''\'' ''"'' ] [ ''\\'' ''\"'' ];
 
   taskList = lib.sort (a: b: a.id < b.id)
     (lib.mapAttrsToList (name: t: t // { inherit name; }) tasks);
+
+  # Everything already claimed by something static, so on-the-fly ad-hoc
+  # task creation (which auto-allocates an id at runtime, see
+  # taskLaunchOrFocus) never collides: predefined tasks, the app-category
+  # workspaces, and the generic SUPER+0..9/SHIFT+0..9 keybind grid (10-101).
+  reservedGridIds = lib.concatMap (n: [ (n * 10) (n * 10 + 1) ]) (lib.range 1 10);
+  workspaceIds = map (ws: ws.id) (lib.attrValues config.module.workspaces.entries);
+  reservedIdsSpace = lib.concatMapStringsSep " " toString
+    (map (t: t.id) taskList ++ workspaceIds ++ reservedGridIds);
 
   idAssignLines = lib.concatMapStringsSep "\n    "
     (t: "[${t.name}]=${toString t.id}") taskList;
@@ -29,8 +39,26 @@ let
   namesArr = lib.concatMapStringsSep " " (t: ''"${t.name}"'') taskList;
   idsArr   = lib.concatMapStringsSep " " (t: toString t.id) taskList;
   iconsArr = lib.concatMapStringsSep " " (t: ''"${luaEscape t.icon}"'') taskList;
+
+  # Icon shown for ad-hoc (on-the-fly created) tasks, in both the picker and
+  # the waybar widget - ad-hoc tasks have no Nix-declared icon of their own.
+  adhocIcon = "★";
 in
 rec {
+  # Launch (or focus, or on-the-fly-create) a task workspace by name.
+  #
+  # Three cases:
+  #  - name is a predefined task (module.taskWorkspaces.tasks): launch its
+  #    apps if the workspace is empty, else just focus it.
+  #  - name is a known ad-hoc task (recorded in the state file by a prior
+  #    on-the-fly creation): just focus its workspace - there's no app list
+  #    to (re)launch, the user populated it manually.
+  #  - name is unrecognized: create a new ad-hoc task on the fly. Allocates
+  #    a free id (>= 500, own space, never colliding with anything static -
+  #    see reservedIdsSpace above), records name -> id in the state file,
+  #    and focuses the (empty) new workspace. Never garbage collected -
+  #    manual only, matching this feature's launch+jump-only, no-teardown
+  #    design.
   taskLaunchOrFocus = writeScript "task-workspace-launch.sh" ''
     #!/usr/bin/env bash
     set -euo pipefail
@@ -39,12 +67,31 @@ rec {
       ${idAssignLines}
     )
     id="''${task_id[$task]:-}"
+
+    state_file="''${XDG_STATE_HOME:-$HOME/.local/state}/hypr-task-workspaces.json"
+    mkdir -p "$(dirname "$state_file")"
+    [ -s "$state_file" ] || printf '{}' > "$state_file"
+
+    is_predefined=1
     if [ -z "$id" ]; then
-      notify-send "Task workspace" "Unknown task: $task"
-      exit 1
+      is_predefined=0
+      id=$(jq -r --arg n "$task" '.[$n] // empty' "$state_file")
     fi
 
-    if ! hyprctl clients -j | jq -e --argjson id "$id" 'any(.[]; .workspace.id == $id)' >/dev/null; then
+    if [ -z "$id" ]; then
+      taken=" ${reservedIdsSpace} $(jq -r '.[]' "$state_file" | tr '\n' ' ')"
+      id=500
+      while [[ "$taken" == *" $id "* ]]; do
+        id=$((id + 1))
+      done
+      jq --arg n "$task" --argjson id "$id" '. + {($n): $id}' "$state_file" > "$state_file.tmp"
+      mv "$state_file.tmp" "$state_file"
+      notify-send "Task workspace" "Created: $task"
+      hyprctl dispatch "hl.dsp.focus({workspace = $id, on_current_monitor = true})"
+      exit 0
+    fi
+
+    if [ "$is_predefined" -eq 1 ] && ! hyprctl clients -j | jq -e --argjson id "$id" 'any(.[]; .workspace.id == $id)' >/dev/null; then
       case "$task" in
         ${launchCaseLines}
       esac
@@ -53,19 +100,38 @@ rec {
     hyprctl dispatch "hl.dsp.focus({workspace = $id, on_current_monitor = true})"
   '';
 
+  # Fuzzel dmenu picker listing predefined + ad-hoc tasks, fuzzy-searchable
+  # in one merged list (fuzzel's own dmenu input filtering does the fuzzy
+  # matching). Typing a name that matches neither is passed through
+  # unmodified by fuzzel (--only-match is NOT set) straight to
+  # taskLaunchOrFocus, which is what creates it on the fly.
   taskPicker = writeScript "task-workspace-picker.sh" ''
     #!/usr/bin/env bash
     set -euo pipefail
     pgrep fuzzel && pkill fuzzel && exit 0
-    selection=$(printf '%s\t%s\n' ${pickerPairs} \
-      | fuzzel --dmenu --with-nth=1 --accept-nth=2 --placeholder="Task workspace")
+    state_file="''${XDG_STATE_HOME:-$HOME/.local/state}/hypr-task-workspaces.json"
+    mkdir -p "$(dirname "$state_file")"
+    [ -s "$state_file" ] || printf '{}' > "$state_file"
+
+    selection=$(
+      {
+        printf '%s\t%s\n' ${pickerPairs}
+        jq -r 'to_entries[] | "${adhocIcon}  \(.key)\t\(.key)"' "$state_file"
+      } | fuzzel --dmenu --with-nth=1 --accept-nth=2 --placeholder="Task workspace"
+    ) || true
     [ -n "$selection" ] && exec ${taskLaunchOrFocus} "$selection"
   '';
 
+  # Waybar custom-module status: icons of currently-active predefined +
+  # ad-hoc tasks, polled (see module.waybar's custom/task-workspaces block).
   taskWaybarStatus = writeScript "task-workspace-status.sh" ''
     #!/usr/bin/env bash
     set -euo pipefail
     clients_json=$(hyprctl clients -j)
+    state_file="''${XDG_STATE_HOME:-$HOME/.local/state}/hypr-task-workspaces.json"
+    mkdir -p "$(dirname "$state_file")"
+    [ -s "$state_file" ] || printf '{}' > "$state_file"
+
     names=(${namesArr})
     ids=(${idsArr})
     icons=(${iconsArr})
@@ -81,6 +147,16 @@ rec {
         tooltip+=("''${names[$i]}: idle")
       fi
     done
+
+    while IFS=$'\t' read -r name id; do
+      [ -z "$name" ] && continue
+      if jq -e --argjson id "$id" 'any(.[]; .workspace.id == $id)' <<< "$clients_json" >/dev/null; then
+        active+=("${adhocIcon}")
+        tooltip+=("$name: running")
+      else
+        tooltip+=("$name: idle")
+      fi
+    done < <(jq -r 'to_entries[] | "\(.key)\t\(.value)"' "$state_file")
 
     text=$(IFS=' '; echo "''${active[*]:-}")
     class=$([ "''${#active[@]}" -gt 0 ] && echo active || echo idle)

@@ -2,7 +2,7 @@
 let
   inherit (pkgs) writeScript;
 in
-{
+rec {
   toggleWindow = writeScript "toggle-window.sh" ''
     #!/usr/bin/env bash
     pgrep fuzzel && pkill fuzzel && exit 0
@@ -17,6 +17,27 @@ in
     #!/usr/bin/env bash
     pgrep fuzzel && pkill fuzzel && exit 0
     fuzzel
+  '';
+
+  # Re-dispatches whatever fuzzel is about to exec through Hyprland's
+  # "[workspace unset]" exec prefix instead of letting fuzzel exec it
+  # directly, so window-rule auto-routing (e.g. browser -> its own tagged
+  # workspace) is bypassed and the app opens on the current workspace
+  # instead - same trick already used for mod+CTRL+space's terminal bind.
+  # Lua-escapes the joined argv (backslash then double-quote, same idiom as
+  # windowrules.nix's luaEscape) since this is a runtime value Nix can't
+  # pre-escape.
+  execCurrentWs = writeScript "exec-current-ws.sh" ''
+    #!/usr/bin/env bash
+    set -euo pipefail
+    escaped=$(printf '%s' "$*" | sed 's/\\/\\\\/g; s/"/\\"/g')
+    hyprctl dispatch "hl.dsp.exec_cmd(\"[workspace unset] $escaped\")"
+  '';
+
+  toggleMenuCurrentWs = writeScript "toggle-menu-current-ws.sh" ''
+    #!/usr/bin/env bash
+    pgrep fuzzel && pkill fuzzel && exit 0
+    fuzzel --launch-prefix="${execCurrentWs}"
   '';
 
   parseHotkeys = writeScript "parseHotkeys.sh" ''

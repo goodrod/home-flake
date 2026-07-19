@@ -3,7 +3,7 @@ let
   option = config.module.hyprland;
   scripts = import ./scripts.nix { inherit pkgs; };
   notifFocusScripts = import ./notif-focus-scripts.nix { inherit pkgs; };
-  taskScripts = import ./task-workspace-scripts.nix { inherit pkgs lib; tasks = config.module.taskWorkspaces.tasks; };
+  taskScripts = import ./task-workspace-scripts.nix { inherit pkgs lib config; };
   lockCmd = if option.lockscreen == "swaylock" then "/usr/bin/swaylock" else "hyprlock";
 
   monitorFocusLines = lib.concatStringsSep "\n      " (
@@ -46,6 +46,7 @@ in
 
       -- App toggles
       hl.bind(mainMod .. " + D", hl.dsp.exec_cmd("${scripts.toggleMenu}"), { description = "Toggle menu" })
+      hl.bind(mainMod .. " + CTRL + D", hl.dsp.exec_cmd("${scripts.toggleMenuCurrentWs}"), { description = "Toggle menu, launch on current workspace" })
       hl.bind(mainMod .. " + escape", hl.dsp.exec_cmd("${scripts.toggleWindow} :;"), { description = "Toggle window" })
       hl.bind(mainMod .. " + B", hl.dsp.exec_cmd("${scripts.toggleWindow} bluetuith"), { description = "Toggle Bluetooth" })
       hl.bind(mainMod .. " + V", hl.dsp.exec_cmd("${scripts.toggleWindow} pulsemixer"), { description = "Toggle Pulse audio mixer" })
