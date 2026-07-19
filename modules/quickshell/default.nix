@@ -25,12 +25,38 @@
     entries = workspaceEntries;
   });
 
-  # Merge the static QML config with the Nix-generated workspace data so the
-  # whole thing can be copied out via a single home.file entry.
+  # Predefined task workspaces (module.taskWorkspaces.tasks) - same data
+  # feeding modules/waybar's custom/task-workspaces widget. Ad-hoc
+  # (on-the-fly-created, id >= 500) tasks aren't in this list at all; they
+  # fall back to taskScripts.adhocIcon.
+  tasks = config.module.taskWorkspaces.tasks;
+  sortedTasks = lib.sort (a: b: a.id < b.id)
+    (lib.mapAttrsToList (name: t: t // { inherit name; }) tasks);
+
+  tasksJson = pkgs.writeText "quickshell-bar-tasks.json" (builtins.toJSON {
+    entries = map (t: { inherit (t) id icon name; }) sortedTasks;
+  });
+
+  # Reuse the exact scripts modules/waybar's custom/task-workspaces module
+  # runs, rather than re-deriving the active/idle-task-icon logic in QML.
+  taskScripts = import ../hyprland/task-workspace-scripts.nix {
+    inherit pkgs lib config;
+  };
+
+  scriptsJson = pkgs.writeText "quickshell-bar-scripts.json" (builtins.toJSON {
+    taskStatus = "${taskScripts.taskWaybarStatus}";
+    taskPicker = "${taskScripts.taskPicker}";
+    adhocIcon = taskScripts.adhocIcon;
+  });
+
+  # Merge the static QML config with the Nix-generated data so the whole
+  # thing can be copied out via a single home.file entry.
   mergedConfigDir = pkgs.runCommand "quickshell-bar-config" {} ''
     mkdir -p "$out"
     cp -r "${quickshellConfig.config-source-directory}/." "$out/"
     cp "${workspacesJson}" "$out/workspaces.json"
+    cp "${tasksJson}" "$out/tasks.json"
+    cp "${scriptsJson}" "$out/scripts.json"
   '';
 in {
   options.module.quickshell = {

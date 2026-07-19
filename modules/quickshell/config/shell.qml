@@ -48,8 +48,66 @@ ShellRoot {
     }
   }
 
+  // Predefined task workspaces (module.taskWorkspaces.tasks) and the store
+  // paths for the exact scripts modules/waybar's custom/task-workspaces
+  // widget already runs - reused rather than re-derived here.
+  FileView {
+    id: taskFile
+    path: Qt.resolvedUrl("./tasks.json")
+    watchChanges: true
+    onFileChanged: reload()
+
+    JsonAdapter {
+      id: taskData
+      property var entries: []
+    }
+  }
+
+  FileView {
+    id: scriptsFile
+    path: Qt.resolvedUrl("./scripts.json")
+    watchChanges: true
+    onFileChanged: reload()
+
+    JsonAdapter {
+      id: scriptsData
+      property string taskStatus: ""
+      property string taskPicker: ""
+      property string adhocIcon: ""
+    }
+  }
+
   function focusedWorkspaceId() {
     return Hyprland.focusedWorkspace ? Hyprland.focusedWorkspace.id : -1;
+  }
+
+  // Static workspaces (module.workspaces.entries) always show, even empty.
+  // Anything else Hyprland actually has instantiated - a shifted (+1)
+  // workspace, or a task workspace (predefined or ad-hoc) - shows too, but
+  // only while it exists (matches waybar: persistent-workspaces forces the
+  // static set, everything else rides on Hyprland's live workspace list).
+  function mergedWorkspaceIds() {
+    const ids = workspaceData.entries.map(e => e.id);
+    const seen = new Set(ids);
+    for (const w of Hyprland.workspaces.values) {
+      if (!seen.has(w.id)) {
+        seen.add(w.id);
+        ids.push(w.id);
+      }
+    }
+    ids.sort((a, b) => a - b);
+    return ids;
+  }
+
+  function workspaceIcon(id) {
+    for (const e of workspaceData.entries) {
+      if (e.id === id) return e.icon;
+      if (e.id + 1 === id) return e.shiftedIcon;
+    }
+    for (const t of taskData.entries) {
+      if (t.id === id) return t.icon;
+    }
+    return scriptsData.adhocIcon;
   }
 
   function focusWorkspace(id) {
@@ -62,6 +120,33 @@ ShellRoot {
 
   Process { id: focusProc }
   Process { id: powerProc; command: ["wlogout", "-b", "4"] }
+
+  // Task-workspaces widget (waybar's custom/task-workspaces): icons of
+  // currently-active predefined/ad-hoc tasks, polled every 3s same as waybar.
+  property string taskStatusText: ""
+  property string taskStatusTooltip: ""
+
+  Process {
+    id: taskStatusProc
+    command: scriptsData.taskStatus ? [scriptsData.taskStatus] : []
+    stdout: StdioCollector {
+      onStreamFinished: {
+        try {
+          const data = JSON.parse(this.text);
+          taskStatusText = data.text ?? "";
+          taskStatusTooltip = data.tooltip ?? "";
+        } catch (e) {}
+      }
+    }
+  }
+  Timer {
+    interval: 3000
+    running: scriptsData.taskStatus !== ""
+    repeat: true
+    triggeredOnStart: true
+    onTriggered: if (!taskStatusProc.running) taskStatusProc.running = true
+  }
+  Process { id: taskPickerProc; command: scriptsData.taskPicker ? [scriptsData.taskPicker] : [] }
 
   // ---------------------------------------------------------------------
   // Notifications (swaync) - "-swb" is a long-running subscription that
@@ -303,9 +388,10 @@ ShellRoot {
           anchors.verticalCenter: parent.verticalCenter
 
           Repeater {
-            model: workspaceData.entries
+            model: mergedWorkspaceIds()
             delegate: Rectangle {
-              readonly property bool focused: modelData.id === focusedWorkspaceId()
+              readonly property int wsId: modelData
+              readonly property bool focused: wsId === focusedWorkspaceId()
               width: 42
               height: 36
               radius: 12
@@ -313,16 +399,38 @@ ShellRoot {
 
               Text {
                 anchors.centerIn: parent
-                text: modelData.icon
+                text: workspaceIcon(wsId)
                 font.pixelSize: 20
                 color: focused ? "#181825" : "#D8DEE9"
               }
 
               MouseArea {
                 anchors.fill: parent
-                onClicked: focusWorkspace(modelData.id)
+                onClicked: focusWorkspace(wsId)
               }
             }
+          }
+        }
+
+        Rectangle {
+          visible: taskStatusText.length > 0
+          width: taskStatusLabel.implicitWidth + 16
+          height: 34
+          radius: 10
+          color: "#404A60"
+          anchors.verticalCenter: parent.verticalCenter
+
+          Text {
+            id: taskStatusLabel
+            anchors.centerIn: parent
+            text: taskStatusText
+            color: "#D8DEE9"
+            font.pixelSize: 18
+          }
+
+          MouseArea {
+            anchors.fill: parent
+            onClicked: taskPickerProc.running = true
           }
         }
 
