@@ -3,6 +3,7 @@ let
   option = config.module.hyprland;
   scripts = import ./scripts.nix { inherit pkgs; };
   notifFocusScripts = import ./notif-focus-scripts.nix { inherit pkgs; };
+  taskScripts = import ./task-workspace-scripts.nix { inherit pkgs lib; tasks = config.module.taskWorkspaces.tasks; };
   lockCmd = if option.lockscreen == "swaylock" then "/usr/bin/swaylock" else "hyprlock";
 
   monitorFocusLines = lib.concatStringsSep "\n      " (
@@ -50,6 +51,7 @@ in
       hl.bind(mainMod .. " + V", hl.dsp.exec_cmd("${scripts.toggleWindow} pulsemixer"), { description = "Toggle Pulse audio mixer" })
       hl.bind(mainMod .. " + M", hl.dsp.exec_cmd("${scripts.toggleWindow} htop"), { description = "Toggle htop" })
       hl.bind(mainMod .. " + N", hl.dsp.exec_cmd("${notifFocusScripts.focusLastNotifApp}"), { description = "Focus app that sent last notification" })
+      hl.bind(mainMod .. " + T", hl.dsp.exec_cmd("${taskScripts.taskPicker}"), { description = "Task workspace picker" })
 
       local function cycleColWidth(dir)
         colWidthIdx = ((colWidthIdx - 1 + dir + #colWidths) % #colWidths) + 1

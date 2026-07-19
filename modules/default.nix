@@ -23,6 +23,7 @@
     ./default-home-dirs
     ./navi
     ./workspaces
+    ./task-workspaces
     ./waybar
     ./wlogout
     ./swaync

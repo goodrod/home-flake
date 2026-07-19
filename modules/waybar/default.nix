@@ -29,6 +29,16 @@
 
   # Ints (waybar expects numbers here), in id order, only those flagged persistent.
   persistentWorkspaceIds = map (ws: ws.id) (lib.filter (ws: ws.persistent) sortedWs);
+
+  # Cross-directory import: task-workspace scripts are generated from
+  # module.taskWorkspaces.tasks the same way module.workspaces.entries feeds
+  # both windowrules.nix and this file - single source of truth extended from
+  # the data to the generated scripts, so the bash-generation logic isn't
+  # duplicated between the keybind and waybar consumers.
+  taskScripts = import ../hyprland/task-workspace-scripts.nix {
+    inherit pkgs lib;
+    tasks = config.module.taskWorkspaces.tasks;
+  };
 in {
   options.module.waybar = {
     enable = mkEnableOption "waybar";
@@ -74,6 +84,7 @@ in {
         modules-center = [
           "custom/notification"
           "hyprland/workspaces"
+          "custom/task-workspaces"
           "custom/power"
         ];
         modules-right = [
@@ -107,6 +118,15 @@ in {
         "custom/power" = {
           format = "⏻";
           on-click = "wlogout -b 4";
+        };
+        "custom/task-workspaces" = {
+          tooltip = true;
+          format = "{}";
+          return-type = "json";
+          interval = 3;
+          exec = "${taskScripts.taskWaybarStatus}";
+          on-click = "${taskScripts.taskPicker}";
+          escape = true;
         };
         "hyprland/workspaces" = {
           disable-scroll = false;
