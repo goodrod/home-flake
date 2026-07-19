@@ -2,7 +2,6 @@
 import QtQuick
 import Quickshell
 import Quickshell.Io
-import Quickshell.Widgets
 import Quickshell.Hyprland
 import Quickshell.Services.SystemTray
 import Quickshell.Services.UPower
@@ -17,6 +16,16 @@ import Quickshell.Networking
 // menu-only tray click silently does nothing. The menu is a native Qt
 // platform popup, so it follows the Qt platform theme, not this file's
 // colors - it won't be dark-themed unless Qt itself is configured for it.
+//
+// Islands are plain Rectangles sized explicitly (height: root.islandHeight,
+// width from content + padding) with content centered via anchors.centerIn,
+// not Quickshell.Widgets.WrapperRectangle - that component manages its
+// direct child's position itself, and anchoring that child (which Chip did)
+// fights it. That one conflict was the cause of three different-looking
+// symptoms: the clock text sitting visibly lower than the tray island next
+// to it, the "Tasks: N" island's clickable area only covering the exact
+// center of the text instead of the whole pill, and inconsistent island
+// heights. Plain Rectangle + anchors.centerIn has none of that ambiguity.
 
 ShellRoot {
   id: root
@@ -25,27 +34,60 @@ ShellRoot {
   // instead of the earlier per-widget rainbow of pastel accents.
   readonly property color islandBg: "#181825"
   readonly property color chipBg: "#22222c"
+  readonly property color chipHoverBg: "#33333f"
   readonly property color textColor: "#d8d8e2"
   readonly property color mutedTextColor: "#9a9aab"
   readonly property color accentColor: "#6c7ce0"
-  // Every island is pinned to this height so they line up regardless of
-  // what their tallest child happens to be (was previously auto-sized per
-  // island from content, which made them visibly uneven heights).
   readonly property int islandHeight: 40
+  readonly property int islandPadding: 16
 
   // Flat colored text, no background pill - just a plain Text with a
-  // `label` alias so call sites read the same as before.
+  // `label` alias so call sites read the same as before. No baked-in
+  // anchors - callers position it explicitly (see the note above about
+  // why an anchor opinion here caused real bugs).
   component Chip: Text {
     id: chipRoot
     property alias label: chipRoot.text
-    // Hardcoded rather than referencing root.textColor: inline `component`
-    // bodies are their own scope and qmllint flags outer-id references from
-    // inside one as unresolved - given a past instance this session of an
-    // "unqualified"-flagged reference turning out to be a genuine runtime
-    // ReferenceError (PanelWindow.anchors), not risking it here too.
-    color: "#d8d8e2"
+    color: root.textColor
     font.pixelSize: 14
-    anchors.verticalCenter: parent.verticalCenter
+  }
+
+  // A single square icon button: fixed size, hover highlight, left/right
+  // click and scroll all exposed as signals so callers wire up whatever
+  // they need (tray/notif/power only need click, audio needs click+wheel).
+  component IconButton: Rectangle {
+    id: btnRoot
+    property string glyph: ""
+    property int glyphSize: 16
+    property alias hovered: mouseArea.containsMouse
+    signal primaryClicked()
+    signal secondaryClicked()
+    signal wheelMoved(real delta)
+
+    width: 34
+    height: 34
+    radius: 10
+    color: mouseArea.containsMouse ? root.chipHoverBg : root.chipBg
+    Behavior on color { ColorAnimation { duration: 100 } }
+
+    Text {
+      anchors.centerIn: parent
+      text: btnRoot.glyph
+      color: root.textColor
+      font.pixelSize: btnRoot.glyphSize
+    }
+
+    MouseArea {
+      id: mouseArea
+      anchors.fill: parent
+      hoverEnabled: true
+      acceptedButtons: Qt.LeftButton | Qt.RightButton
+      onClicked: (mouse) => {
+        if (mouse.button === Qt.RightButton) btnRoot.secondaryClicked();
+        else btnRoot.primaryClicked();
+      }
+      onWheel: (wheel) => btnRoot.wheelMoved(wheel.angleDelta.y)
+    }
   }
 
   // ---------------------------------------------------------------------
@@ -164,18 +206,18 @@ ShellRoot {
   // Notifications (swaync) - "-swb" is a long-running subscription that
   // prints one JSON line per state change, not a one-shot query.
   // ---------------------------------------------------------------------
-  property string notifIcon: ""
+  property string notifIcon: ""
   property string notifTooltip: ""
 
   readonly property var notifIconMap: ({
-    "notification": "",
-    "none": "",
-    "dnd-notification": "",
-    "dnd-none": "",
-    "inhibited-notification": "",
-    "inhibited-none": "",
-    "dnd-inhibited-notification": "",
-    "dnd-inhibited-none": ""
+    "notification": "",
+    "none": "",
+    "dnd-notification": "",
+    "dnd-none": "",
+    "inhibited-notification": "",
+    "inhibited-none": "",
+    "dnd-inhibited-notification": "",
+    "dnd-inhibited-none": ""
   })
 
   Process {
@@ -277,26 +319,20 @@ ShellRoot {
       implicitHeight: 50
       color: "transparent"
 
-    // ---------------- clock island ----------------
-    WrapperRectangle {
-      id: clockIsland
-      anchors.left: parent.left
-      anchors.leftMargin: 14
-      anchors.verticalCenter: parent.verticalCenter
-      margin: 16
-      implicitHeight: root.islandHeight
-      radius: 16
-      color: root.islandBg
+      // ---------------- clock island ----------------
+      Rectangle {
+        id: clockIsland
+        anchors.left: parent.left
+        anchors.leftMargin: 14
+        anchors.verticalCenter: parent.verticalCenter
+        height: root.islandHeight
+        width: clockChip.implicitWidth + root.islandPadding * 2
+        radius: 16
+        color: root.islandBg
 
-      // WrapperRectangle manages (and positions) its direct child itself -
-      // putting anchors on that child directly conflicts with it (per
-      // WrapperRectangle's own docs), which is what was throwing the clock
-      // text's vertical centering off compared to the other islands. A
-      // single-item Row as the direct child sidesteps that: the Row is
-      // wrapper-managed with no anchors of its own, and Chip's anchor
-      // targets the Row instead, which is fine.
-      Row {
         Chip {
+          id: clockChip
+          anchors.centerIn: parent
           label: Qt.formatDateTime(new Date(), "ddd dd MMM  HH:mm")
 
           Timer {
@@ -307,274 +343,261 @@ ShellRoot {
           }
         }
       }
-    }
 
-    // ---------------- tray island ----------------
-    WrapperRectangle {
-      anchors.left: clockIsland.right
-      anchors.leftMargin: 14
-      anchors.verticalCenter: parent.verticalCenter
-      margin: 16
-      implicitHeight: root.islandHeight
-      radius: 16
-      color: root.islandBg
+      // ---------------- tray island ----------------
+      Rectangle {
+        id: trayIsland
+        anchors.left: clockIsland.right
+        anchors.leftMargin: 14
+        anchors.verticalCenter: parent.verticalCenter
+        height: root.islandHeight
+        width: trayRow.implicitWidth + root.islandPadding * 2
+        radius: 16
+        color: root.islandBg
 
-      Row {
-        spacing: 14
-        Repeater {
-          model: SystemTray.items
-          delegate: Rectangle {
-            id: trayDelegate
-            width: 30
-            height: 30
-            radius: 8
-            color: root.chipBg
+        Row {
+          id: trayRow
+          anchors.centerIn: parent
+          spacing: 14
 
-            Image {
-              anchors.centerIn: parent
-              width: 18
-              height: 18
-              source: modelData.icon
-            }
+          Repeater {
+            model: SystemTray.items
+            delegate: Rectangle {
+              id: trayDelegate
+              width: 30
+              height: 30
+              radius: 8
+              color: trayMouse.containsMouse ? root.chipHoverBg : root.chipBg
+              Behavior on color { ColorAnimation { duration: 100 } }
 
-            // Anchored to this specific icon (not raw mouse coordinates,
-            // which were relative to the icon, not the window - the menu
-            // was opening at the bar's top-left every time).
-            QsMenuAnchor {
-              id: trayMenuAnchor
-              anchor {
-                item: trayDelegate
-                gravity: Edges.Bottom | Edges.Right
-                edges: Edges.Bottom | Edges.Right
+              Image {
+                anchors.centerIn: parent
+                width: 18
+                height: 18
+                source: modelData.icon
               }
-            }
 
-            MouseArea {
-              anchors.fill: parent
-              acceptedButtons: Qt.LeftButton | Qt.RightButton
-              onClicked: (mouse) => {
-                if (mouse.button === Qt.RightButton) {
-                  if (modelData.menu) {
-                    trayMenuAnchor.menu = modelData.menu;
-                    trayMenuAnchor.open();
+              // Anchored to this specific icon (not raw mouse coordinates,
+              // which were relative to the icon, not the window - the menu
+              // was opening at the bar's top-left every time).
+              QsMenuAnchor {
+                id: trayMenuAnchor
+                anchor {
+                  item: trayDelegate
+                  gravity: Edges.Bottom | Edges.Right
+                  edges: Edges.Bottom | Edges.Right
+                }
+              }
+
+              MouseArea {
+                id: trayMouse
+                anchors.fill: parent
+                hoverEnabled: true
+                acceptedButtons: Qt.LeftButton | Qt.RightButton
+                onClicked: (mouse) => {
+                  if (mouse.button === Qt.RightButton) {
+                    if (modelData.menu) {
+                      trayMenuAnchor.menu = modelData.menu;
+                      trayMenuAnchor.open();
+                    } else {
+                      modelData.secondaryActivate();
+                    }
                   } else {
-                    modelData.secondaryActivate();
+                    modelData.activate();
                   }
-                } else {
-                  modelData.activate();
                 }
               }
             }
           }
         }
       }
-    }
 
-    // ---------------- workspaces island (the true bar-center anchor) ----------------
-    WrapperRectangle {
-      id: workspacesIsland
-      anchors.horizontalCenter: parent.horizontalCenter
-      anchors.verticalCenter: parent.verticalCenter
-      margin: 16
-      implicitHeight: root.islandHeight
-      radius: 16
-      color: root.islandBg
+      // ---------------- workspaces island (the true bar-center anchor) ----------------
+      Rectangle {
+        id: workspacesIsland
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.verticalCenter: parent.verticalCenter
+        height: root.islandHeight
+        width: workspacesRow.implicitWidth + root.islandPadding * 2
+        radius: 16
+        color: root.islandBg
 
-      Row {
-        spacing: 10
+        Row {
+          id: workspacesRow
+          anchors.centerIn: parent
+          spacing: 10
 
-        Repeater {
-          model: mergedWorkspaceIds()
-          delegate: Rectangle {
-            readonly property int wsId: modelData
-            readonly property bool focused: wsId === focusedWorkspaceId()
-            width: 42
-            height: 36
-            radius: 12
-            color: focused ? root.accentColor : root.chipBg
+          Repeater {
+            model: mergedWorkspaceIds()
+            delegate: Rectangle {
+              readonly property int wsId: modelData
+              readonly property bool focused: wsId === focusedWorkspaceId()
+              width: 42
+              height: 36
+              radius: 12
+              color: focused ? root.accentColor : (wsMouse.containsMouse ? root.chipHoverBg : root.chipBg)
+              Behavior on color { ColorAnimation { duration: 100 } }
 
-            Text {
-              anchors.centerIn: parent
-              text: workspaceIcon(wsId)
-              font.pixelSize: 20
-              color: focused ? "#ffffff" : root.mutedTextColor
+              Text {
+                anchors.centerIn: parent
+                text: workspaceIcon(wsId)
+                font.pixelSize: 20
+                color: focused ? "#ffffff" : root.mutedTextColor
+              }
+
+              MouseArea {
+                id: wsMouse
+                anchors.fill: parent
+                hoverEnabled: true
+                onClicked: focusWorkspace(wsId)
+              }
+            }
+          }
+        }
+      }
+
+      // ---------------- notification island - separate from workspaces so it ----------------
+      // ---------------- doesn't visually read as just another workspace pill ----------------
+      Rectangle {
+        anchors.right: workspacesIsland.left
+        anchors.rightMargin: 14
+        anchors.verticalCenter: parent.verticalCenter
+        height: root.islandHeight
+        width: notifBtn.width + root.islandPadding * 2
+        radius: 16
+        color: root.islandBg
+
+        IconButton {
+          id: notifBtn
+          anchors.centerIn: parent
+          glyph: notifIcon
+          glyphSize: 18
+          onPrimaryClicked: notifToggle.running = true
+          onSecondaryClicked: notifDismiss.running = true
+        }
+      }
+
+      // ---------------- power island ----------------
+      Rectangle {
+        id: powerIsland
+        anchors.left: workspacesIsland.right
+        anchors.leftMargin: 14
+        anchors.verticalCenter: parent.verticalCenter
+        height: root.islandHeight
+        width: powerBtn.width + root.islandPadding * 2
+        radius: 16
+        color: root.islandBg
+
+        IconButton {
+          id: powerBtn
+          anchors.centerIn: parent
+          glyph: "⏻"
+          onPrimaryClicked: sessionScreen.toggle()
+        }
+      }
+
+      // ---------------- tasks island: "Tasks: N" launcher/status ----------------
+      Rectangle {
+        anchors.left: powerIsland.right
+        anchors.leftMargin: 14
+        anchors.verticalCenter: parent.verticalCenter
+        height: root.islandHeight
+        width: tasksLabel.implicitWidth + root.islandPadding * 2
+        radius: 16
+        color: tasksMouse.containsMouse ? root.chipHoverBg : root.islandBg
+        Behavior on color { ColorAnimation { duration: 100 } }
+
+        Chip {
+          id: tasksLabel
+          anchors.centerIn: parent
+          label: "Tasks: " + activeTaskCount()
+        }
+
+        MouseArea {
+          id: tasksMouse
+          anchors.fill: parent
+          hoverEnabled: true
+          onClicked: taskPickerProc.running = true
+        }
+      }
+
+      // ---------------- right island: network, audio, cpu, memory, battery ----------------
+      Rectangle {
+        anchors.right: parent.right
+        anchors.rightMargin: 14
+        anchors.verticalCenter: parent.verticalCenter
+        height: root.islandHeight
+        width: rightRow.implicitWidth + root.islandPadding * 2
+        radius: 16
+        color: root.islandBg
+
+        Row {
+          id: rightRow
+          anchors.centerIn: parent
+          spacing: 20
+
+          Chip {
+            anchors.verticalCenter: parent.verticalCenter
+            readonly property var device: connectedNetworkDevice()
+            readonly property var net: connectedNetwork(device)
+            label: {
+              if (!device) return "  Disconnected";
+              if (device.type === DeviceType.Wifi) return "󰤨  " + (net ? net.name : device.name);
+              return "󰅢  " + device.name;
+            }
+          }
+
+          Chip {
+            id: audioChip
+            anchors.verticalCenter: parent.verticalCenter
+            readonly property var sink: Pipewire.defaultAudioSink
+            label: {
+              if (!sink || !sink.audio) return "  --";
+              const pct = Math.round(sink.audio.volume * 100);
+              return (sink.audio.muted ? "󰖁 " : " ") + " " + pct + "%";
             }
 
             MouseArea {
               anchors.fill: parent
-              onClicked: focusWorkspace(wsId)
+              onClicked: {
+                const sink = Pipewire.defaultAudioSink;
+                if (sink && sink.audio) sink.audio.muted = !sink.audio.muted;
+              }
+              onWheel: (wheel) => {
+                const sink = Pipewire.defaultAudioSink;
+                if (!sink || !sink.audio) return;
+                const step = 0.05;
+                const delta = wheel.angleDelta.y > 0 ? step : -step;
+                sink.audio.volume = Math.max(0, Math.min(1, sink.audio.volume + delta));
+              }
+            }
+          }
+
+          Chip {
+            anchors.verticalCenter: parent.verticalCenter
+            label: "  " + cpuUsage + "%"
+          }
+
+          Chip {
+            anchors.verticalCenter: parent.verticalCenter
+            label: "  " + memUsedGb.toFixed(1) + "G"
+          }
+
+          Chip {
+            anchors.verticalCenter: parent.verticalCenter
+            readonly property var battery: UPower.displayDevice
+            visible: battery && battery.isPresent
+            label: {
+              if (!battery || !battery.isPresent) return "";
+              const icons = ["󰂎", "󰁼", "󰁿", "󰂁", "󰁹"];
+              const pct = Math.round(battery.percentage * 100);
+              const tier = Math.max(0, Math.min(icons.length - 1, Math.floor(pct / 25)));
+              const charging = battery.state === UPowerDeviceState.Charging;
+              return icons[tier] + "  " + (charging ? "󱐋 " : "") + pct + "%";
             }
           }
         }
       }
-    }
-
-    // ---------------- notification island - separate from workspaces so it ----------------
-    // ---------------- doesn't visually read as just another workspace pill ----------------
-    WrapperRectangle {
-      anchors.right: workspacesIsland.left
-      anchors.rightMargin: 14
-      anchors.verticalCenter: parent.verticalCenter
-      margin: 16
-      implicitHeight: root.islandHeight
-      radius: 16
-      color: root.islandBg
-
-      Row {
-        Rectangle {
-          width: 34
-          height: 34
-          radius: 10
-          color: root.chipBg
-
-          Text {
-            anchors.centerIn: parent
-            text: notifIcon
-            color: root.textColor
-            font.pixelSize: 18
-          }
-
-          MouseArea {
-            anchors.fill: parent
-            acceptedButtons: Qt.LeftButton | Qt.RightButton
-            onClicked: (mouse) => {
-              if (mouse.button === Qt.RightButton) notifDismiss.running = true;
-              else notifToggle.running = true;
-            }
-          }
-        }
-      }
-    }
-
-    // ---------------- power island ----------------
-    WrapperRectangle {
-      id: powerIsland
-      anchors.left: workspacesIsland.right
-      anchors.leftMargin: 14
-      anchors.verticalCenter: parent.verticalCenter
-      margin: 16
-      implicitHeight: root.islandHeight
-      radius: 16
-      color: root.islandBg
-
-      Row {
-        Rectangle {
-          width: 34
-          height: 34
-          radius: 10
-          color: root.chipBg
-
-          Text {
-            anchors.centerIn: parent
-            text: "⏻"
-            color: root.textColor
-            font.pixelSize: 16
-          }
-
-          MouseArea {
-            anchors.fill: parent
-            onClicked: sessionScreen.toggle()
-          }
-        }
-      }
-    }
-
-    // ---------------- tasks island: "Tasks: N" launcher/status ----------------
-    WrapperRectangle {
-      anchors.left: powerIsland.right
-      anchors.leftMargin: 14
-      anchors.verticalCenter: parent.verticalCenter
-      margin: 16
-      implicitHeight: root.islandHeight
-      radius: 16
-      color: root.islandBg
-
-      // Chip as WrapperRectangle's direct child would fight the wrapper's
-      // own positioning (same issue the clock island had) - the MouseArea's
-      // hit area ended up not lining up with the rendered text, so clicks
-      // landed nowhere. Single-item Row sidesteps it.
-      Row {
-        Chip {
-          label: "Tasks: " + activeTaskCount()
-
-          MouseArea {
-            anchors.fill: parent
-            onClicked: taskPickerProc.running = true
-          }
-        }
-      }
-    }
-
-    // ---------------- right island: network, audio, cpu, memory, battery ----------------
-    WrapperRectangle {
-      anchors.right: parent.right
-      anchors.rightMargin: 14
-      anchors.verticalCenter: parent.verticalCenter
-      margin: 16
-      implicitHeight: root.islandHeight
-      radius: 16
-      color: root.islandBg
-
-      Row {
-        spacing: 20
-
-        Chip {
-          readonly property var device: connectedNetworkDevice()
-          readonly property var net: connectedNetwork(device)
-          label: {
-            if (!device) return " Disconnected";
-            if (device.type === DeviceType.Wifi) return "󰤨 " + (net ? net.name : device.name);
-            return "󰅢 " + device.name;
-          }
-        }
-
-        Chip {
-          id: audioChip
-          readonly property var sink: Pipewire.defaultAudioSink
-          label: {
-            if (!sink || !sink.audio) return "--";
-            const pct = Math.round(sink.audio.volume * 100);
-            return (sink.audio.muted ? "󰖁 " : " ") + pct + "%";
-          }
-
-          MouseArea {
-            anchors.fill: parent
-            onClicked: {
-              const sink = Pipewire.defaultAudioSink;
-              if (sink && sink.audio) sink.audio.muted = !sink.audio.muted;
-            }
-            onWheel: (wheel) => {
-              const sink = Pipewire.defaultAudioSink;
-              if (!sink || !sink.audio) return;
-              const step = 0.05;
-              const delta = wheel.angleDelta.y > 0 ? step : -step;
-              sink.audio.volume = Math.max(0, Math.min(1, sink.audio.volume + delta));
-            }
-          }
-        }
-
-        Chip {
-          label: " " + cpuUsage + "%"
-        }
-
-        Chip {
-          label: " " + memUsedGb.toFixed(1) + "G"
-        }
-
-        Chip {
-          readonly property var battery: UPower.displayDevice
-          visible: battery && battery.isPresent
-          label: {
-            if (!battery || !battery.isPresent) return "";
-            const icons = ["󰂎 ", "󰁼 ", "󰁿 ", "󰂁 ", "󰁹 "];
-            const pct = Math.round(battery.percentage * 100);
-            const tier = Math.max(0, Math.min(icons.length - 1, Math.floor(pct / 25)));
-            const charging = battery.state === UPowerDeviceState.Charging;
-            return icons[tier] + (charging ? "󱐋 " : "") + pct + "%";
-          }
-        }
-      }
-    }
     }
   }
 }

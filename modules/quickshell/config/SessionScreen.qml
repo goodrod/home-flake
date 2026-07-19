@@ -5,8 +5,11 @@ import Quickshell.Wayland
 
 // Session/logout screen, replacing wlogout for the bar's power button.
 // Same four actions modules/wlogout's layout has (lock/shutdown/suspend/
-// reboot), sshell-style presentation: full-screen dim, big keyboard-
-// navigable buttons, focused one grows a rounder corner + bigger glyph.
+// reboot), sshell-style presentation: full-screen dim, big keyboard- and
+// mouse-navigable buttons, focused/hovered one grows a rounder corner +
+// bigger glyph. Plain monochrome Unicode symbols instead of color emoji -
+// color glyphs read as cheap/inconsistent next to everything else in the
+// bar, which is all flat nerd-font/monochrome icons.
 PanelWindow {
   id: sessionScreen
 
@@ -60,14 +63,22 @@ PanelWindow {
     id: btnRoot
     property string glyph: ""
     property string label: ""
+    readonly property bool active: activeFocus || mouseArea.containsMouse
     signal activated()
 
-    width: 140
-    height: 140
-    radius: activeFocus ? width / 3 : 20
-    color: activeFocus ? "#6c7ce0" : "#22222c"
+    width: 150
+    height: 150
+    radius: active ? width / 3 : 20
+    // Hardcoded rather than referencing sessionScreen.accentColor/chipBg:
+    // inline `component` bodies are their own scope and outer-id references
+    // from inside one aren't reliable (see shell.qml's Chip for the same
+    // reasoning, backed by a real runtime bug it explains elsewhere).
+    color: active ? "#6c7ce0" : "#22222c"
+    border.width: active ? 0 : 1
+    border.color: Qt.rgba(1, 1, 1, 0.08)
 
     Behavior on radius { NumberAnimation { duration: 150; easing.type: Easing.OutQuad } }
+    Behavior on color { ColorAnimation { duration: 150 } }
 
     Keys.onPressed: (event) => {
       if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter || event.key === Qt.Key_Space) {
@@ -78,28 +89,30 @@ PanelWindow {
 
     Column {
       anchors.centerIn: parent
-      spacing: 12
+      spacing: 14
 
       Text {
         anchors.horizontalCenter: parent.horizontalCenter
         text: btnRoot.glyph
-        font.pixelSize: 40
-        color: btnRoot.activeFocus ? "#ffffff" : "#d8d8e2"
-        scale: btnRoot.activeFocus ? 1.15 : 1.0
+        font.pixelSize: 44
+        color: btnRoot.active ? "#ffffff" : "#d8d8e2"
+        scale: btnRoot.active ? 1.15 : 1.0
         Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutBack } }
       }
 
       Text {
         anchors.horizontalCenter: parent.horizontalCenter
         text: btnRoot.label
-        font.pixelSize: 15
+        font.pixelSize: 16
         font.bold: true
-        color: btnRoot.activeFocus ? "#ffffff" : "#d8d8e2"
+        color: btnRoot.active ? "#ffffff" : "#d8d8e2"
       }
     }
 
     MouseArea {
+      id: mouseArea
       anchors.fill: parent
+      hoverEnabled: true
       onClicked: btnRoot.activated()
     }
   }
@@ -107,7 +120,7 @@ PanelWindow {
   Rectangle {
     anchors.fill: parent
     color: "#000000"
-    opacity: sessionScreen.shown ? 0.6 : 0
+    opacity: sessionScreen.shown ? 0.65 : 0
     Behavior on opacity { NumberAnimation { duration: 150 } }
 
     MouseArea {
@@ -126,23 +139,28 @@ PanelWindow {
 
     Column {
       id: content
-      spacing: 30
+      spacing: 36
 
-      Text {
+      Column {
         anchors.horizontalCenter: parent.horizontalCenter
-        text: "Session"
-        font.pixelSize: 32
-        font.bold: true
-        color: "#d8d8e2"
+        spacing: 6
+
+        Text {
+          anchors.horizontalCenter: parent.horizontalCenter
+          text: "Session"
+          font.pixelSize: 34
+          font.bold: true
+          color: sessionScreen.textColor
+        }
       }
 
       Row {
         anchors.horizontalCenter: parent.horizontalCenter
-        spacing: 20
+        spacing: 24
 
         SessionButton {
           id: lockBtn
-          glyph: "🔒"
+          glyph: "⚿"
           label: "Lock"
           KeyNavigation.right: shutdownBtn
           KeyNavigation.left: rebootBtn
@@ -167,7 +185,7 @@ PanelWindow {
 
         SessionButton {
           id: suspendBtn
-          glyph: "🌙"
+          glyph: "☾"
           label: "Suspend"
           KeyNavigation.left: shutdownBtn
           KeyNavigation.right: rebootBtn
@@ -179,7 +197,7 @@ PanelWindow {
 
         SessionButton {
           id: rebootBtn
-          glyph: "🔄"
+          glyph: "↻"
           label: "Reboot"
           KeyNavigation.left: suspendBtn
           KeyNavigation.right: lockBtn
@@ -192,9 +210,9 @@ PanelWindow {
 
       Text {
         anchors.horizontalCenter: parent.horizontalCenter
-        text: "Arrow keys to navigate, Enter to select, Esc to cancel"
-        font.pixelSize: 12
-        color: "#9a9aab"
+        text: "Arrow keys or mouse to navigate, Enter/click to select, Esc to cancel"
+        font.pixelSize: 13
+        color: sessionScreen.mutedTextColor
       }
     }
   }
