@@ -21,11 +21,29 @@ import Quickshell.Networking
 ShellRoot {
   id: root
 
+  // Muted, mostly-monochrome palette (one accent color, used sparingly)
+  // instead of the earlier per-widget rainbow of pastel accents.
+  readonly property color islandBg: "#181825"
+  readonly property color chipBg: "#22222c"
+  readonly property color textColor: "#d8d8e2"
+  readonly property color mutedTextColor: "#9a9aab"
+  readonly property color accentColor: "#6c7ce0"
+  // Every island is pinned to this height so they line up regardless of
+  // what their tallest child happens to be (was previously auto-sized per
+  // island from content, which made them visibly uneven heights).
+  readonly property int islandHeight: 40
+
   // Flat colored text, no background pill - just a plain Text with a
   // `label` alias so call sites read the same as before.
   component Chip: Text {
     id: chipRoot
     property alias label: chipRoot.text
+    // Hardcoded rather than referencing root.textColor: inline `component`
+    // bodies are their own scope and qmllint flags outer-id references from
+    // inside one as unresolved - given a past instance this session of an
+    // "unqualified"-flagged reference turning out to be a genuine runtime
+    // ReferenceError (PanelWindow.anchors), not risking it here too.
+    color: "#d8d8e2"
     font.pixelSize: 14
     anchors.verticalCenter: parent.verticalCenter
   }
@@ -272,11 +290,11 @@ ShellRoot {
       anchors.leftMargin: 10
       anchors.verticalCenter: parent.verticalCenter
       margin: 10
+      implicitHeight: root.islandHeight
       radius: 16
-      color: "#181825"
+      color: root.islandBg
 
       Chip {
-        color: "#cdd6f4"
         label: Qt.formatDateTime(new Date(), "ddd dd MMM  HH:mm")
 
         Timer {
@@ -294,8 +312,9 @@ ShellRoot {
       anchors.leftMargin: 10
       anchors.verticalCenter: parent.verticalCenter
       margin: 10
+      implicitHeight: root.islandHeight
       radius: 16
-      color: "#181825"
+      color: root.islandBg
 
       Row {
         spacing: 10
@@ -306,7 +325,7 @@ ShellRoot {
             width: 30
             height: 30
             radius: 8
-            color: "#404A60"
+            color: root.chipBg
 
             Image {
               anchors.centerIn: parent
@@ -353,8 +372,9 @@ ShellRoot {
       anchors.horizontalCenter: parent.horizontalCenter
       anchors.verticalCenter: parent.verticalCenter
       margin: 10
+      implicitHeight: root.islandHeight
       radius: 16
-      color: "#181825"
+      color: root.islandBg
 
       Row {
         spacing: 10
@@ -363,13 +383,13 @@ ShellRoot {
           width: 34
           height: 34
           radius: 10
-          color: "#DDC062"
+          color: root.chipBg
           anchors.verticalCenter: parent.verticalCenter
 
           Text {
             anchors.centerIn: parent
             text: notifIcon
-            color: "#181825"
+            color: root.textColor
             font.pixelSize: 18
           }
 
@@ -395,13 +415,13 @@ ShellRoot {
               width: 42
               height: 36
               radius: 12
-              color: focused ? "#cdd6f4" : "#404A60"
+              color: focused ? root.accentColor : root.chipBg
 
               Text {
                 anchors.centerIn: parent
                 text: workspaceIcon(wsId)
                 font.pixelSize: 20
-                color: focused ? "#181825" : "#D8DEE9"
+                color: focused ? "#ffffff" : root.mutedTextColor
               }
 
               MouseArea {
@@ -417,14 +437,14 @@ ShellRoot {
           width: taskStatusLabel.implicitWidth + 16
           height: 34
           radius: 10
-          color: "#404A60"
+          color: root.chipBg
           anchors.verticalCenter: parent.verticalCenter
 
           Text {
             id: taskStatusLabel
             anchors.centerIn: parent
             text: taskStatusText
-            color: "#D8DEE9"
+            color: root.textColor
             font.pixelSize: 18
           }
 
@@ -438,13 +458,13 @@ ShellRoot {
           width: 34
           height: 34
           radius: 10
-          color: "#f38ba8"
+          color: root.chipBg
           anchors.verticalCenter: parent.verticalCenter
 
           Text {
             anchors.centerIn: parent
             text: "⏻"
-            color: "#181825"
+            color: root.textColor
             font.pixelSize: 16
           }
 
@@ -462,14 +482,14 @@ ShellRoot {
       anchors.rightMargin: 10
       anchors.verticalCenter: parent.verticalCenter
       margin: 10
+      implicitHeight: root.islandHeight
       radius: 16
-      color: "#181825"
+      color: root.islandBg
 
       Row {
         spacing: 8
 
         Chip {
-          color: "#A3BE8C"
           readonly property var device: connectedNetworkDevice()
           readonly property var net: connectedNetwork(device)
           label: {
@@ -481,7 +501,6 @@ ShellRoot {
 
         Chip {
           id: audioChip
-          color: "#89dceb"
           readonly property var sink: Pipewire.defaultAudioSink
           label: {
             if (!sink || !sink.audio) return "--";
@@ -499,17 +518,14 @@ ShellRoot {
         }
 
         Chip {
-          color: "#FF7B87"
           label: " " + cpuUsage + "%"
         }
 
         Chip {
-          color: "#FF9F81"
           label: " " + memUsedGb.toFixed(1) + "G"
         }
 
         Chip {
-          color: "#cba6f7"
           readonly property var battery: UPower.displayDevice
           visible: battery && battery.isPresent
           label: {
