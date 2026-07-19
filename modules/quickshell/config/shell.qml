@@ -66,21 +66,8 @@ ShellRoot {
     }
   }
 
-  // Predefined task workspaces (module.taskWorkspaces.tasks) and the store
-  // paths for the exact scripts modules/waybar's custom/task-workspaces
+  // Store paths for the exact scripts modules/waybar's custom/task-workspaces
   // widget already runs - reused rather than re-derived here.
-  FileView {
-    id: taskFile
-    path: Qt.resolvedUrl("./tasks.json")
-    watchChanges: true
-    onFileChanged: reload()
-
-    JsonAdapter {
-      id: taskData
-      property var entries: []
-    }
-  }
-
   FileView {
     id: scriptsFile
     path: Qt.resolvedUrl("./scripts.json")
@@ -91,7 +78,6 @@ ShellRoot {
       id: scriptsData
       property string taskStatus: ""
       property string taskPicker: ""
-      property string adhocIcon: ""
     }
   }
 
@@ -100,15 +86,15 @@ ShellRoot {
   }
 
   // Static workspaces (module.workspaces.entries) always show, even empty.
-  // Anything else Hyprland actually has instantiated - a shifted (+1)
-  // workspace, or a task workspace (predefined or ad-hoc) - shows too, but
-  // only while it exists (matches waybar: persistent-workspaces forces the
-  // static set, everything else rides on Hyprland's live workspace list).
+  // A shifted (+1) workspace shows too, but only while it exists. Task
+  // workspaces (id >= 200, see task-workspace-scripts.nix's reserved id
+  // space) are deliberately excluded here - they get their own "Tasks: N"
+  // island instead of cluttering this row.
   function mergedWorkspaceIds() {
     const ids = workspaceData.entries.map(e => e.id);
     const seen = new Set(ids);
     for (const w of Hyprland.workspaces.values) {
-      if (!seen.has(w.id)) {
+      if (w.id < 200 && !seen.has(w.id)) {
         seen.add(w.id);
         ids.push(w.id);
       }
@@ -122,10 +108,15 @@ ShellRoot {
       if (e.id === id) return e.icon;
       if (e.id + 1 === id) return e.shiftedIcon;
     }
-    for (const t of taskData.entries) {
-      if (t.id === id) return t.icon;
-    }
-    return scriptsData.adhocIcon;
+    return "";
+  }
+
+  // Count of currently-active (running) task workspaces, from the same
+  // space-separated icon string modules/waybar's custom/task-workspaces
+  // widget renders directly - here we only need how many, not which.
+  function activeTaskCount() {
+    const trimmed = taskStatusText.trim();
+    return trimmed.length === 0 ? 0 : trimmed.split(/\s+/).length;
   }
 
   function focusWorkspace(id) {
@@ -287,9 +278,9 @@ ShellRoot {
     WrapperRectangle {
       id: clockIsland
       anchors.left: parent.left
-      anchors.leftMargin: 10
+      anchors.leftMargin: 14
       anchors.verticalCenter: parent.verticalCenter
-      margin: 10
+      margin: 16
       implicitHeight: root.islandHeight
       radius: 16
       color: root.islandBg
@@ -309,15 +300,15 @@ ShellRoot {
     // ---------------- tray island ----------------
     WrapperRectangle {
       anchors.left: clockIsland.right
-      anchors.leftMargin: 10
+      anchors.leftMargin: 14
       anchors.verticalCenter: parent.verticalCenter
-      margin: 10
+      margin: 16
       implicitHeight: root.islandHeight
       radius: 16
       color: root.islandBg
 
       Row {
-        spacing: 10
+        spacing: 14
         Repeater {
           model: SystemTray.items
           delegate: Rectangle {
@@ -369,15 +360,16 @@ ShellRoot {
 
     // ---------------- center island: notification + workspaces + power ----------------
     WrapperRectangle {
+      id: centerIsland
       anchors.horizontalCenter: parent.horizontalCenter
       anchors.verticalCenter: parent.verticalCenter
-      margin: 10
+      margin: 16
       implicitHeight: root.islandHeight
       radius: 16
       color: root.islandBg
 
       Row {
-        spacing: 10
+        spacing: 14
 
         Rectangle {
           width: 34
@@ -404,7 +396,7 @@ ShellRoot {
         }
 
         Row {
-          spacing: 8
+          spacing: 12
           anchors.verticalCenter: parent.verticalCenter
 
           Repeater {
@@ -433,28 +425,6 @@ ShellRoot {
         }
 
         Rectangle {
-          visible: taskStatusText.length > 0
-          width: taskStatusLabel.implicitWidth + 16
-          height: 34
-          radius: 10
-          color: root.chipBg
-          anchors.verticalCenter: parent.verticalCenter
-
-          Text {
-            id: taskStatusLabel
-            anchors.centerIn: parent
-            text: taskStatusText
-            color: root.textColor
-            font.pixelSize: 18
-          }
-
-          MouseArea {
-            anchors.fill: parent
-            onClicked: taskPickerProc.running = true
-          }
-        }
-
-        Rectangle {
           width: 34
           height: 34
           radius: 10
@@ -476,18 +446,38 @@ ShellRoot {
       }
     }
 
+    // ---------------- tasks island: "Tasks: N" launcher/status ----------------
+    WrapperRectangle {
+      anchors.left: centerIsland.right
+      anchors.leftMargin: 14
+      anchors.verticalCenter: parent.verticalCenter
+      margin: 16
+      implicitHeight: root.islandHeight
+      radius: 16
+      color: root.islandBg
+
+      Chip {
+        label: "Tasks: " + activeTaskCount()
+
+        MouseArea {
+          anchors.fill: parent
+          onClicked: taskPickerProc.running = true
+        }
+      }
+    }
+
     // ---------------- right island: network, audio, cpu, memory, battery ----------------
     WrapperRectangle {
       anchors.right: parent.right
-      anchors.rightMargin: 10
+      anchors.rightMargin: 14
       anchors.verticalCenter: parent.verticalCenter
-      margin: 10
+      margin: 16
       implicitHeight: root.islandHeight
       radius: 16
       color: root.islandBg
 
       Row {
-        spacing: 8
+        spacing: 12
 
         Chip {
           readonly property var device: connectedNetworkDevice()
@@ -505,7 +495,7 @@ ShellRoot {
           label: {
             if (!sink || !sink.audio) return "--";
             const pct = Math.round(sink.audio.volume * 100);
-            return sink.audio.muted ? "󰖁" : "" + pct + "%";
+            return (sink.audio.muted ? "󰖁 " : " ") + pct + "%";
           }
 
           MouseArea {
@@ -513,6 +503,13 @@ ShellRoot {
             onClicked: {
               const sink = Pipewire.defaultAudioSink;
               if (sink && sink.audio) sink.audio.muted = !sink.audio.muted;
+            }
+            onWheel: (wheel) => {
+              const sink = Pipewire.defaultAudioSink;
+              if (!sink || !sink.audio) return;
+              const step = 0.05;
+              const delta = wheel.angleDelta.y > 0 ? step : -step;
+              sink.audio.volume = Math.max(0, Math.min(1, sink.audio.volume + delta));
             }
           }
         }
@@ -530,11 +527,11 @@ ShellRoot {
           visible: battery && battery.isPresent
           label: {
             if (!battery || !battery.isPresent) return "";
-            const icons = ["󰂎", "󰁼", "󰁿", "󰂁", "󰁹"];
+            const icons = ["󰂎 ", "󰁼 ", "󰁿 ", "󰂁 ", "󰁹 "];
             const pct = Math.round(battery.percentage * 100);
             const tier = Math.max(0, Math.min(icons.length - 1, Math.floor(pct / 25)));
             const charging = battery.state === UPowerDeviceState.Charging;
-            return icons[tier] + (charging ? "󱐋" : "") + pct + "%";
+            return icons[tier] + (charging ? "󱐋 " : "") + pct + "%";
           }
         }
       }

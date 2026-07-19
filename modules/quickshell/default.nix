@@ -25,20 +25,11 @@
     entries = workspaceEntries;
   });
 
-  # Predefined task workspaces (module.taskWorkspaces.tasks) - same data
-  # feeding modules/waybar's custom/task-workspaces widget. Ad-hoc
-  # (on-the-fly-created, id >= 500) tasks aren't in this list at all; they
-  # fall back to taskScripts.adhocIcon.
-  tasks = config.module.taskWorkspaces.tasks;
-  sortedTasks = lib.sort (a: b: a.id < b.id)
-    (lib.mapAttrsToList (name: t: t // { inherit name; }) tasks);
-
-  tasksJson = pkgs.writeText "quickshell-bar-tasks.json" (builtins.toJSON {
-    entries = map (t: { inherit (t) id icon name; }) sortedTasks;
-  });
-
   # Reuse the exact scripts modules/waybar's custom/task-workspaces module
-  # runs, rather than re-deriving the active/idle-task-icon logic in QML.
+  # runs, rather than re-deriving the active/idle-task logic in QML. The
+  # quickshell bar only needs a count of active tasks (see shell.qml's
+  # "Tasks: N" island), not per-task icons, so only the script paths
+  # (status poller + fuzzel picker) get passed through.
   taskScripts = import ../hyprland/task-workspace-scripts.nix {
     inherit pkgs lib config;
   };
@@ -46,7 +37,6 @@
   scriptsJson = pkgs.writeText "quickshell-bar-scripts.json" (builtins.toJSON {
     taskStatus = "${taskScripts.taskWaybarStatus}";
     taskPicker = "${taskScripts.taskPicker}";
-    adhocIcon = taskScripts.adhocIcon;
   });
 
   # Merge the static QML config with the Nix-generated data so the whole
@@ -55,7 +45,6 @@
     mkdir -p "$out"
     cp -r "${quickshellConfig.config-source-directory}/." "$out/"
     cp "${workspacesJson}" "$out/workspaces.json"
-    cp "${tasksJson}" "$out/tasks.json"
     cp "${scriptsJson}" "$out/scripts.json"
   '';
 in {
