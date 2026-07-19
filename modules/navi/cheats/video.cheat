@@ -1,0 +1,14 @@
+% video
+# (compress/encode)             Compress video (h264, target quality)
+ffmpeg -i <input> -vcodec libx264 -crf <crf> -preset <preset> -acodec aac -b:a 128k <output>
+$ input: fd -t f -e mp4 -e mkv -e mov
+$ crf: echo -e "23\n28\n32"
+$ preset: echo -e "medium\nfast\nslow\nveryslow"
+$ output: echo "compressed.mp4"
+
+# (compress/encode)             Compress video (h265, smaller size)
+ffmpeg -i <input> -vcodec libx265 -crf <crf> -preset <preset> -acodec aac -b:a 128k <output>
+$ input: fd -t f -e mp4 -e mkv -e mov
+$ crf: echo -e "26\n28\n32"
+$ preset: echo -e "medium\nfast\nslow\nveryslow"
+$ output: echo "compressed.mp4"
