@@ -267,7 +267,5 @@ rec {
       '{text: $text, tooltip: $tooltip, class: $class}'
   '';
 
-  # Exposed so other consumers (module.quickshell) can render the same
-  # ad-hoc-task fallback glyph without duplicating it.
   inherit adhocIcon;
 }

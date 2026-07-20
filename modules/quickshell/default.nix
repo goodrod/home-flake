@@ -8,8 +8,6 @@
   inherit (types) path str;
   quickshellConfig = config.module.quickshell;
 
-  # Single source of truth for workspaces lives in module.workspaces (same
-  # data waybar's workspaceFormatIcons/persistentWorkspaceIds derive from).
   workspaces = config.module.workspaces.entries;
   sortedWs = lib.sort (a: b: a.id < b.id) (lib.attrValues workspaces);
 
@@ -25,18 +23,10 @@
     entries = workspaceEntries;
   });
 
-  # Reuse the exact scripts modules/waybar's custom/task-workspaces module
-  # runs, rather than re-deriving the active/idle-task logic in QML. The
-  # quickshell bar only needs a count of active tasks (see shell.qml's
-  # "Tasks: N" island), not per-task icons, so only the script paths
-  # (status poller + fuzzel picker) get passed through.
   taskScripts = import ../hyprland/task-workspace-scripts.nix {
     inherit pkgs lib config;
   };
 
-  # Same lock-command resolution modules/wlogout's layout file uses
-  # (duplicated locally rather than shared - matches this repo's existing
-  # convention, see task-workspace-scripts.nix's luaEscape comment).
   lockCmd =
     if config.module.hyprland.lockscreen == "swaylock"
     then "swaylock -f"
@@ -48,8 +38,6 @@
     lockCmd = lockCmd;
   });
 
-  # Merge the static QML config with the Nix-generated data so the whole
-  # thing can be copied out via a single home.file entry.
   mergedConfigDir = pkgs.runCommand "quickshell-bar-config" {} ''
     mkdir -p "$out"
     cp -r "${quickshellConfig.config-source-directory}/." "$out/"
@@ -74,10 +62,6 @@ in {
   };
 
   config = mkIf quickshellConfig.enable {
-    # Nerd-font glyphs are used throughout shell.qml (workspaces, tray,
-    # network/battery icons, session screen) - install these directly
-    # rather than relying on module.waybar also being enabled to pull
-    # them in.
     fonts.fontconfig.enable = true;
     home.packages = with pkgs;
       [quickshell qt6Packages.qt6ct]
@@ -89,10 +73,6 @@ in {
       recursive = true;
     };
 
-    # Tray context menus (QsMenuAnchor/SystemTrayItem.display) are native Qt
-    # platform popups, so they ignore the QML bar's colors entirely - they
-    # follow whatever Qt platform theme is configured. qt6ct + one of its
-    # bundled dark color schemes gets them out of the default light style.
     home.file.".config/qt6ct/qt6ct.conf".text = ''
       [Appearance]
       custom_palette=true

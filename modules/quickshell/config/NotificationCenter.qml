@@ -3,15 +3,6 @@ import Quickshell
 import Quickshell.Wayland
 import Quickshell.Services.Notifications
 
-// Notification center, sshell-style: quickshell owns notifications directly
-// (Quickshell.Services.Notifications.NotificationServer) instead of going
-// through swaync - toast popups top-right, a toggleable history panel with
-// DND/clear-all/power in its header (the standalone power button moved in
-// here, same as sshell's ControlCenter). All glyphs below are written as
-// \u{...} escapes rather than pasted literal characters - this repo hit
-// real UTF-8 byte-corruption bugs earlier from copy/pasting multi-byte
-// glyphs through shell tooling, and a JS unicode escape is immune to that
-// entire class of problem.
 Item {
   id: notifCenter
 
@@ -22,10 +13,6 @@ Item {
   readonly property color mutedTextColor: "#9a9aab"
   readonly property color accentColor: "#6c7ce0"
 
-  // Toasts: currently-visible popups (cleared on timeout or dismiss).
-  // History: everything not yet cleared, most recent first - what the
-  // panel's list shows. A notification lives in both until its toast
-  // times out; closing/clearing removes it from both at once.
   property var toasts: []
   property var history: []
   property bool dnd: false
@@ -99,7 +86,6 @@ Item {
     }
   }
 
-  // ---------------- toasts: non-modal, top-right, one per screen[0] ----------------
   PanelWindow {
     screen: Quickshell.screens[0]
     color: "transparent"
@@ -172,7 +158,6 @@ Item {
     }
   }
 
-  // ---------------- history panel: modal, opened from the bar's bell ----------------
   PanelWindow {
     screen: Quickshell.screens[0]
     visible: notifCenter.shown
@@ -183,7 +168,6 @@ Item {
     exclusionMode: ExclusionMode.Ignore
     anchors { top: true; bottom: true; left: true; right: true }
 
-    // Full-window click-outside catcher, sits behind the panel below.
     MouseArea {
       anchors.fill: parent
       onClicked: notifCenter.close()
@@ -207,8 +191,6 @@ Item {
         border.width: 1
         border.color: Qt.rgba(1, 1, 1, 0.06)
 
-        // Swallows clicks so they don't fall through to the outer
-        // click-outside catcher and close the panel on its own content.
         MouseArea { anchors.fill: parent }
 
         Column {

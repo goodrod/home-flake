@@ -3,13 +3,6 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
 
-// Session/logout screen, replacing wlogout for the bar's power button.
-// Same four actions modules/wlogout's layout has (lock/shutdown/suspend/
-// reboot), sshell-style presentation: full-screen dim, big keyboard- and
-// mouse-navigable buttons, focused/hovered one grows a rounder corner +
-// bigger glyph. Plain monochrome Unicode symbols instead of color emoji -
-// color glyphs read as cheap/inconsistent next to everything else in the
-// bar, which is all flat nerd-font/monochrome icons.
 PanelWindow {
   id: sessionScreen
 
@@ -69,10 +62,6 @@ PanelWindow {
     width: 150
     height: 150
     radius: active ? width / 3 : 20
-    // Hardcoded rather than referencing sessionScreen.accentColor/chipBg:
-    // inline `component` bodies are their own scope and outer-id references
-    // from inside one aren't reliable (see shell.qml's Chip for the same
-    // reasoning, backed by a real runtime bug it explains elsewhere).
     color: active ? "#6c7ce0" : "#22222c"
     border.width: active ? 0 : 1
     border.color: Qt.rgba(1, 1, 1, 0.08)
