@@ -41,17 +41,19 @@ in {
           radius = 10; # Border radius
         };
         colors = {
-          background = "#1e1e2eff"; # Dark background
-          text = "#cdd6f4ff"; # Light text
-          prompt = "#ff8c00ff"; # Orange prompt
-          placeholder = "#93a1a1ff"; # Light placeholder
-          input = "#cdd6f4ff"; # Light input text
-          match = "#00ff00ff"; # Match color (same as prompt)
-          selection = "#313244ff"; # Darker selection background
-          selection-text = "#ff8c00ff"; # Selected text matches prompt
-          selection-match = "#00ff00ff"; # Match color in selected text
-          counter = "#93a1a1ff"; # Counter color
-          border = "#1e1e2eff"; # Border col r
+          # Matches the quickshell bar/control-center palette
+          # (modules/quickshell/config/shell.qml).
+          background = "#141313ff"; # islandBg
+          text = "#DEE2E6ff"; # textColor
+          prompt = "#D0BCFFff"; # accentColor
+          placeholder = "#CAC4D0ff"; # mutedTextColor
+          input = "#DEE2E6ff"; # textColor
+          match = "#D0BCFFff"; # accentColor
+          selection = "#D0BCFFff"; # accentColor
+          selection-text = "#381E72ff"; # accentTextColor
+          selection-match = "#381E72ff"; # accentTextColor
+          counter = "#CAC4D0ff"; # mutedTextColor
+          border = "#49454Fff"; # chipBg
         };
       };
     };

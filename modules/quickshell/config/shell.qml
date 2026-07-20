@@ -386,9 +386,9 @@ ShellRoot {
             delegate: Rectangle {
               readonly property int wsId: modelData
               readonly property bool focused: wsId === focusedWorkspaceId()
-              width: 42
+              width: 36
               height: 36
-              radius: 12
+              radius: 18
               color: focused ? root.accentColor : (wsMouse.containsMouse ? root.chipHoverBg : root.chipBg)
               Behavior on color { ColorAnimation { duration: 100 } }
 
@@ -462,7 +462,7 @@ ShellRoot {
 
             Text {
               anchors.centerIn: parent
-              text: controlCenter.dnd ? "" : ""
+              text: ""
               font.pixelSize: 15
               color: root.textColor
             }
