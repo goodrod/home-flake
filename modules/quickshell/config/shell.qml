@@ -2,6 +2,7 @@
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import Quickshell.Wayland
 import Quickshell.Hyprland
 import Quickshell.Services.SystemTray
 import Quickshell.Services.UPower
@@ -175,6 +176,16 @@ ShellRoot {
   // power button - single instance, not per-monitor.
   SessionScreen { id: sessionScreen }
 
+  // Notification center (NotificationCenter.qml) replaces both the old
+  // swaync-backed bell and the standalone power button - single instance,
+  // not per-monitor (matches SessionScreen and sshell's own popups, which
+  // also live on one screen rather than duplicating per output). The power
+  // icon now lives inside its header, sshell-style.
+  NotificationCenter {
+    id: notifCenter
+    onRequestSessionScreen: sessionScreen.toggle()
+  }
+
   // Task-workspaces widget (waybar's custom/task-workspaces): icons of
   // currently-active predefined/ad-hoc tasks, polled every 3s same as waybar.
   property string taskStatusText: ""
@@ -203,68 +214,64 @@ ShellRoot {
   Process { id: taskPickerProc; command: scriptsData.taskPicker ? [scriptsData.taskPicker] : [] }
 
   // ---------------------------------------------------------------------
-  // Notifications (swaync) - "-swb" is a long-running subscription that
-  // prints one JSON line per state change, not a one-shot query.
-  // ---------------------------------------------------------------------
-  property string notifIcon: ""
-  property string notifTooltip: ""
-
-  readonly property var notifIconMap: ({
-    "notification": "",
-    "none": "",
-    "dnd-notification": "",
-    "dnd-none": "",
-    "inhibited-notification": "",
-    "inhibited-none": "",
-    "dnd-inhibited-notification": "",
-    "dnd-inhibited-none": ""
-  })
-
-  Process {
-    id: notifWatch
-    command: ["swaync-client", "-swb"]
-    running: true
-    stdout: SplitParser {
-      splitMarker: "\n"
-      onRead: (line) => {
-        if (!line) return;
-        try {
-          const data = JSON.parse(line);
-          notifIcon = notifIconMap[data.alt] ?? notifIconMap["none"];
-          notifTooltip = data.tooltip ?? "";
-        } catch (e) {}
-      }
-    }
-  }
-
-  Process { id: notifToggle; command: ["swaync-client", "-t", "-sw"] }
-  Process { id: notifDismiss; command: ["swaync-client", "-d", "-sw"] }
-
-  // ---------------------------------------------------------------------
-  // CPU / memory, read straight from /proc - quickshell has no built-in
-  // service for either (unlike battery/audio/network below).
+  // CPU / memory / disk, read straight from /proc (or df for disk) -
+  // quickshell has no built-in service for any of these (unlike battery/
+  // audio/network below).
   // ---------------------------------------------------------------------
   property real cpuPrevIdle: -1
   property real cpuPrevTotal: -1
   property int cpuUsage: 0
+
+  // Per-core usage, shown in a hover popup off the cpu chip - same
+  // idle/total delta method as the aggregate figure above, tracked
+  // per-core instead of summed. cpuPrevPerCore holds {idle,total} objects
+  // (plain JS, not exposed as a property since only this handler reads it).
+  property var cpuPerCoreUsage: []
 
   FileView {
     id: cpuFile
     path: "/proc/stat"
     blockLoading: true
     onLoaded: {
-      const line = text().split("\n")[0];
-      const parts = line.trim().split(/\s+/).slice(1).map(Number);
-      const idle = parts[3] + (parts[4] || 0);
-      const total = parts.reduce((a, b) => a + b, 0);
+      const cpuPrevPerCore = cpuFile.prevPerCore;
+      const lines = text().split("\n");
+
+      const parseLine = (line) => {
+        const parts = line.trim().split(/\s+/).slice(1).map(Number);
+        const idle = parts[3] + (parts[4] || 0);
+        const total = parts.reduce((a, b) => a + b, 0);
+        return { idle, total };
+      };
+
+      const agg = parseLine(lines[0]);
       if (cpuPrevTotal >= 0) {
-        const totalDelta = total - cpuPrevTotal;
-        const idleDelta = idle - cpuPrevIdle;
+        const totalDelta = agg.total - cpuPrevTotal;
+        const idleDelta = agg.idle - cpuPrevIdle;
         cpuUsage = totalDelta > 0 ? Math.round(100 * (1 - idleDelta / totalDelta)) : 0;
       }
-      cpuPrevTotal = total;
-      cpuPrevIdle = idle;
+      cpuPrevTotal = agg.total;
+      cpuPrevIdle = agg.idle;
+
+      const coreLines = lines.filter(l => /^cpu\d/.test(l));
+      const newPerCore = [];
+      const newPrevPerCore = [];
+      for (let i = 0; i < coreLines.length; i++) {
+        const c = parseLine(coreLines[i]);
+        const prev = cpuPrevPerCore[i];
+        let pct = 0;
+        if (prev) {
+          const totalDelta = c.total - prev.total;
+          const idleDelta = c.idle - prev.idle;
+          pct = totalDelta > 0 ? Math.round(100 * (1 - idleDelta / totalDelta)) : 0;
+        }
+        newPerCore.push(pct);
+        newPrevPerCore.push(c);
+      }
+      cpuPerCoreUsage = newPerCore;
+      cpuFile.prevPerCore = newPrevPerCore;
     }
+
+    property var prevPerCore: []
   }
   Timer { interval: 2000; running: true; repeat: true; triggeredOnStart: true; onTriggered: cpuFile.reload() }
 
@@ -285,6 +292,29 @@ ShellRoot {
     }
   }
   Timer { interval: 5000; running: true; repeat: true; triggeredOnStart: true; onTriggered: memFile.reload() }
+
+  property real diskUsedGb: 0
+  property real diskTotalGb: 0
+  property int diskPercent: 0
+
+  // df, not /proc - there's no equally simple /proc source for filesystem
+  // usage the way /proc/stat and /proc/meminfo cover cpu and memory.
+  Process {
+    id: diskProc
+    command: ["df", "-k", "--output=used,size", "/"]
+    stdout: StdioCollector {
+      onStreamFinished: {
+        const lines = this.text.trim().split("\n");
+        if (lines.length < 2) return;
+        const parts = lines[1].trim().split(/\s+/).map(Number);
+        const usedKb = parts[0], totalKb = parts[1];
+        diskUsedGb = usedKb / 1024 / 1024;
+        diskTotalGb = totalKb / 1024 / 1024;
+        diskPercent = totalKb > 0 ? Math.round(100 * usedKb / totalKb) : 0;
+      }
+    }
+  }
+  Timer { interval: 30000; running: true; repeat: true; triggeredOnStart: true; onTriggered: if (!diskProc.running) diskProc.running = true }
 
   // ---------------------------------------------------------------------
   // Pipewire needs the default sink referenced through a PwObjectTracker
@@ -456,8 +486,8 @@ ShellRoot {
         }
       }
 
-      // ---------------- notification island - separate from workspaces so it ----------------
-      // ---------------- doesn't visually read as just another workspace pill ----------------
+      // ---------------- notification center island - replaces the old bell ----------------
+      // ---------------- + standalone power button (power now lives in the panel header) ----------------
       Rectangle {
         anchors.right: workspacesIsland.left
         anchors.rightMargin: 14
@@ -470,35 +500,35 @@ ShellRoot {
         IconButton {
           id: notifBtn
           anchors.centerIn: parent
-          glyph: notifIcon
-          glyphSize: 18
-          onPrimaryClicked: notifToggle.running = true
-          onSecondaryClicked: notifDismiss.running = true
+          glyph: notifCenter.dnd ? "\u{1F515}" : "\u{1F514}"
+          glyphSize: 16
+          onPrimaryClicked: notifCenter.toggle()
         }
-      }
 
-      // ---------------- power island ----------------
-      Rectangle {
-        id: powerIsland
-        anchors.left: workspacesIsland.right
-        anchors.leftMargin: 14
-        anchors.verticalCenter: parent.verticalCenter
-        height: root.islandHeight
-        width: powerBtn.width + root.islandPadding * 2
-        radius: 16
-        color: root.islandBg
+        Rectangle {
+          visible: notifCenter.count > 0
+          width: 16
+          height: 16
+          radius: 8
+          color: root.accentColor
+          anchors.top: notifBtn.top
+          anchors.right: notifBtn.right
+          anchors.topMargin: -4
+          anchors.rightMargin: -4
 
-        IconButton {
-          id: powerBtn
-          anchors.centerIn: parent
-          glyph: "⏻"
-          onPrimaryClicked: sessionScreen.toggle()
+          Text {
+            anchors.centerIn: parent
+            text: notifCenter.count > 9 ? "9+" : notifCenter.count
+            color: "#ffffff"
+            font.pixelSize: 9
+            font.bold: true
+          }
         }
       }
 
       // ---------------- tasks island: "Tasks: N" launcher/status ----------------
       Rectangle {
-        anchors.left: powerIsland.right
+        anchors.left: workspacesIsland.right
         anchors.leftMargin: 14
         anchors.verticalCenter: parent.verticalCenter
         height: root.islandHeight
@@ -574,13 +604,25 @@ ShellRoot {
           }
 
           Chip {
+            id: cpuChip
             anchors.verticalCenter: parent.verticalCenter
             label: "  " + cpuUsage + "%"
+
+            MouseArea {
+              id: cpuHoverArea
+              anchors.fill: parent
+              hoverEnabled: true
+            }
           }
 
           Chip {
             anchors.verticalCenter: parent.verticalCenter
             label: "  " + memUsedGb.toFixed(1) + "G"
+          }
+
+          Chip {
+            anchors.verticalCenter: parent.verticalCenter
+            label: "\u{1F4BE} " + diskPercent + "%"
           }
 
           Chip {
@@ -594,6 +636,51 @@ ShellRoot {
               const tier = Math.max(0, Math.min(icons.length - 1, Math.floor(pct / 25)));
               const charging = battery.state === UPowerDeviceState.Charging;
               return icons[tier] + "  " + (charging ? "󱐋 " : "") + pct + "%";
+            }
+          }
+        }
+      }
+
+      // ---------------- cpu per-core hover popup ----------------
+      PanelWindow {
+        id: cpuPopup
+        screen: modelData
+        visible: cpuHoverArea.containsMouse && cpuPerCoreUsage.length > 0
+        color: "transparent"
+        WlrLayershell.namespace: "quickshell:cpu-popup"
+        WlrLayershell.layer: WlrLayer.Overlay
+        WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
+        exclusionMode: ExclusionMode.Ignore
+        anchors { top: true; right: true }
+        margins.top: bar.implicitHeight + 6
+        margins.right: 14
+        implicitWidth: cpuPopupContent.implicitWidth + 24
+        implicitHeight: cpuPopupContent.implicitHeight + 20
+
+        Rectangle {
+          anchors.fill: parent
+          radius: 14
+          color: root.islandBg
+
+          Column {
+            id: cpuPopupContent
+            anchors.centerIn: parent
+            spacing: 4
+
+            Text {
+              text: "CPU cores"
+              color: root.textColor
+              font.bold: true
+              font.pixelSize: 13
+            }
+
+            Repeater {
+              model: cpuPerCoreUsage
+              delegate: Text {
+                text: "Core " + index + ": " + modelData + "%"
+                color: root.mutedTextColor
+                font.pixelSize: 12
+              }
             }
           }
         }
