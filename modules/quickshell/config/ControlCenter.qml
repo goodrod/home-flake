@@ -10,12 +10,16 @@ import Quickshell.Bluetooth
 Item {
   id: controlCenter
 
-  readonly property color islandBg: "#181825"
-  readonly property color chipBg: "#22222c"
-  readonly property color chipHoverBg: "#33333f"
-  readonly property color textColor: "#d8d8e2"
-  readonly property color mutedTextColor: "#9a9aab"
-  readonly property color accentColor: "#6c7ce0"
+  readonly property color islandBg: "#141313"
+  readonly property color chipBg: "#49454F"
+  readonly property color chipHoverBg: Qt.lighter(chipBg, 1.25)
+  readonly property color textColor: "#DEE2E6"
+  readonly property color mutedTextColor: "#CAC4D0"
+  readonly property color accentColor: "#D0BCFF"
+  readonly property color onAccentColor: "#381E72"
+  readonly property color iconBadgeBg: "#4A4458"
+  readonly property color iconBadgeFg: "#E8DEF8"
+  readonly property color notifAreaBg: "#211F26"
   readonly property int barHeight: 50
 
   property var toasts: []
@@ -194,19 +198,29 @@ Item {
     signal clicked()
 
     height: 56
-    radius: 12
-    color: active ? controlCenter.accentColor : controlCenter.chipBg
-    Behavior on color { ColorAnimation { duration: 100 } }
+    radius: 14
+    color: controlCenter.chipBg
 
     Row {
-      anchors.centerIn: parent
+      anchors.left: parent.left
+      anchors.verticalCenter: parent.verticalCenter
+      anchors.leftMargin: 10
       spacing: 10
 
-      Text {
+      Rectangle {
+        width: 34
+        height: 34
+        radius: 12
         anchors.verticalCenter: parent.verticalCenter
-        text: tileRoot.glyph
-        font.pixelSize: 20
-        color: tileRoot.active ? "#ffffff" : controlCenter.textColor
+        color: tileRoot.active ? controlCenter.accentColor : controlCenter.iconBadgeBg
+        Behavior on color { ColorAnimation { duration: 100 } }
+
+        Text {
+          anchors.centerIn: parent
+          text: tileRoot.glyph
+          font.pixelSize: 16
+          color: tileRoot.active ? controlCenter.onAccentColor : controlCenter.iconBadgeFg
+        }
       }
 
       Column {
@@ -217,13 +231,13 @@ Item {
           text: tileRoot.label
           font.pixelSize: 13
           font.bold: true
-          color: tileRoot.active ? "#ffffff" : controlCenter.textColor
+          color: controlCenter.textColor
         }
 
         Text {
           text: tileRoot.status
           font.pixelSize: 11
-          color: tileRoot.active ? Qt.rgba(1, 1, 1, 0.85) : controlCenter.mutedTextColor
+          color: controlCenter.mutedTextColor
         }
       }
     }
@@ -409,7 +423,7 @@ Item {
 
         Column {
           id: headerBlock
-          anchors { top: parent.top; left: parent.left; right: parent.right; margins: 16 }
+          anchors { top: parent.top; left: parent.left; right: parent.right; margins: 20 }
           spacing: 12
 
           Item {
@@ -504,7 +518,7 @@ Item {
 
         Column {
           id: footerBlock
-          anchors { bottom: parent.bottom; left: parent.left; right: parent.right; margins: 16 }
+          anchors { bottom: parent.bottom; left: parent.left; right: parent.right; margins: 20 }
           spacing: 8
 
           SliderRow {
@@ -555,14 +569,25 @@ Item {
           }
         }
 
-        Item {
-          visible: controlCenter.history.length === 0
+        Rectangle {
+          id: notifArea
           anchors {
             top: headerBlock.bottom
             bottom: footerBlock.top
             left: parent.left
             right: parent.right
+            topMargin: 12
+            bottomMargin: 12
+            leftMargin: 20
+            rightMargin: 20
           }
+          radius: 14
+          color: controlCenter.notifAreaBg
+        }
+
+        Item {
+          visible: controlCenter.history.length === 0
+          anchors.fill: notifArea
 
           Column {
             anchors.centerIn: parent
@@ -585,16 +610,8 @@ Item {
         }
 
         ListView {
-          anchors {
-            top: headerBlock.bottom
-            bottom: footerBlock.top
-            left: parent.left
-            right: parent.right
-            topMargin: 12
-            bottomMargin: 12
-            leftMargin: 16
-            rightMargin: 16
-          }
+          anchors.fill: notifArea
+          anchors.margins: 10
           clip: true
           spacing: 8
           visible: controlCenter.history.length > 0

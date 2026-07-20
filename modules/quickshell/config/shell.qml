@@ -12,12 +12,13 @@ import Quickshell.Networking
 ShellRoot {
   id: root
 
-  readonly property color islandBg: "#181825"
-  readonly property color chipBg: "#22222c"
-  readonly property color chipHoverBg: "#33333f"
-  readonly property color textColor: "#d8d8e2"
-  readonly property color mutedTextColor: "#9a9aab"
-  readonly property color accentColor: "#6c7ce0"
+  readonly property color islandBg: "#141313"
+  readonly property color chipBg: "#49454F"
+  readonly property color chipHoverBg: Qt.lighter(chipBg, 1.25)
+  readonly property color textColor: "#DEE2E6"
+  readonly property color mutedTextColor: "#CAC4D0"
+  readonly property color accentColor: "#D0BCFF"
+  readonly property color onAccentColor: "#381E72"
   readonly property int islandHeight: 40
   readonly property int islandPadding: 16
 
@@ -395,7 +396,7 @@ ShellRoot {
                 anchors.centerIn: parent
                 text: workspaceIcon(wsId)
                 font.pixelSize: 20
-                color: focused ? "#ffffff" : root.mutedTextColor
+                color: focused ? root.onAccentColor : root.mutedTextColor
               }
 
               MouseArea {
@@ -480,7 +481,7 @@ ShellRoot {
               Text {
                 anchors.centerIn: parent
                 text: controlCenter.count > 9 ? "9+" : controlCenter.count
-                color: "#ffffff"
+                color: root.onAccentColor
                 font.pixelSize: 8
                 font.bold: true
               }

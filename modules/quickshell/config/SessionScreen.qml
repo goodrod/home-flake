@@ -6,10 +6,11 @@ import Quickshell.Wayland
 PanelWindow {
   id: sessionScreen
 
-  readonly property color chipBg: "#22222c"
-  readonly property color textColor: "#d8d8e2"
-  readonly property color mutedTextColor: "#9a9aab"
-  readonly property color accentColor: "#6c7ce0"
+  readonly property color chipBg: "#49454F"
+  readonly property color textColor: "#DEE2E6"
+  readonly property color mutedTextColor: "#CAC4D0"
+  readonly property color accentColor: "#D0BCFF"
+  readonly property color onAccentColor: "#381E72"
 
   property bool shown: false
   visible: shown
@@ -62,7 +63,7 @@ PanelWindow {
     width: 150
     height: 150
     radius: active ? width / 3 : 20
-    color: active ? "#6c7ce0" : "#22222c"
+    color: active ? sessionScreen.accentColor : sessionScreen.chipBg
     border.width: active ? 0 : 1
     border.color: Qt.rgba(1, 1, 1, 0.08)
 
@@ -84,7 +85,7 @@ PanelWindow {
         anchors.horizontalCenter: parent.horizontalCenter
         text: btnRoot.glyph
         font.pixelSize: 44
-        color: btnRoot.active ? "#ffffff" : "#d8d8e2"
+        color: btnRoot.active ? sessionScreen.onAccentColor : sessionScreen.textColor
         scale: btnRoot.active ? 1.15 : 1.0
         Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutBack } }
       }
@@ -94,7 +95,7 @@ PanelWindow {
         text: btnRoot.label
         font.pixelSize: 16
         font.bold: true
-        color: btnRoot.active ? "#ffffff" : "#d8d8e2"
+        color: btnRoot.active ? sessionScreen.onAccentColor : sessionScreen.textColor
       }
     }
 
