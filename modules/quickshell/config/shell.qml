@@ -324,7 +324,7 @@ ShellRoot {
               id: trayDelegate
               width: 30
               height: 30
-              radius: 8
+              radius: 15
               color: trayMouse.containsMouse ? root.chipHoverBg : root.chipBg
               Behavior on color { ColorAnimation { duration: 100 } }
 
@@ -455,7 +455,7 @@ ShellRoot {
 
             Rectangle {
               anchors.fill: parent
-              radius: 8
+              radius: 11
               color: bellMouse.containsMouse ? root.chipHoverBg : "transparent"
               Behavior on color { ColorAnimation { duration: 100 } }
             }

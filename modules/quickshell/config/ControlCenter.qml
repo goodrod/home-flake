@@ -225,19 +225,24 @@ Item {
 
       Column {
         anchors.verticalCenter: parent.verticalCenter
+        width: tileRoot.width - 34 - 10 - 10 - 10
         spacing: 2
 
         Text {
+          width: parent.width
           text: tileRoot.label
           font.pixelSize: 13
           font.bold: true
           color: controlCenter.textColor
+          elide: Text.ElideRight
         }
 
         Text {
+          width: parent.width
           text: tileRoot.status
           font.pixelSize: 11
           color: controlCenter.mutedTextColor
+          elide: Text.ElideRight
         }
       }
     }
@@ -407,7 +412,7 @@ Item {
       anchors.topMargin: controlCenter.barHeight + 10
       anchors.bottomMargin: 14
       anchors.rightMargin: 14
-      width: 360
+      width: 420
       focus: controlCenter.shown
 
       Keys.onEscapePressed: controlCenter.close()
@@ -516,9 +521,17 @@ Item {
           }
         }
 
-        Column {
-          id: footerBlock
+        Rectangle {
+          id: slidersAreaBg
           anchors { bottom: parent.bottom; left: parent.left; right: parent.right; margins: 20 }
+          height: slidersBlock.implicitHeight + 24
+          radius: 14
+          color: controlCenter.notifAreaBg
+        }
+
+        Column {
+          id: slidersBlock
+          anchors { bottom: slidersAreaBg.bottom; left: slidersAreaBg.left; right: slidersAreaBg.right; margins: 12 }
           spacing: 8
 
           SliderRow {
@@ -538,42 +551,13 @@ Item {
             value: controlCenter.brightnessValue
             onMoved: (v) => controlCenter.setBrightness(v)
           }
-
-          Item {
-            width: parent.width
-            height: 28
-
-            Text {
-              anchors.left: parent.left
-              anchors.verticalCenter: parent.verticalCenter
-              text: controlCenter.count + " Notifications"
-              color: controlCenter.mutedTextColor
-              font.pixelSize: 12
-            }
-
-            Row {
-              anchors.right: parent.right
-              anchors.verticalCenter: parent.verticalCenter
-              spacing: 4
-
-              IconButton {
-                glyph: "✕"
-                onClicked: controlCenter.clearAll()
-              }
-
-              IconButton {
-                glyph: controlCenter.dnd ? "\uF1F6" : "\uF476"
-                onClicked: controlCenter.toggleDnd()
-              }
-            }
-          }
         }
 
         Rectangle {
           id: notifArea
           anchors {
             top: headerBlock.bottom
-            bottom: footerBlock.top
+            bottom: slidersAreaBg.top
             left: parent.left
             right: parent.right
             topMargin: 12
@@ -586,8 +570,43 @@ Item {
         }
 
         Item {
+          id: notifCountRow
+          anchors { bottom: notifArea.bottom; left: notifArea.left; right: notifArea.right; margins: 10 }
+          height: 28
+
+          Text {
+            anchors.left: parent.left
+            anchors.verticalCenter: parent.verticalCenter
+            text: controlCenter.count + " Notifications"
+            color: controlCenter.mutedTextColor
+            font.pixelSize: 12
+          }
+
+          Row {
+            anchors.right: parent.right
+            anchors.verticalCenter: parent.verticalCenter
+            spacing: 4
+
+            IconButton {
+              glyph: "✕"
+              onClicked: controlCenter.clearAll()
+            }
+
+            IconButton {
+              glyph: controlCenter.dnd ? "\uF1F6" : "\uF476"
+              onClicked: controlCenter.toggleDnd()
+            }
+          }
+        }
+
+        Item {
           visible: controlCenter.history.length === 0
-          anchors.fill: notifArea
+          anchors {
+            top: notifArea.top
+            bottom: notifCountRow.top
+            left: notifArea.left
+            right: notifArea.right
+          }
 
           Column {
             anchors.centerIn: parent
@@ -610,8 +629,13 @@ Item {
         }
 
         ListView {
-          anchors.fill: notifArea
-          anchors.margins: 10
+          anchors {
+            top: notifArea.top
+            bottom: notifCountRow.top
+            left: notifArea.left
+            right: notifArea.right
+            margins: 10
+          }
           clip: true
           spacing: 8
           visible: controlCenter.history.length > 0
