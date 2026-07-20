@@ -74,25 +74,15 @@ in
       hl.bind(mainMod .. " + A", hl.dsp.window.fullscreen({mode = "fullscreen"}), { description = "Toggle fullscreen" })
 
       -- Privacy
-      local noShareState = {}
       local noShareDefaults = { discord = true, vesktop = true, Slack = true }
-      local function setNoShare(address, hide)
-        noShareState[address] = hide
-        local target = "address:" .. address
-        hl.dispatch(hl.dsp.window.set_prop({ window = target, prop = "no_screen_share", value = hide and "true" or "false" }))
-        hl.dispatch(hl.dsp.window.set_prop({ window = target, prop = "active_border_color", value = hide and "rgb(f38ba8)" or "rgba(cdd6f4ee)" }))
-        hl.dispatch(hl.dsp.window.set_prop({ window = target, prop = "inactive_border_color", value = hide and "rgba(f38ba888)" or "rgba(404A60aa)" }))
-      end
       hl.on("window.open", function(w)
-        if w ~= nil and noShareDefaults[w.class] then
-          setNoShare(w.address, true)
-        end
+        if w == nil or not noShareDefaults[w.class] then return end
+        local target = "address:" .. w.address
+        hl.dispatch(hl.dsp.window.set_prop({ window = target, prop = "no_screen_share", value = "true" }))
+        hl.dispatch(hl.dsp.window.set_prop({ window = target, prop = "active_border_color", value = "rgb(f38ba8)" }))
+        hl.dispatch(hl.dsp.window.set_prop({ window = target, prop = "inactive_border_color", value = "rgba(f38ba888)" }))
       end)
-      hl.bind(mainMod .. " + SHIFT + S", function()
-        local w = hl.get_active_window()
-        if w == nil then return end
-        setNoShare(w.address, not (noShareState[w.address] or false))
-      end, { description = "Toggle screen-share exclusion for focused window" })
+      hl.bind(mainMod .. " + SHIFT + S", hl.dsp.exec_cmd("${scripts.toggleNoShare}"), { description = "Toggle screen-share exclusion for focused window" })
 
       -- Monitor focus
       ${monitorFocusLines}

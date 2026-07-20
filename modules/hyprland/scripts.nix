@@ -48,6 +48,26 @@ rec {
     fuzzel --launch-prefix="${execCurrentWs}"
   '';
 
+  # External script, not inline Lua: io.popen("hyprctl ...") from inside a
+  # keybind callback deadlocks Hyprland against its own IPC thread (~5s hang, confirmed live).
+  toggleNoShare = writeScript "toggle-no-share.sh" ''
+    #!/usr/bin/env bash
+    set -euo pipefail
+    addr=$(hyprctl activewindow -j | jq -r '.address // empty')
+    [ -n "$addr" ] || exit 0
+    target="address:$addr"
+    current=$(hyprctl getprop "$target" no_screen_share)
+    if [ "$current" = "true" ]; then
+      hyprctl dispatch "hl.dsp.window.set_prop({ window = \"$target\", prop = \"no_screen_share\", value = \"false\" })"
+      hyprctl dispatch "hl.dsp.window.set_prop({ window = \"$target\", prop = \"active_border_color\", value = \"rgba(cdd6f4ee)\" })"
+      hyprctl dispatch "hl.dsp.window.set_prop({ window = \"$target\", prop = \"inactive_border_color\", value = \"rgba(404A60aa)\" })"
+    else
+      hyprctl dispatch "hl.dsp.window.set_prop({ window = \"$target\", prop = \"no_screen_share\", value = \"true\" })"
+      hyprctl dispatch "hl.dsp.window.set_prop({ window = \"$target\", prop = \"active_border_color\", value = \"rgb(f38ba8)\" })"
+      hyprctl dispatch "hl.dsp.window.set_prop({ window = \"$target\", prop = \"inactive_border_color\", value = \"rgba(f38ba888)\" })"
+    fi
+  '';
+
   parseHotkeys = writeScript "parseHotkeys.sh" ''
     #!/usr/bin/env bash
 
