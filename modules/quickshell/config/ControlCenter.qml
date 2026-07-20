@@ -236,7 +236,7 @@ Item {
 
   component SliderRow: Item {
     id: sliderRoot
-    property string label: ""
+    property string icon: ""
     property real value: 0
     property bool sliderEnabled: true
     signal moved(real val)
@@ -246,16 +246,16 @@ Item {
     Text {
       anchors.left: parent.left
       anchors.verticalCenter: parent.verticalCenter
-      width: 70
-      text: sliderRoot.label
+      width: 20
+      text: sliderRoot.icon
       color: controlCenter.mutedTextColor
-      font.pixelSize: 12
+      font.pixelSize: 14
     }
 
     Rectangle {
       id: track
       anchors.left: parent.left
-      anchors.leftMargin: 76
+      anchors.leftMargin: 28
       anchors.right: pctText.left
       anchors.rightMargin: 8
       anchors.verticalCenter: parent.verticalCenter
@@ -444,14 +444,6 @@ Item {
             }
           }
 
-          Text {
-            width: parent.width
-            text: "Control Center"
-            color: controlCenter.textColor
-            font.pixelSize: 18
-            font.bold: true
-          }
-
           Row {
             id: toggleRow1
             width: parent.width
@@ -517,7 +509,7 @@ Item {
 
           SliderRow {
             width: parent.width
-            label: "Volume"
+            icon: "\uF028"
             value: (Pipewire.defaultAudioSink && Pipewire.defaultAudioSink.audio) ? Pipewire.defaultAudioSink.audio.volume : 0
             onMoved: (v) => {
               const sink = Pipewire.defaultAudioSink;
@@ -528,7 +520,7 @@ Item {
           SliderRow {
             width: parent.width
             visible: controlCenter.brightnessAvailable
-            label: "Brightness"
+            icon: "\uF185"
             value: controlCenter.brightnessValue
             onMoved: (v) => controlCenter.setBrightness(v)
           }
@@ -578,12 +570,24 @@ Item {
           contentHeight: listColumn.implicitHeight
           clip: true
 
-          Text {
+          Column {
             visible: controlCenter.history.length === 0
             anchors.centerIn: parent
-            text: "No notifications"
-            color: controlCenter.mutedTextColor
-            font.pixelSize: 13
+            spacing: 8
+
+            Text {
+              anchors.horizontalCenter: parent.horizontalCenter
+              text: "\u{F0A93}"
+              color: controlCenter.mutedTextColor
+              font.pixelSize: 40
+            }
+
+            Text {
+              anchors.horizontalCenter: parent.horizontalCenter
+              text: "No notifications"
+              color: controlCenter.mutedTextColor
+              font.pixelSize: 13
+            }
           }
 
           Column {
