@@ -130,8 +130,8 @@ ShellRoot {
 
   SessionScreen { id: sessionScreen }
 
-  NotificationCenter {
-    id: notifCenter
+  ControlCenter {
+    id: controlCenter
     onRequestSessionScreen: sessionScreen.toggle()
   }
 
@@ -461,13 +461,13 @@ ShellRoot {
 
             Text {
               anchors.centerIn: parent
-              text: notifCenter.dnd ? "" : ""
+              text: controlCenter.dnd ? "" : ""
               font.pixelSize: 15
               color: root.textColor
             }
 
             Rectangle {
-              visible: notifCenter.count > 0
+              visible: controlCenter.count > 0
               width: 14
               height: 14
               radius: 7
@@ -479,7 +479,7 @@ ShellRoot {
 
               Text {
                 anchors.centerIn: parent
-                text: notifCenter.count > 9 ? "9+" : notifCenter.count
+                text: controlCenter.count > 9 ? "9+" : controlCenter.count
                 color: "#ffffff"
                 font.pixelSize: 8
                 font.bold: true
@@ -490,7 +490,7 @@ ShellRoot {
               id: bellMouse
               anchors.fill: parent
               hoverEnabled: true
-              onClicked: notifCenter.toggle()
+              onClicked: controlCenter.toggle()
             }
           }
 

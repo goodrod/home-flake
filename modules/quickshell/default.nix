@@ -64,7 +64,7 @@ in {
   config = mkIf quickshellConfig.enable {
     fonts.fontconfig.enable = true;
     home.packages = with pkgs;
-      [quickshell qt6Packages.qt6ct]
+      [quickshell qt6Packages.qt6ct brightnessctl]
       ++ builtins.filter lib.attrsets.isDerivation (builtins.attrValues pkgs.nerd-fonts);
 
     home.file."${quickshellConfig.config-output-directory}" = {

@@ -1,10 +1,14 @@
 import QtQuick
 import Quickshell
+import Quickshell.Io
 import Quickshell.Wayland
 import Quickshell.Services.Notifications
+import Quickshell.Services.Pipewire
+import Quickshell.Networking
+import Quickshell.Bluetooth
 
 Item {
-  id: notifCenter
+  id: controlCenter
 
   readonly property color islandBg: "#181825"
   readonly property color chipBg: "#22222c"
@@ -19,6 +23,11 @@ Item {
   property bool dnd: false
   property bool shown: false
   readonly property int count: history.length
+
+  readonly property var btAdapter: Bluetooth.defaultAdapter
+
+  property real brightnessValue: 0
+  property bool brightnessAvailable: false
 
   signal requestSessionScreen()
 
@@ -48,6 +57,13 @@ Item {
     toasts = [];
   }
 
+  function setBrightness(v) {
+    brightnessValue = v;
+    const pct = Math.round(v * 100);
+    brightnessSetProc.command = ["brightnessctl", "-c", "backlight", "-m", "s", pct + "%"];
+    brightnessSetProc.running = true;
+  }
+
   NotificationServer {
     id: server
     bodySupported: true
@@ -62,10 +78,10 @@ Item {
         wrapped: n
       };
       history = [entry, ...history];
-      if (!notifCenter.dnd) {
+      if (!controlCenter.dnd) {
         toasts = [entry, ...toasts];
         const timeout = n.expireTimeout > 0 ? n.expireTimeout : 5000;
-        const timer = dismissTimerComponent.createObject(notifCenter, { notifId: entry.id, interval: timeout });
+        const timer = dismissTimerComponent.createObject(controlCenter, { notifId: entry.id, interval: timeout });
         timer.start();
       }
       n.closed.connect(() => {
@@ -81,11 +97,44 @@ Item {
       property var notifId
       repeat: false
       onTriggered: {
-        notifCenter.toasts = notifCenter.toasts.filter((t) => t.id !== notifId);
+        controlCenter.toasts = controlCenter.toasts.filter((t) => t.id !== notifId);
         destroy();
       }
     }
   }
+
+  Process {
+    id: brightnessGetProc
+    command: ["brightnessctl", "-c", "backlight", "-m", "i"]
+    stdout: StdioCollector {
+      onStreamFinished: {
+        const line = this.text.trim();
+        const parts = line.split(",");
+        if (parts.length < 4) {
+          controlCenter.brightnessAvailable = false;
+          return;
+        }
+        const pct = parseInt(parts[3]);
+        if (isNaN(pct)) {
+          controlCenter.brightnessAvailable = false;
+          return;
+        }
+        controlCenter.brightnessAvailable = true;
+        controlCenter.brightnessValue = pct / 100;
+      }
+    }
+    onExited: (exitCode) => {
+      if (exitCode !== 0) controlCenter.brightnessAvailable = false;
+    }
+  }
+  Timer {
+    interval: 2000
+    running: controlCenter.shown
+    repeat: true
+    triggeredOnStart: true
+    onTriggered: if (!brightnessGetProc.running) brightnessGetProc.running = true
+  }
+  Process { id: brightnessSetProc }
 
   component IconButton: Rectangle {
     id: iconBtnRoot
@@ -96,14 +145,14 @@ Item {
     width: 28
     height: 28
     radius: 8
-    color: mouseArea.containsMouse ? notifCenter.chipHoverBg : "transparent"
+    color: mouseArea.containsMouse ? controlCenter.chipHoverBg : "transparent"
     Behavior on color { ColorAnimation { duration: 100 } }
 
     Text {
       anchors.centerIn: parent
       text: iconBtnRoot.glyph
       font.pixelSize: iconBtnRoot.glyphSize
-      color: notifCenter.textColor
+      color: controlCenter.textColor
     }
 
     MouseArea {
@@ -114,16 +163,124 @@ Item {
     }
   }
 
+  component ToggleTile: Rectangle {
+    id: tileRoot
+    property string glyph: ""
+    property string label: ""
+    property string status: ""
+    property bool active: false
+    signal clicked()
+
+    height: 56
+    radius: 12
+    color: active ? controlCenter.accentColor : controlCenter.chipBg
+    Behavior on color { ColorAnimation { duration: 100 } }
+
+    Row {
+      anchors.centerIn: parent
+      spacing: 10
+
+      Text {
+        anchors.verticalCenter: parent.verticalCenter
+        text: tileRoot.glyph
+        font.pixelSize: 20
+        color: tileRoot.active ? "#ffffff" : controlCenter.textColor
+      }
+
+      Column {
+        anchors.verticalCenter: parent.verticalCenter
+        spacing: 2
+
+        Text {
+          text: tileRoot.label
+          font.pixelSize: 13
+          font.bold: true
+          color: tileRoot.active ? "#ffffff" : controlCenter.textColor
+        }
+
+        Text {
+          text: tileRoot.status
+          font.pixelSize: 11
+          color: tileRoot.active ? Qt.rgba(1, 1, 1, 0.85) : controlCenter.mutedTextColor
+        }
+      }
+    }
+
+    MouseArea {
+      anchors.fill: parent
+      onClicked: tileRoot.clicked()
+    }
+  }
+
+  component SliderRow: Item {
+    id: sliderRoot
+    property string label: ""
+    property real value: 0
+    property bool sliderEnabled: true
+    signal moved(real val)
+
+    height: 22
+
+    Text {
+      anchors.left: parent.left
+      anchors.verticalCenter: parent.verticalCenter
+      width: 70
+      text: sliderRoot.label
+      color: controlCenter.mutedTextColor
+      font.pixelSize: 12
+    }
+
+    Rectangle {
+      id: track
+      anchors.left: parent.left
+      anchors.leftMargin: 76
+      anchors.right: pctText.left
+      anchors.rightMargin: 8
+      anchors.verticalCenter: parent.verticalCenter
+      height: 6
+      radius: 3
+      color: controlCenter.chipBg
+      opacity: sliderRoot.sliderEnabled ? 1 : 0.4
+
+      Rectangle {
+        width: track.width * Math.max(0, Math.min(1, sliderRoot.value))
+        height: parent.height
+        radius: 3
+        color: controlCenter.accentColor
+      }
+
+      MouseArea {
+        anchors.fill: parent
+        enabled: sliderRoot.sliderEnabled
+        onPressed: (mouse) => sliderRoot.moved(Math.max(0, Math.min(1, mouse.x / track.width)))
+        onPositionChanged: (mouse) => {
+          if (pressed) sliderRoot.moved(Math.max(0, Math.min(1, mouse.x / track.width)));
+        }
+      }
+    }
+
+    Text {
+      id: pctText
+      anchors.right: parent.right
+      anchors.verticalCenter: parent.verticalCenter
+      width: 36
+      horizontalAlignment: Text.AlignRight
+      text: Math.round(sliderRoot.value * 100) + "%"
+      color: controlCenter.textColor
+      font.pixelSize: 12
+    }
+  }
+
   PanelWindow {
     screen: Quickshell.screens[0]
     color: "transparent"
-    visible: notifCenter.toasts.length > 0
+    visible: controlCenter.toasts.length > 0
     WlrLayershell.namespace: "quickshell:notification-popups"
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
     exclusionMode: ExclusionMode.Ignore
     anchors { top: true; right: true }
-    margins.top: notifCenter.barHeight + 10
+    margins.top: controlCenter.barHeight + 10
     margins.right: 14
     implicitWidth: 340
     implicitHeight: toastColumn.implicitHeight + 20
@@ -136,12 +293,12 @@ Item {
       spacing: 8
 
       Repeater {
-        model: notifCenter.toasts
+        model: controlCenter.toasts
         delegate: Rectangle {
           width: toastColumn.width
           height: toastContent.implicitHeight + 20
           radius: 14
-          color: notifCenter.islandBg
+          color: controlCenter.islandBg
 
           Column {
             id: toastContent
@@ -156,7 +313,7 @@ Item {
                 id: summaryText
                 anchors { left: parent.left; right: closeIcon.left; rightMargin: 8 }
                 text: modelData.summary
-                color: notifCenter.textColor
+                color: controlCenter.textColor
                 font.bold: true
                 font.pixelSize: 14
                 elide: Text.ElideRight
@@ -166,12 +323,12 @@ Item {
                 id: closeIcon
                 anchors.right: parent.right
                 text: "✕"
-                color: notifCenter.mutedTextColor
+                color: controlCenter.mutedTextColor
                 font.pixelSize: 12
 
                 MouseArea {
                   anchors.fill: parent
-                  onClicked: notifCenter.dismissToast(modelData.id)
+                  onClicked: controlCenter.dismissToast(modelData.id)
                 }
               }
             }
@@ -180,7 +337,7 @@ Item {
               width: parent.width
               visible: modelData.body.length > 0
               text: modelData.body
-              color: notifCenter.mutedTextColor
+              color: controlCenter.mutedTextColor
               font.pixelSize: 12
               wrapMode: Text.WordWrap
               maximumLineCount: 3
@@ -194,34 +351,34 @@ Item {
 
   PanelWindow {
     screen: Quickshell.screens[0]
-    visible: notifCenter.shown
+    visible: controlCenter.shown
     color: "transparent"
     WlrLayershell.namespace: "quickshell:notification-center"
     WlrLayershell.layer: WlrLayer.Overlay
-    WlrLayershell.keyboardFocus: notifCenter.shown ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+    WlrLayershell.keyboardFocus: controlCenter.shown ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
     exclusionMode: ExclusionMode.Ignore
     anchors { top: true; bottom: true; left: true; right: true }
 
     MouseArea {
       anchors.fill: parent
-      onClicked: notifCenter.close()
+      onClicked: controlCenter.close()
     }
 
     FocusScope {
       anchors.top: parent.top
       anchors.right: parent.right
-      anchors.topMargin: notifCenter.barHeight + 10
+      anchors.topMargin: controlCenter.barHeight + 10
       anchors.rightMargin: 14
       width: 360
-      height: Math.min(parent.height - notifCenter.barHeight - 40, panelColumn.implicitHeight + 32)
-      focus: notifCenter.shown
+      height: Math.min(parent.height - controlCenter.barHeight - 40, panelColumn.implicitHeight + 32)
+      focus: controlCenter.shown
 
-      Keys.onEscapePressed: notifCenter.close()
+      Keys.onEscapePressed: controlCenter.close()
 
       Rectangle {
         anchors.fill: parent
         radius: 18
-        color: notifCenter.islandBg
+        color: controlCenter.islandBg
         border.width: 1
         border.color: Qt.rgba(1, 1, 1, 0.06)
 
@@ -239,8 +396,8 @@ Item {
             Text {
               anchors.left: parent.left
               anchors.verticalCenter: parent.verticalCenter
-              text: "Notifications"
-              color: notifCenter.textColor
+              text: "Control Center"
+              color: controlCenter.textColor
               font.pixelSize: 18
               font.bold: true
             }
@@ -250,28 +407,52 @@ Item {
               anchors.verticalCenter: parent.verticalCenter
               glyph: "⏻"
               onClicked: {
-                notifCenter.requestSessionScreen();
-                notifCenter.close();
+                controlCenter.requestSessionScreen();
+                controlCenter.close();
               }
             }
           }
 
+          Row {
+            id: toggleRow
+            width: parent.width
+            spacing: 8
+
+            ToggleTile {
+              width: (toggleRow.width - toggleRow.spacing) / 2
+              glyph: ""
+              label: "Wifi"
+              status: Networking.wifiEnabled ? "On" : "Off"
+              active: Networking.wifiEnabled
+              onClicked: Networking.wifiEnabled = !Networking.wifiEnabled
+            }
+
+            ToggleTile {
+              width: (toggleRow.width - toggleRow.spacing) / 2
+              glyph: ""
+              label: "Bluetooth"
+              status: (controlCenter.btAdapter && controlCenter.btAdapter.enabled) ? "On" : "Off"
+              active: controlCenter.btAdapter && controlCenter.btAdapter.enabled
+              onClicked: if (controlCenter.btAdapter) controlCenter.btAdapter.enabled = !controlCenter.btAdapter.enabled
+            }
+          }
+
           Text {
-            visible: notifCenter.history.length === 0
+            visible: controlCenter.history.length === 0
             width: parent.width
             text: "No notifications"
-            color: notifCenter.mutedTextColor
+            color: controlCenter.mutedTextColor
             font.pixelSize: 13
             horizontalAlignment: Text.AlignHCenter
           }
 
           Flickable {
             width: parent.width
-            height: Math.min(320, listColumn.implicitHeight)
+            height: Math.min(280, listColumn.implicitHeight)
             contentWidth: width
             contentHeight: listColumn.implicitHeight
             clip: true
-            visible: notifCenter.history.length > 0
+            visible: controlCenter.history.length > 0
 
             Column {
               id: listColumn
@@ -279,12 +460,12 @@ Item {
               spacing: 8
 
               Repeater {
-                model: notifCenter.history
+                model: controlCenter.history
                 delegate: Rectangle {
                   width: listColumn.width
                   height: entryContent.implicitHeight + 20
                   radius: 12
-                  color: notifCenter.chipBg
+                  color: controlCenter.chipBg
 
                   Column {
                     id: entryContent
@@ -299,7 +480,7 @@ Item {
                         id: entrySummary
                         anchors { left: parent.left; right: entryClose.left; rightMargin: 8 }
                         text: modelData.summary
-                        color: notifCenter.textColor
+                        color: controlCenter.textColor
                         font.bold: true
                         font.pixelSize: 13
                         elide: Text.ElideRight
@@ -309,12 +490,12 @@ Item {
                         id: entryClose
                         anchors.right: parent.right
                         text: "✕"
-                        color: notifCenter.mutedTextColor
+                        color: controlCenter.mutedTextColor
                         font.pixelSize: 12
 
                         MouseArea {
                           anchors.fill: parent
-                          onClicked: notifCenter.closeNotification(modelData)
+                          onClicked: controlCenter.closeNotification(modelData)
                         }
                       }
                     }
@@ -323,7 +504,7 @@ Item {
                       width: parent.width
                       visible: modelData.body.length > 0
                       text: modelData.body
-                      color: notifCenter.mutedTextColor
+                      color: controlCenter.mutedTextColor
                       font.pixelSize: 12
                       wrapMode: Text.WordWrap
                       maximumLineCount: 3
@@ -342,8 +523,8 @@ Item {
             Text {
               anchors.left: parent.left
               anchors.verticalCenter: parent.verticalCenter
-              text: notifCenter.count + " Notifications"
-              color: notifCenter.mutedTextColor
+              text: controlCenter.count + " Notifications"
+              color: controlCenter.mutedTextColor
               font.pixelSize: 12
             }
 
@@ -354,13 +535,36 @@ Item {
 
               IconButton {
                 glyph: "✕"
-                onClicked: notifCenter.clearAll()
+                onClicked: controlCenter.clearAll()
               }
 
               IconButton {
-                glyph: notifCenter.dnd ? "" : ""
-                onClicked: notifCenter.toggleDnd()
+                glyph: controlCenter.dnd ? "" : ""
+                onClicked: controlCenter.toggleDnd()
               }
+            }
+          }
+
+          Column {
+            width: parent.width
+            spacing: 8
+
+            SliderRow {
+              width: parent.width
+              label: "Volume"
+              value: (Pipewire.defaultAudioSink && Pipewire.defaultAudioSink.audio) ? Pipewire.defaultAudioSink.audio.volume : 0
+              onMoved: (v) => {
+                const sink = Pipewire.defaultAudioSink;
+                if (sink && sink.audio) sink.audio.volume = v;
+              }
+            }
+
+            SliderRow {
+              width: parent.width
+              visible: controlCenter.brightnessAvailable
+              label: "Brightness"
+              value: controlCenter.brightnessValue
+              onMoved: (v) => controlCenter.setBrightness(v)
             }
           }
         }
