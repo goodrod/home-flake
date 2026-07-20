@@ -12,11 +12,16 @@ in
     #
     # app name alone isn't enough: CLI tools like notify-send report their own
     # name ("notify-send"), not whatever shell/terminal invoked them. The
-    # sender-pid hint gives the actual PID that made the call, so we walk its
-    # process ancestry (pid -> parent -> ...) to find a window. That walk has
-    # to happen HERE, immediately, while the sender is still alive: a CLI like
-    # notify-send exits within milliseconds, so by the time a hotkey is
-    # pressed later `ps` can no longer see it or its parents at all.
+    # sender-pid hint gives the actual PID that made the call, so we'd like to
+    # walk its process ancestry (pid -> parent -> ...) to find a window. But
+    # that race is unwinnable in practice: notify-send is a synchronous glib
+    # dbus call that returns and exits essentially instantly, while this
+    # daemon only sees the event after it's relayed through dbus-monitor and
+    # an awk pipe, by which point `ps` on the sender pid already finds
+    # nothing (confirmed empirically, not hypothetical). So the bash wrapper
+    # around notify-send (see modules/bash) stamps an "x-shell-pid" hint with
+    # the *interactive shell's* pid, which stays alive indefinitely, and we
+    # prefer that as the ancestry-walk starting point when present.
     set -euo pipefail
     state_file="''${XDG_RUNTIME_DIR:-/tmp}/hypr-last-notif-app"
 
@@ -24,7 +29,7 @@ in
       stdbuf -oL awk '
         /^method call|^signal|^error / {
           state = ($0 ~ /member=Notify/) ? 1 : 0
-          app = ""; pid = ""; wantpid = 0
+          app = ""; senderpid = ""; shellpid = ""; wantfield = ""
           next
         }
         state==1 && app=="" {
@@ -32,16 +37,29 @@ in
           next
         }
         state==1 && app!="" {
-          if ($0 ~ /string "sender-pid"/) { wantpid = 1; next }
-          if (wantpid==1) {
-            if (match($0, /(int64|uint32|int32) *([0-9]+)/, a)) { pid = a[2] }
-            wantpid = 0
-            if (pid != "") { print app "\t" pid; fflush(); state = 0 }
+          if ($0 ~ /string "sender-pid"/) { wantfield = "sender"; next }
+          if ($0 ~ /string "x-shell-pid"/) { wantfield = "shell"; next }
+          if (wantfield != "") {
+            if (match($0, /(int64|uint32|int32) *([0-9]+)/, a)) {
+              if (wantfield == "sender") { senderpid = a[2] } else { shellpid = a[2] }
+            }
+            wantfield = ""
+            next
+          }
+          if ($0 ~ /^ *int32 /) {
+            print app "\t" senderpid "\t" shellpid
+            fflush()
+            state = 0
           }
         }
       ' |
-      while IFS=$'\t' read -r app pid; do
+      while IFS=$'\t' read -r app senderpid shellpid; do
         [ -z "$app" ] && continue
+
+        # Prefer x-shell-pid (guaranteed still alive) over sender-pid (often
+        # already reaped by the time we get here) as the ancestry-walk start.
+        start_pid="$senderpid"
+        [ -n "$shellpid" ] && start_pid="$shellpid"
 
         # Collect the whole ancestor chain via ps FIRST, as fast as possible:
         # a CLI sender like notify-send can exit within milliseconds of
@@ -51,8 +69,8 @@ in
         # gone, making `ps` on it useless. Collecting pids up front and
         # matching against the window list afterwards sidesteps that: the
         # window's own pid is long-lived regardless of how slow the lookup is.
-        pids="$pid"
-        cur="$pid"
+        pids="$start_pid"
+        cur="$start_pid"
         if [ -n "$cur" ]; then
           for _ in $(seq 1 15); do
             parent=$(ps -o ppid= -p "$cur" 2>/dev/null | tr -d ' ') || true
