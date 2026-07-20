@@ -555,23 +555,16 @@ Item {
           }
         }
 
-        Flickable {
+        Item {
+          visible: controlCenter.history.length === 0
           anchors {
             top: headerBlock.bottom
             bottom: footerBlock.top
             left: parent.left
             right: parent.right
-            topMargin: 12
-            bottomMargin: 12
-            leftMargin: 16
-            rightMargin: 16
           }
-          contentWidth: width
-          contentHeight: listColumn.implicitHeight
-          clip: true
 
           Column {
-            visible: controlCenter.history.length === 0
             anchors.centerIn: parent
             spacing: 8
 
@@ -589,65 +582,72 @@ Item {
               font.pixelSize: 13
             }
           }
+        }
 
-          Column {
-            id: listColumn
-            width: parent.width
-            spacing: 8
-            visible: controlCenter.history.length > 0
+        ListView {
+          anchors {
+            top: headerBlock.bottom
+            bottom: footerBlock.top
+            left: parent.left
+            right: parent.right
+            topMargin: 12
+            bottomMargin: 12
+            leftMargin: 16
+            rightMargin: 16
+          }
+          clip: true
+          spacing: 8
+          visible: controlCenter.history.length > 0
+          model: controlCenter.history
 
-            Repeater {
-              model: controlCenter.history
-              delegate: Rectangle {
-                width: listColumn.width
-                height: entryContent.implicitHeight + 20
-                radius: 12
-                color: controlCenter.chipBg
+          delegate: Rectangle {
+            width: ListView.view.width
+            height: entryContent.implicitHeight + 20
+            radius: 12
+            color: controlCenter.chipBg
 
-                Column {
-                  id: entryContent
-                  anchors { left: parent.left; right: parent.right; top: parent.top; margins: 10 }
-                  spacing: 4
+            Column {
+              id: entryContent
+              anchors { left: parent.left; right: parent.right; top: parent.top; margins: 10 }
+              spacing: 4
 
-                  Item {
-                    width: parent.width
-                    height: Math.max(entrySummary.implicitHeight, 16)
+              Item {
+                width: parent.width
+                height: Math.max(entrySummary.implicitHeight, 16)
 
-                    Text {
-                      id: entrySummary
-                      anchors { left: parent.left; right: entryClose.left; rightMargin: 8 }
-                      text: modelData.summary
-                      color: controlCenter.textColor
-                      font.bold: true
-                      font.pixelSize: 13
-                      elide: Text.ElideRight
-                    }
+                Text {
+                  id: entrySummary
+                  anchors { left: parent.left; right: entryClose.left; rightMargin: 8 }
+                  text: modelData.summary
+                  color: controlCenter.textColor
+                  font.bold: true
+                  font.pixelSize: 13
+                  elide: Text.ElideRight
+                }
 
-                    Text {
-                      id: entryClose
-                      anchors.right: parent.right
-                      text: "✕"
-                      color: controlCenter.mutedTextColor
-                      font.pixelSize: 12
+                Text {
+                  id: entryClose
+                  anchors.right: parent.right
+                  text: "✕"
+                  color: controlCenter.mutedTextColor
+                  font.pixelSize: 12
 
-                      MouseArea {
-                        anchors.fill: parent
-                        onClicked: controlCenter.closeNotification(modelData)
-                      }
-                    }
-                  }
-
-                  Text {
-                    width: parent.width
-                    visible: modelData.body.length > 0
-                    text: modelData.body
-                    color: controlCenter.mutedTextColor
-                    font.pixelSize: 12
-                    wrapMode: Text.WordWrap
-                    maximumLineCount: 3
-                    elide: Text.ElideRight
+                  MouseArea {
+                    anchors.fill: parent
+                    onClicked: controlCenter.closeNotification(modelData)
                   }
                 }
+              }
+
+              Text {
+                width: parent.width
+                visible: modelData.body.length > 0
+                text: modelData.body
+                color: controlCenter.mutedTextColor
+                font.pixelSize: 12
+                wrapMode: Text.WordWrap
+                maximumLineCount: 3
+                elide: Text.ElideRight
               }
             }
           }
