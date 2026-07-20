@@ -8,14 +8,14 @@ let
 in
 {
   options.module.workspaces = {
-    # Options only - this module is pure shared data consumed by the waybar and
-    # hyprland modules. Each of those gates its own output on its own enable flag.
+    # Options only - this module is pure shared data consumed by the quickshell
+    # and hyprland modules. Each of those gates its own output on its own enable flag.
 
     entries = mkOption {
       description = ''
         Workspace definitions keyed by tag name. The key is used verbatim as the
         Hyprland window tag (e.g. "chat" -> tag "+chat") and must be unique. Drives
-        both the waybar workspace widget (icons + persistent list) and the Hyprland
+        both the quickshell workspace widget (icons + persistent list) and the Hyprland
         window tag/assignment rules.
       '';
       default = {
@@ -85,7 +85,7 @@ in
 
           icon = mkOption {
             type = str;
-            description = "Waybar glyph shown for this workspace.";
+            description = "Glyph shown for this workspace.";
           };
 
           shiftedIcon = mkOption {
@@ -100,7 +100,7 @@ in
           persistent = mkOption {
             type = bool;
             default = false;
-            description = "Show this workspace in waybar even when empty (persistent-workspaces).";
+            description = "Show this workspace even when empty (persistent-workspaces).";
           };
 
           match = mkOption {
@@ -108,7 +108,7 @@ in
             description = ''
               Hyprland match regexps. Any non-null/non-empty field produces one
               `hl.window_rule({ match = { <field> = <regexp> }, tag = "+<name>" })`.
-              Leave all null for a waybar-only workspace (e.g. a scratch ws) with no
+              Leave all null for a bar-only workspace (e.g. a scratch ws) with no
               automatic window assignment.
             '';
             type = submodule {

@@ -33,7 +33,7 @@
     else "hyprlock";
 
   scriptsJson = pkgs.writeText "quickshell-bar-scripts.json" (builtins.toJSON {
-    taskStatus = "${taskScripts.taskWaybarStatus}";
+    taskStatus = "${taskScripts.taskStatusScript}";
     taskPicker = "${taskScripts.taskPicker}";
     lockCmd = lockCmd;
   });

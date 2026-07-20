@@ -48,7 +48,7 @@ let
   iconsArr = lib.concatMapStringsSep " " (t: ''"${luaEscape t.icon}"'') taskList;
 
   # Icon shown for ad-hoc (on-the-fly created) tasks, in both the picker and
-  # the waybar widget - ad-hoc tasks have no Nix-declared icon of their own.
+  # the bar widget - ad-hoc tasks have no Nix-declared icon of their own.
   adhocIcon = "★";
 in
 rec {
@@ -254,7 +254,7 @@ rec {
   # No-ops unless that id is a currently-known ad-hoc task and it's actually
   # empty - predefined tasks are never touched since they're never recorded
   # in the state file. Keeps emptied ad-hoc tasks from lingering forever in
-  # the picker/waybar (previously "manual only" removal was the sole way to
+  # the picker/bar (previously "manual only" removal was the sole way to
   # forget one, even after every window on it was already closed by hand).
   taskForgetIfEmpty = writeScript "task-workspace-forget-if-empty.sh" ''
     #!/usr/bin/env bash
@@ -275,9 +275,9 @@ rec {
     notify-send "Task workspace" "Forgot empty: $name"
   '';
 
-  # Waybar custom-module status: icons of currently-active predefined +
-  # ad-hoc tasks, polled (see module.waybar's custom/task-workspaces block).
-  taskWaybarStatus = writeScript "task-workspace-status.sh" ''
+  # Status text for the bar's task-workspaces widget: icons of currently-active
+  # predefined + ad-hoc tasks, polled (see modules/quickshell's taskStatus).
+  taskStatusScript = writeScript "task-workspace-status.sh" ''
     #!/usr/bin/env bash
     set -euo pipefail
     clients_json=$(hyprctl clients -j)

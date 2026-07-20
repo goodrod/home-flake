@@ -386,16 +386,16 @@ ShellRoot {
             delegate: Rectangle {
               readonly property int wsId: modelData
               readonly property bool focused: wsId === focusedWorkspaceId()
-              width: 36
-              height: 36
-              radius: 18
+              width: 32
+              height: 32
+              radius: 16
               color: focused ? root.accentColor : (wsMouse.containsMouse ? root.chipHoverBg : root.chipBg)
               Behavior on color { ColorAnimation { duration: 100 } }
 
               Text {
                 anchors.centerIn: parent
                 text: workspaceIcon(wsId)
-                font.pixelSize: 20
+                font.pixelSize: 16
                 color: focused ? root.accentTextColor : root.mutedTextColor
               }
 
@@ -403,7 +403,10 @@ ShellRoot {
                 id: wsMouse
                 anchors.fill: parent
                 hoverEnabled: true
-                onClicked: focusWorkspace(wsId)
+                onClicked: (mouse) => {
+                  const targetId = (mouse.modifiers & Qt.ShiftModifier) ? wsId + 1 : wsId;
+                  focusWorkspace(targetId);
+                }
               }
             }
           }
@@ -447,53 +450,6 @@ ShellRoot {
           id: rightRow
           anchors.centerIn: parent
           spacing: 20
-
-          Item {
-            width: 22
-            height: 22
-            anchors.verticalCenter: parent.verticalCenter
-
-            Rectangle {
-              anchors.fill: parent
-              radius: 11
-              color: bellMouse.containsMouse ? root.chipHoverBg : "transparent"
-              Behavior on color { ColorAnimation { duration: 100 } }
-            }
-
-            Text {
-              anchors.centerIn: parent
-              text: ""
-              font.pixelSize: 15
-              color: root.textColor
-            }
-
-            Rectangle {
-              visible: controlCenter.count > 0
-              width: 14
-              height: 14
-              radius: 7
-              color: root.accentColor
-              anchors.top: parent.top
-              anchors.right: parent.right
-              anchors.topMargin: -4
-              anchors.rightMargin: -4
-
-              Text {
-                anchors.centerIn: parent
-                text: controlCenter.count > 9 ? "9+" : controlCenter.count
-                color: root.accentTextColor
-                font.pixelSize: 8
-                font.bold: true
-              }
-            }
-
-            MouseArea {
-              id: bellMouse
-              anchors.fill: parent
-              hoverEnabled: true
-              onClicked: controlCenter.toggle()
-            }
-          }
 
           Chip {
             anchors.verticalCenter: parent.verticalCenter
@@ -574,6 +530,54 @@ ShellRoot {
               return icons[tier] + "  " + (charging ? "󱐋 " : "") + pct + "%";
             }
           }
+
+          Item {
+            width: 22
+            height: 22
+            anchors.verticalCenter: parent.verticalCenter
+
+            Rectangle {
+              anchors.fill: parent
+              radius: 11
+              color: bellMouse.containsMouse ? root.chipHoverBg : "transparent"
+              Behavior on color { ColorAnimation { duration: 100 } }
+            }
+
+            Text {
+              anchors.centerIn: parent
+              text: ""
+              font.pixelSize: 15
+              color: root.textColor
+            }
+
+            Rectangle {
+              visible: controlCenter.count > 0
+              width: 14
+              height: 14
+              radius: 7
+              color: root.accentColor
+              anchors.top: parent.top
+              anchors.right: parent.right
+              anchors.topMargin: -4
+              anchors.rightMargin: -4
+
+              Text {
+                anchors.centerIn: parent
+                text: controlCenter.count > 9 ? "9+" : controlCenter.count
+                color: root.accentTextColor
+                font.pixelSize: 8
+                font.bold: true
+              }
+            }
+
+            MouseArea {
+              id: bellMouse
+              anchors.fill: parent
+              hoverEnabled: true
+              onClicked: controlCenter.toggle()
+            }
+          }
+
         }
       }
 

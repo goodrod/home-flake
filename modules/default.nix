@@ -24,7 +24,6 @@
     ./navi
     ./workspaces
     ./task-workspaces
-    ./waybar
     ./quickshell
     ./wlogout
     ./swaync

@@ -33,7 +33,7 @@ let
     ) workspaces)
   );
 
-  # Assignment rules: tag -> workspace "<id> silent", in id order. Skip waybar-only
+  # Assignment rules: tag -> workspace "<id> silent", in id order. Skip bar-only
   # workspaces (no match fields), which have no tag to assign.
   wsList = lib.mapAttrsToList (tag: ws: ws // { _tagName = tag; }) workspaces;
   sortedWsWithNames = lib.sort (a: b: a.id < b.id) wsList;

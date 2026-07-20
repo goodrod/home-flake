@@ -29,7 +29,7 @@ in
           };
           icon = mkOption {
             type = str;
-            description = "Glyph shown in the waybar task-workspaces widget and the picker.";
+            description = "Glyph shown in the bar's task-workspaces widget and the picker.";
           };
           apps = mkOption {
             type = listOf str;
