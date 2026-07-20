@@ -461,7 +461,7 @@ ShellRoot {
 
             Text {
               anchors.centerIn: parent
-              text: notifCenter.dnd ? "\u{1F515}" : "\u{1F514}"
+              text: notifCenter.dnd ? "" : ""
               font.pixelSize: 15
               color: root.textColor
             }
@@ -549,8 +549,15 @@ ShellRoot {
           }
 
           Chip {
+            id: diskChip
             anchors.verticalCenter: parent.verticalCenter
-            label: "\u{1F4BE} " + diskPercent + "%"
+            label: "\uF0A0 " + diskPercent + "%"
+
+            MouseArea {
+              id: diskHoverArea
+              anchors.fill: parent
+              hoverEnabled: true
+            }
           }
 
           Chip {
@@ -569,6 +576,19 @@ ShellRoot {
         }
       }
 
+      property real cpuChipCenterX: 0
+      property real diskChipCenterX: 0
+
+      Timer {
+        interval: 100
+        running: true
+        repeat: true
+        onTriggered: {
+          bar.cpuChipCenterX = cpuChip.mapToItem(bar.contentItem, cpuChip.width / 2, 0).x;
+          bar.diskChipCenterX = diskChip.mapToItem(bar.contentItem, diskChip.width / 2, 0).x;
+        }
+      }
+
       PanelWindow {
         id: cpuPopup
         screen: modelData
@@ -578,9 +598,9 @@ ShellRoot {
         WlrLayershell.layer: WlrLayer.Overlay
         WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
         exclusionMode: ExclusionMode.Ignore
-        anchors { top: true; right: true }
+        anchors { top: true; left: true }
         margins.top: bar.implicitHeight + 6
-        margins.right: 14
+        margins.left: Math.max(8, bar.cpuChipCenterX - implicitWidth / 2)
         implicitWidth: cpuPopupContent.implicitWidth + 24
         implicitHeight: cpuPopupContent.implicitHeight + 20
 
@@ -608,6 +628,47 @@ ShellRoot {
                 color: root.mutedTextColor
                 font.pixelSize: 12
               }
+            }
+          }
+        }
+      }
+
+      PanelWindow {
+        id: diskPopup
+        screen: modelData
+        visible: diskHoverArea.containsMouse
+        color: "transparent"
+        WlrLayershell.namespace: "quickshell:disk-popup"
+        WlrLayershell.layer: WlrLayer.Overlay
+        WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
+        exclusionMode: ExclusionMode.Ignore
+        anchors { top: true; left: true }
+        margins.top: bar.implicitHeight + 6
+        margins.left: Math.max(8, bar.diskChipCenterX - implicitWidth / 2)
+        implicitWidth: diskPopupContent.implicitWidth + 24
+        implicitHeight: diskPopupContent.implicitHeight + 20
+
+        Rectangle {
+          anchors.fill: parent
+          radius: 14
+          color: root.islandBg
+
+          Column {
+            id: diskPopupContent
+            anchors.centerIn: parent
+            spacing: 4
+
+            Text {
+              text: "Disk (/)"
+              color: root.textColor
+              font.bold: true
+              font.pixelSize: 13
+            }
+
+            Text {
+              text: diskUsedGb.toFixed(1) + " GB used of " + diskTotalGb.toFixed(1) + " GB"
+              color: root.mutedTextColor
+              font.pixelSize: 12
             }
           }
         }

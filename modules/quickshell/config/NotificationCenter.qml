@@ -12,6 +12,7 @@ Item {
   readonly property color textColor: "#d8d8e2"
   readonly property color mutedTextColor: "#9a9aab"
   readonly property color accentColor: "#6c7ce0"
+  readonly property int barHeight: 50
 
   property var toasts: []
   property var history: []
@@ -86,6 +87,33 @@ Item {
     }
   }
 
+  component IconButton: Rectangle {
+    id: iconBtnRoot
+    property string glyph: ""
+    property int glyphSize: 13
+    signal clicked()
+
+    width: 28
+    height: 28
+    radius: 8
+    color: mouseArea.containsMouse ? notifCenter.chipHoverBg : "transparent"
+    Behavior on color { ColorAnimation { duration: 100 } }
+
+    Text {
+      anchors.centerIn: parent
+      text: iconBtnRoot.glyph
+      font.pixelSize: iconBtnRoot.glyphSize
+      color: notifCenter.textColor
+    }
+
+    MouseArea {
+      id: mouseArea
+      anchors.fill: parent
+      hoverEnabled: true
+      onClicked: iconBtnRoot.clicked()
+    }
+  }
+
   PanelWindow {
     screen: Quickshell.screens[0]
     color: "transparent"
@@ -95,6 +123,8 @@ Item {
     WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
     exclusionMode: ExclusionMode.Ignore
     anchors { top: true; right: true }
+    margins.top: notifCenter.barHeight + 10
+    margins.right: 14
     implicitWidth: 340
     implicitHeight: toastColumn.implicitHeight + 20
 
@@ -118,11 +148,13 @@ Item {
             anchors { left: parent.left; right: parent.right; top: parent.top; margins: 10 }
             spacing: 4
 
-            Row {
+            Item {
               width: parent.width
+              height: Math.max(summaryText.implicitHeight, 16)
 
               Text {
-                width: parent.width - 20
+                id: summaryText
+                anchors { left: parent.left; right: closeIcon.left; rightMargin: 8 }
                 text: modelData.summary
                 color: notifCenter.textColor
                 font.bold: true
@@ -131,6 +163,8 @@ Item {
               }
 
               Text {
+                id: closeIcon
+                anchors.right: parent.right
                 text: "✕"
                 color: notifCenter.mutedTextColor
                 font.pixelSize: 12
@@ -176,10 +210,10 @@ Item {
     FocusScope {
       anchors.top: parent.top
       anchors.right: parent.right
-      anchors.topMargin: 60
+      anchors.topMargin: notifCenter.barHeight + 10
       anchors.rightMargin: 14
       width: 360
-      height: Math.min(parent.height - 100, panelColumn.implicitHeight + 32)
+      height: Math.min(parent.height - notifCenter.barHeight - 40, panelColumn.implicitHeight + 32)
       focus: notifCenter.shown
 
       Keys.onEscapePressed: notifCenter.close()
@@ -198,83 +232,26 @@ Item {
           anchors { left: parent.left; right: parent.right; top: parent.top; margins: 16 }
           spacing: 12
 
-          Row {
+          Item {
             width: parent.width
-            spacing: 8
+            height: 28
 
             Text {
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
               text: "Notifications"
               color: notifCenter.textColor
               font.pixelSize: 18
               font.bold: true
+            }
+
+            IconButton {
+              anchors.right: parent.right
               anchors.verticalCenter: parent.verticalCenter
-            }
-
-            Item { width: parent.width - 220; height: 1 }
-
-            Rectangle {
-              width: 28
-              height: 28
-              radius: 8
-              color: dndMouse.containsMouse ? notifCenter.chipHoverBg : notifCenter.chipBg
-
-              Text {
-                anchors.centerIn: parent
-                text: notifCenter.dnd ? "\u{1F515}" : "\u{1F514}"
-                font.pixelSize: 13
-                color: notifCenter.textColor
-              }
-
-              MouseArea {
-                id: dndMouse
-                anchors.fill: parent
-                hoverEnabled: true
-                onClicked: notifCenter.toggleDnd()
-              }
-            }
-
-            Rectangle {
-              width: 28
-              height: 28
-              radius: 8
-              color: clearMouse.containsMouse ? notifCenter.chipHoverBg : notifCenter.chipBg
-
-              Text {
-                anchors.centerIn: parent
-                text: "\u{1F5D1}"
-                font.pixelSize: 13
-                color: notifCenter.textColor
-              }
-
-              MouseArea {
-                id: clearMouse
-                anchors.fill: parent
-                hoverEnabled: true
-                onClicked: notifCenter.clearAll()
-              }
-            }
-
-            Rectangle {
-              width: 28
-              height: 28
-              radius: 8
-              color: powerMouse.containsMouse ? notifCenter.chipHoverBg : notifCenter.chipBg
-
-              Text {
-                anchors.centerIn: parent
-                text: "⏻"
-                font.pixelSize: 13
-                color: notifCenter.textColor
-              }
-
-              MouseArea {
-                id: powerMouse
-                anchors.fill: parent
-                hoverEnabled: true
-                onClicked: {
-                  notifCenter.requestSessionScreen();
-                  notifCenter.close();
-                }
+              glyph: "⏻"
+              onClicked: {
+                notifCenter.requestSessionScreen();
+                notifCenter.close();
               }
             }
           }
@@ -290,7 +267,7 @@ Item {
 
           Flickable {
             width: parent.width
-            height: Math.min(400, listColumn.implicitHeight)
+            height: Math.min(320, listColumn.implicitHeight)
             contentWidth: width
             contentHeight: listColumn.implicitHeight
             clip: true
@@ -314,11 +291,13 @@ Item {
                     anchors { left: parent.left; right: parent.right; top: parent.top; margins: 10 }
                     spacing: 4
 
-                    Row {
+                    Item {
                       width: parent.width
+                      height: Math.max(entrySummary.implicitHeight, 16)
 
                       Text {
-                        width: parent.width - 20
+                        id: entrySummary
+                        anchors { left: parent.left; right: entryClose.left; rightMargin: 8 }
                         text: modelData.summary
                         color: notifCenter.textColor
                         font.bold: true
@@ -327,6 +306,8 @@ Item {
                       }
 
                       Text {
+                        id: entryClose
+                        anchors.right: parent.right
                         text: "✕"
                         color: notifCenter.mutedTextColor
                         font.pixelSize: 12
@@ -350,6 +331,35 @@ Item {
                     }
                   }
                 }
+              }
+            }
+          }
+
+          Item {
+            width: parent.width
+            height: 28
+
+            Text {
+              anchors.left: parent.left
+              anchors.verticalCenter: parent.verticalCenter
+              text: notifCenter.count + " Notifications"
+              color: notifCenter.mutedTextColor
+              font.pixelSize: 12
+            }
+
+            Row {
+              anchors.right: parent.right
+              anchors.verticalCenter: parent.verticalCenter
+              spacing: 4
+
+              IconButton {
+                glyph: "✕"
+                onClicked: notifCenter.clearAll()
+              }
+
+              IconButton {
+                glyph: notifCenter.dnd ? "" : ""
+                onClicked: notifCenter.toggleDnd()
               }
             }
           }
