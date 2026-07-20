@@ -25,9 +25,12 @@ Item {
   readonly property int count: history.length
 
   readonly property var btAdapter: Bluetooth.defaultAdapter
+  readonly property bool airplaneModeOn: !Networking.wifiEnabled && (!btAdapter || !btAdapter.enabled)
 
   property real brightnessValue: 0
   property bool brightnessAvailable: false
+
+  property string userAtHost: ""
 
   signal requestSessionScreen()
 
@@ -57,12 +60,31 @@ Item {
     toasts = [];
   }
 
+  function toggleAirplaneMode() {
+    if (airplaneModeOn) {
+      Networking.wifiEnabled = true;
+      if (btAdapter) btAdapter.enabled = true;
+    } else {
+      Networking.wifiEnabled = false;
+      if (btAdapter) btAdapter.enabled = false;
+    }
+  }
+
   function setBrightness(v) {
     brightnessValue = v;
     const pct = Math.round(v * 100);
-    brightnessSetProc.command = ["brightnessctl", "-c", "backlight", "-m", "s", pct + "%"];
+    brightnessSetProc.command = ["brightnessctl", "-m", "s", pct + "%"];
     brightnessSetProc.running = true;
   }
+
+  Process {
+    id: userAtHostProc
+    command: ["sh", "-c", "echo \"$(whoami)@$(hostname)\""]
+    stdout: StdioCollector {
+      onStreamFinished: controlCenter.userAtHost = this.text.trim()
+    }
+  }
+  Component.onCompleted: userAtHostProc.running = true
 
   NotificationServer {
     id: server
@@ -105,16 +127,21 @@ Item {
 
   Process {
     id: brightnessGetProc
-    command: ["brightnessctl", "-c", "backlight", "-m", "i"]
+    command: ["brightnessctl", "-m", "i"]
     stdout: StdioCollector {
       onStreamFinished: {
-        const line = this.text.trim();
-        const parts = line.split(",");
+        const lines = this.text.trim().split("\n").filter((l) => l.length > 0);
+        const chosen = lines.find((l) => l.split(",")[1] === "backlight") || lines[0];
+        if (!chosen) {
+          controlCenter.brightnessAvailable = false;
+          return;
+        }
+        const parts = chosen.split(",");
         if (parts.length < 4) {
           controlCenter.brightnessAvailable = false;
           return;
         }
-        const pct = parseInt(parts[3]);
+        const pct = parseInt(parts[3], 10);
         if (isNaN(pct)) {
           controlCenter.brightnessAvailable = false;
           return;
@@ -366,11 +393,12 @@ Item {
 
     FocusScope {
       anchors.top: parent.top
+      anchors.bottom: parent.bottom
       anchors.right: parent.right
       anchors.topMargin: controlCenter.barHeight + 10
+      anchors.bottomMargin: 14
       anchors.rightMargin: 14
       width: 360
-      height: Math.min(parent.height - controlCenter.barHeight - 40, panelColumn.implicitHeight + 32)
       focus: controlCenter.shown
 
       Keys.onEscapePressed: controlCenter.close()
@@ -385,42 +413,58 @@ Item {
         MouseArea { anchors.fill: parent }
 
         Column {
-          id: panelColumn
-          anchors { left: parent.left; right: parent.right; top: parent.top; margins: 16 }
+          id: headerBlock
+          anchors { top: parent.top; left: parent.left; right: parent.right; margins: 16 }
           spacing: 12
 
           Item {
             width: parent.width
-            height: 28
+            height: 20
 
             Text {
               anchors.left: parent.left
               anchors.verticalCenter: parent.verticalCenter
-              text: "Control Center"
-              color: controlCenter.textColor
-              font.pixelSize: 18
-              font.bold: true
+              text: controlCenter.userAtHost
+              color: controlCenter.mutedTextColor
+              font.pixelSize: 12
             }
 
-            IconButton {
+            Row {
               anchors.right: parent.right
               anchors.verticalCenter: parent.verticalCenter
-              glyph: "⏻"
-              onClicked: {
-                controlCenter.requestSessionScreen();
-                controlCenter.close();
+              spacing: 4
+
+              IconButton {
+                glyph: "\uF021"
+                onClicked: Quickshell.reload(true)
+              }
+
+              IconButton {
+                glyph: "⏻"
+                onClicked: {
+                  controlCenter.requestSessionScreen();
+                  controlCenter.close();
+                }
               }
             }
           }
 
+          Text {
+            width: parent.width
+            text: "Control Center"
+            color: controlCenter.textColor
+            font.pixelSize: 18
+            font.bold: true
+          }
+
           Row {
-            id: toggleRow
+            id: toggleRow1
             width: parent.width
             spacing: 8
 
             ToggleTile {
-              width: (toggleRow.width - toggleRow.spacing) / 2
-              glyph: ""
+              width: (toggleRow1.width - toggleRow1.spacing) / 2
+              glyph: "\uF1EB"
               label: "Wifi"
               status: Networking.wifiEnabled ? "On" : "Off"
               active: Networking.wifiEnabled
@@ -428,8 +472,8 @@ Item {
             }
 
             ToggleTile {
-              width: (toggleRow.width - toggleRow.spacing) / 2
-              glyph: ""
+              width: (toggleRow1.width - toggleRow1.spacing) / 2
+              glyph: "\uF293"
               label: "Bluetooth"
               status: (controlCenter.btAdapter && controlCenter.btAdapter.enabled) ? "On" : "Off"
               active: controlCenter.btAdapter && controlCenter.btAdapter.enabled
@@ -437,83 +481,61 @@ Item {
             }
           }
 
-          Text {
-            visible: controlCenter.history.length === 0
+          Row {
+            id: toggleRow2
             width: parent.width
-            text: "No notifications"
-            color: controlCenter.mutedTextColor
-            font.pixelSize: 13
-            horizontalAlignment: Text.AlignHCenter
-          }
+            spacing: 8
 
-          Flickable {
-            width: parent.width
-            height: Math.min(280, listColumn.implicitHeight)
-            contentWidth: width
-            contentHeight: listColumn.implicitHeight
-            clip: true
-            visible: controlCenter.history.length > 0
-
-            Column {
-              id: listColumn
-              width: parent.width
-              spacing: 8
-
-              Repeater {
-                model: controlCenter.history
-                delegate: Rectangle {
-                  width: listColumn.width
-                  height: entryContent.implicitHeight + 20
-                  radius: 12
-                  color: controlCenter.chipBg
-
-                  Column {
-                    id: entryContent
-                    anchors { left: parent.left; right: parent.right; top: parent.top; margins: 10 }
-                    spacing: 4
-
-                    Item {
-                      width: parent.width
-                      height: Math.max(entrySummary.implicitHeight, 16)
-
-                      Text {
-                        id: entrySummary
-                        anchors { left: parent.left; right: entryClose.left; rightMargin: 8 }
-                        text: modelData.summary
-                        color: controlCenter.textColor
-                        font.bold: true
-                        font.pixelSize: 13
-                        elide: Text.ElideRight
-                      }
-
-                      Text {
-                        id: entryClose
-                        anchors.right: parent.right
-                        text: "✕"
-                        color: controlCenter.mutedTextColor
-                        font.pixelSize: 12
-
-                        MouseArea {
-                          anchors.fill: parent
-                          onClicked: controlCenter.closeNotification(modelData)
-                        }
-                      }
-                    }
-
-                    Text {
-                      width: parent.width
-                      visible: modelData.body.length > 0
-                      text: modelData.body
-                      color: controlCenter.mutedTextColor
-                      font.pixelSize: 12
-                      wrapMode: Text.WordWrap
-                      maximumLineCount: 3
-                      elide: Text.ElideRight
-                    }
-                  }
-                }
+            ToggleTile {
+              id: audioTile
+              width: (toggleRow2.width - toggleRow2.spacing) / 2
+              readonly property var sink: Pipewire.defaultAudioSink
+              glyph: "\uF025"
+              label: "Audio"
+              status: {
+                if (!sink || !sink.audio) return "--";
+                if (sink.audio.muted) return "Muted";
+                return Math.round(sink.audio.volume * 100) + "%";
+              }
+              active: audioTile.sink && audioTile.sink.audio && !audioTile.sink.audio.muted
+              onClicked: {
+                const s = Pipewire.defaultAudioSink;
+                if (s && s.audio) s.audio.muted = !s.audio.muted;
               }
             }
+
+            ToggleTile {
+              width: (toggleRow2.width - toggleRow2.spacing) / 2
+              glyph: "\uF072"
+              label: "Airplane Mode"
+              status: controlCenter.airplaneModeOn ? "On" : "Off"
+              active: controlCenter.airplaneModeOn
+              onClicked: controlCenter.toggleAirplaneMode()
+            }
+          }
+        }
+
+        Column {
+          id: footerBlock
+          anchors { bottom: parent.bottom; left: parent.left; right: parent.right; margins: 16 }
+          spacing: 8
+
+          SliderRow {
+            width: parent.width
+            label: "Volume"
+            value: (Pipewire.defaultAudioSink && Pipewire.defaultAudioSink.audio) ? Pipewire.defaultAudioSink.audio.volume : 0
+            onMoved: (v) => {
+              const sink = Pipewire.defaultAudioSink;
+              if (sink && sink.audio) sink.audio.volume = v;
+            }
+          }
+
+          SliderRow {
+            width: parent.width
+            visible: controlCenter.brightnessAvailable
+            label: "Brightness"
+            value: controlCenter.brightnessValue
+            onMoved: (v) => controlCenter.setBrightness(v)
           }
 
           Item {
@@ -539,32 +561,95 @@ Item {
               }
 
               IconButton {
-                glyph: controlCenter.dnd ? "" : ""
+                glyph: controlCenter.dnd ? "\uF1F6" : "\uF476"
                 onClicked: controlCenter.toggleDnd()
               }
             }
           }
+        }
+
+        Flickable {
+          anchors {
+            top: headerBlock.bottom
+            bottom: footerBlock.top
+            left: parent.left
+            right: parent.right
+            topMargin: 12
+            bottomMargin: 12
+            leftMargin: 16
+            rightMargin: 16
+          }
+          contentWidth: width
+          contentHeight: listColumn.implicitHeight
+          clip: true
+
+          Text {
+            visible: controlCenter.history.length === 0
+            anchors.centerIn: parent
+            text: "No notifications"
+            color: controlCenter.mutedTextColor
+            font.pixelSize: 13
+          }
 
           Column {
+            id: listColumn
             width: parent.width
             spacing: 8
+            visible: controlCenter.history.length > 0
 
-            SliderRow {
-              width: parent.width
-              label: "Volume"
-              value: (Pipewire.defaultAudioSink && Pipewire.defaultAudioSink.audio) ? Pipewire.defaultAudioSink.audio.volume : 0
-              onMoved: (v) => {
-                const sink = Pipewire.defaultAudioSink;
-                if (sink && sink.audio) sink.audio.volume = v;
+            Repeater {
+              model: controlCenter.history
+              delegate: Rectangle {
+                width: listColumn.width
+                height: entryContent.implicitHeight + 20
+                radius: 12
+                color: controlCenter.chipBg
+
+                Column {
+                  id: entryContent
+                  anchors { left: parent.left; right: parent.right; top: parent.top; margins: 10 }
+                  spacing: 4
+
+                  Item {
+                    width: parent.width
+                    height: Math.max(entrySummary.implicitHeight, 16)
+
+                    Text {
+                      id: entrySummary
+                      anchors { left: parent.left; right: entryClose.left; rightMargin: 8 }
+                      text: modelData.summary
+                      color: controlCenter.textColor
+                      font.bold: true
+                      font.pixelSize: 13
+                      elide: Text.ElideRight
+                    }
+
+                    Text {
+                      id: entryClose
+                      anchors.right: parent.right
+                      text: "✕"
+                      color: controlCenter.mutedTextColor
+                      font.pixelSize: 12
+
+                      MouseArea {
+                        anchors.fill: parent
+                        onClicked: controlCenter.closeNotification(modelData)
+                      }
+                    }
+                  }
+
+                  Text {
+                    width: parent.width
+                    visible: modelData.body.length > 0
+                    text: modelData.body
+                    color: controlCenter.mutedTextColor
+                    font.pixelSize: 12
+                    wrapMode: Text.WordWrap
+                    maximumLineCount: 3
+                    elide: Text.ElideRight
+                  }
+                }
               }
-            }
-
-            SliderRow {
-              width: parent.width
-              visible: controlCenter.brightnessAvailable
-              label: "Brightness"
-              value: controlCenter.brightnessValue
-              onMoved: (v) => controlCenter.setBrightness(v)
             }
           }
         }

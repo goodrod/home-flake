@@ -551,7 +551,7 @@ ShellRoot {
           Chip {
             id: diskChip
             anchors.verticalCenter: parent.verticalCenter
-            label: "\uF0A0 " + diskPercent + "%"
+            label: "\u{F02CA}  " + diskPercent + "%"
 
             MouseArea {
               id: diskHoverArea
