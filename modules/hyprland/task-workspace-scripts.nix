@@ -198,9 +198,10 @@ rec {
 
   # SUPER+CTRL+T: pick an ad-hoc (on-the-fly created) task workspace to
   # forget. Predefined tasks aren't listed here - they're Nix-managed, not
-  # something a runtime picker can remove. This only forgets the name -> id
-  # mapping in the state file; it does not close any windows already on
-  # that workspace (matches the launch+jump-only, no-teardown design).
+  # something a runtime picker can remove. Closes every window still on that
+  # workspace (confirming first if any are open) before forgetting the
+  # name -> id mapping in the state file, so removal never leaves orphaned
+  # windows behind on an unreachable-by-name workspace id.
   # --only-match: there's nothing sensible to "create" here, only pick from
   # what already exists.
   taskRemovePicker = writeScript "task-workspace-remove-picker.sh" ''
@@ -219,9 +220,51 @@ rec {
     task=$(jq -r 'keys[]' "$state_file" | fuzzel --dmenu --only-match --placeholder="Remove task workspace") || true
     [ -z "$task" ] && exit 0
 
+    id=$(jq -r --arg n "$task" '.[$n]' "$state_file")
+
+    clients_json=$(hyprctl clients -j)
+    addrs=$(jq -r --argjson id "$id" '[.[] | select(.workspace.id == $id)] | .[].address' <<< "$clients_json")
+    count=$(grep -c . <<< "$addrs" 2>/dev/null || true)
+
+    if [ "$count" -gt 0 ]; then
+      confirm=$(printf 'Yes\nNo' | fuzzel --dmenu --placeholder="Close $count window(s) in '$task' and remove it?") || true
+      [ "$confirm" = "Yes" ] || exit 0
+    fi
+
+    while IFS= read -r addr; do
+      [ -z "$addr" ] && continue
+      hyprctl dispatch "hl.dsp.window.close({ window = \"address:$addr\" })"
+    done <<< "$addrs"
+
     jq --arg n "$task" 'del(.[$n])' "$state_file" > "$state_file.tmp"
     mv "$state_file.tmp" "$state_file"
     notify-send "Task workspace" "Removed: $task"
+  '';
+
+  # Auto-forget hook (see task-workspace-cleanup.nix's workspace.active
+  # listener): called with a workspace id whenever you navigate away from it.
+  # No-ops unless that id is a currently-known ad-hoc task and it's actually
+  # empty - predefined tasks are never touched since they're never recorded
+  # in the state file. Keeps emptied ad-hoc tasks from lingering forever in
+  # the picker/waybar (previously "manual only" removal was the sole way to
+  # forget one, even after every window on it was already closed by hand).
+  taskForgetIfEmpty = writeScript "task-workspace-forget-if-empty.sh" ''
+    #!/usr/bin/env bash
+    set -euo pipefail
+    id="''${1:-}"
+    [ -n "$id" ] || exit 0
+
+    state_file="''${XDG_STATE_HOME:-$HOME/.local/state}/hypr-task-workspaces.json"
+    [ -s "$state_file" ] || exit 0
+
+    name=$(jq -r --argjson id "$id" 'to_entries[] | select(.value == $id) | .key' "$state_file")
+    [ -n "$name" ] || exit 0
+
+    hyprctl clients -j | jq -e --argjson id "$id" 'any(.[]; .workspace.id == $id)' >/dev/null && exit 0
+
+    jq --arg n "$name" 'del(.[$n])' "$state_file" > "$state_file.tmp"
+    mv "$state_file.tmp" "$state_file"
+    notify-send "Task workspace" "Forgot empty: $name"
   '';
 
   # Waybar custom-module status: icons of currently-active predefined +

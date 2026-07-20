@@ -18,6 +18,7 @@ in
     ./lockscreen.nix
     ./notif-focus.nix
     ./pending-move.nix
+    ./task-workspace-cleanup.nix
   ];
 
   options.module.hyprland = {
