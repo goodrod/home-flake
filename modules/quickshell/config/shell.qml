@@ -403,8 +403,9 @@ ShellRoot {
                 id: wsMouse
                 anchors.fill: parent
                 hoverEnabled: true
+                acceptedButtons: Qt.LeftButton | Qt.RightButton
                 onClicked: (mouse) => {
-                  const targetId = (mouse.modifiers & Qt.ShiftModifier) ? wsId + 1 : wsId;
+                  const targetId = (mouse.button === Qt.RightButton) ? wsId + 1 : wsId;
                   focusWorkspace(targetId);
                 }
               }

@@ -5,23 +5,6 @@ in
 {
   notifAppWatcher = writeScript "notif-app-watcher.sh" ''
     #!/usr/bin/env bash
-    # Eavesdrops org.freedesktop.Notifications.Notify calls on the session bus
-    # and records which window sent it, so a hotkey can jump to it later.
-    # Daemon-agnostic: this sees the raw Notify call before swaync/dunst/etc
-    # ever handles it.
-    #
-    # app name alone isn't enough: CLI tools like notify-send report their own
-    # name ("notify-send"), not whatever shell/terminal invoked them. The
-    # sender-pid hint gives the actual PID that made the call, so we'd like to
-    # walk its process ancestry (pid -> parent -> ...) to find a window. But
-    # that race is unwinnable in practice: notify-send is a synchronous glib
-    # dbus call that returns and exits essentially instantly, while this
-    # daemon only sees the event after it's relayed through dbus-monitor and
-    # an awk pipe, by which point `ps` on the sender pid already finds
-    # nothing (confirmed empirically, not hypothetical). So the bash wrapper
-    # around notify-send (see modules/bash) stamps an "x-shell-pid" hint with
-    # the *interactive shell's* pid, which stays alive indefinitely, and we
-    # prefer that as the ancestry-walk starting point when present.
     set -euo pipefail
     state_file="''${XDG_RUNTIME_DIR:-/tmp}/hypr-last-notif-app"
 
@@ -56,8 +39,6 @@ in
       while IFS=$'\t' read -r app senderpid shellpid; do
         [ -z "$app" ] && continue
 
-        # Prefer x-shell-pid (guaranteed still alive) over sender-pid (often
-        # already reaped by the time we get here) as the ancestry-walk start.
         start_pid="$senderpid"
         [ -n "$shellpid" ] && start_pid="$shellpid"
 
