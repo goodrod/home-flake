@@ -141,9 +141,11 @@ rec {
   # create a new ad-hoc one on the fly - same resolution as
   # taskLaunchOrFocus, duplicated locally rather than shelling out to it
   # since this needs the id back to move a window, not to launch/focus)
-  # then move the currently focused window there. Doesn't follow - the
-  # window moves, focus stays put, matching this repo's existing
-  # move-to-workspace binds (mainMod+CTRL+<n>).
+  # then move the currently focused window there. Doesn't follow for an
+  # existing task - the window moves, focus stays put, matching this repo's
+  # existing move-to-workspace binds (mainMod+CTRL+<n>). Freshly-created
+  # ad-hoc tasks are the exception: they follow, since otherwise you'd have
+  # no way to see the workspace you just made until a separate SUPER+T.
   taskMoveWindow = writeScript "task-workspace-move-window.sh" ''
     #!/usr/bin/env bash
     set -euo pipefail
@@ -161,6 +163,7 @@ rec {
       id=$(jq -r --arg n "$task" '.[$n] // empty' "$state_file")
     fi
 
+    created=0
     if [ -z "$id" ]; then
       taken=" ${reservedIdsSpace} $(jq -r '.[]' "$state_file" | tr '\n' ' ')"
       id=500
@@ -170,9 +173,14 @@ rec {
       jq --arg n "$task" --argjson id "$id" '. + {($n): $id}' "$state_file" > "$state_file.tmp"
       mv "$state_file.tmp" "$state_file"
       notify-send "Task workspace" "Created: $task"
+      created=1
     fi
 
-    hyprctl dispatch "hl.dsp.window.move({workspace = $id, follow = false})"
+    if [ "$created" -eq 1 ]; then
+      hyprctl dispatch "hl.dsp.window.move({workspace = $id, follow = true})"
+    else
+      hyprctl dispatch "hl.dsp.window.move({workspace = $id, follow = false})"
+    fi
   '';
 
   # SUPER+SHIFT+T: same merged fuzzy picker as taskPicker, but moves the
