@@ -73,7 +73,7 @@ Item {
   function setBrightness(v) {
     brightnessValue = v;
     const pct = Math.round(v * 100);
-    brightnessSetProc.command = ["brightnessctl", "-m", "s", pct + "%"];
+    brightnessSetProc.command = ["brightnessctl", "-c", "backlight", "-m", "s", pct + "%"];
     brightnessSetProc.running = true;
   }
 
@@ -127,17 +127,12 @@ Item {
 
   Process {
     id: brightnessGetProc
-    command: ["brightnessctl", "-m", "i"]
+    command: ["brightnessctl", "-c", "backlight", "-m", "i"]
     stdout: StdioCollector {
       onStreamFinished: {
-        const lines = this.text.trim().split("\n").filter((l) => l.length > 0);
-        const chosen = lines.find((l) => l.split(",")[1] === "backlight") || lines[0];
-        if (!chosen) {
-          controlCenter.brightnessAvailable = false;
-          return;
-        }
-        const parts = chosen.split(",");
-        if (parts.length < 4) {
+        const line = this.text.trim();
+        const parts = line.split(",");
+        if (parts.length < 4 || parts[1] !== "backlight") {
           controlCenter.brightnessAvailable = false;
           return;
         }
