@@ -600,7 +600,7 @@ ShellRoot {
         exclusionMode: ExclusionMode.Ignore
         anchors { top: true; left: true }
         margins.top: bar.implicitHeight + 6
-        margins.left: Math.max(8, bar.cpuChipCenterX - implicitWidth / 2)
+        margins.left: Math.min(Math.max(8, bar.cpuChipCenterX - implicitWidth / 2), screen.width - implicitWidth - 8)
         implicitWidth: cpuPopupContent.implicitWidth + 24
         implicitHeight: cpuPopupContent.implicitHeight + 20
 
@@ -644,7 +644,7 @@ ShellRoot {
         exclusionMode: ExclusionMode.Ignore
         anchors { top: true; left: true }
         margins.top: bar.implicitHeight + 6
-        margins.left: Math.max(8, bar.diskChipCenterX - implicitWidth / 2)
+        margins.left: Math.min(Math.max(8, bar.diskChipCenterX - implicitWidth / 2), screen.width - implicitWidth - 8)
         implicitWidth: diskPopupContent.implicitWidth + 24
         implicitHeight: diskPopupContent.implicitHeight + 20
 
