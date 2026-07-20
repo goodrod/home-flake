@@ -18,7 +18,7 @@ ShellRoot {
   readonly property color textColor: "#DEE2E6"
   readonly property color mutedTextColor: "#CAC4D0"
   readonly property color accentColor: "#D0BCFF"
-  readonly property color onAccentColor: "#381E72"
+  readonly property color accentTextColor: "#381E72"
   readonly property int islandHeight: 40
   readonly property int islandPadding: 16
 
@@ -396,7 +396,7 @@ ShellRoot {
                 anchors.centerIn: parent
                 text: workspaceIcon(wsId)
                 font.pixelSize: 20
-                color: focused ? root.onAccentColor : root.mutedTextColor
+                color: focused ? root.accentTextColor : root.mutedTextColor
               }
 
               MouseArea {
@@ -481,7 +481,7 @@ ShellRoot {
               Text {
                 anchors.centerIn: parent
                 text: controlCenter.count > 9 ? "9+" : controlCenter.count
-                color: root.onAccentColor
+                color: root.accentTextColor
                 font.pixelSize: 8
                 font.bold: true
               }

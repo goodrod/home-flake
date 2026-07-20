@@ -16,7 +16,7 @@ Item {
   readonly property color textColor: "#DEE2E6"
   readonly property color mutedTextColor: "#CAC4D0"
   readonly property color accentColor: "#D0BCFF"
-  readonly property color onAccentColor: "#381E72"
+  readonly property color accentTextColor: "#381E72"
   readonly property color iconBadgeBg: "#4A4458"
   readonly property color iconBadgeFg: "#E8DEF8"
   readonly property color notifAreaBg: "#211F26"
@@ -219,7 +219,7 @@ Item {
           anchors.centerIn: parent
           text: tileRoot.glyph
           font.pixelSize: 16
-          color: tileRoot.active ? controlCenter.onAccentColor : controlCenter.iconBadgeFg
+          color: tileRoot.active ? controlCenter.accentTextColor : controlCenter.iconBadgeFg
         }
       }
 

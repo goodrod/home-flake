@@ -10,7 +10,7 @@ PanelWindow {
   readonly property color textColor: "#DEE2E6"
   readonly property color mutedTextColor: "#CAC4D0"
   readonly property color accentColor: "#D0BCFF"
-  readonly property color onAccentColor: "#381E72"
+  readonly property color accentTextColor: "#381E72"
 
   property bool shown: false
   visible: shown
@@ -85,7 +85,7 @@ PanelWindow {
         anchors.horizontalCenter: parent.horizontalCenter
         text: btnRoot.glyph
         font.pixelSize: 44
-        color: btnRoot.active ? sessionScreen.onAccentColor : sessionScreen.textColor
+        color: btnRoot.active ? sessionScreen.accentTextColor : sessionScreen.textColor
         scale: btnRoot.active ? 1.15 : 1.0
         Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutBack } }
       }
@@ -95,7 +95,7 @@ PanelWindow {
         text: btnRoot.label
         font.pixelSize: 16
         font.bold: true
-        color: btnRoot.active ? sessionScreen.onAccentColor : sessionScreen.textColor
+        color: btnRoot.active ? sessionScreen.accentTextColor : sessionScreen.textColor
       }
     }
 
