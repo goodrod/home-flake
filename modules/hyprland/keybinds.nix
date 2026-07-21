@@ -56,10 +56,30 @@ in
       hl.bind(mainMod .. " + CTRL + T", hl.dsp.exec_cmd("${taskScripts.taskMoveWindowPicker}"), { description = "Send focused window to a task workspace" })
       hl.bind(mainMod .. " + SHIFT + T", hl.dsp.exec_cmd("${taskScripts.taskRemovePicker}"), { description = "Remove an ad-hoc task workspace" })
 
+      -- mon.width/height are the panel-native (untransformed) pixel size, so
+      -- swap them for 90/270 transforms to get the actual on-screen size.
+      -- Needed to detect an ultrawide rotated to portrait ("standing up"),
+      -- where no column width should end up narrower than the screen.
+      local function effectiveMonitorSize(mon)
+        local w, h = mon.width, mon.height
+        if mon.transform % 2 == 1 then w, h = h, w end
+        return w, h
+      end
+
+      local function colWidthsFor(activeWindow)
+        local mon = activeWindow and activeWindow.monitor
+        if mon then
+          local w, h = effectiveMonitorSize(mon)
+          if h > w then return { 1.0 } end
+        end
+        return colWidths
+      end
+
       local function cycleColWidth(dir)
-        colWidthIdx = ((colWidthIdx - 1 + dir + #colWidths) % #colWidths) + 1
         local w = hl.get_active_window()
-        hl.dispatch(hl.dsp.layout("colresize all " .. colWidths[colWidthIdx]))
+        local widths = colWidthsFor(w)
+        colWidthIdx = ((colWidthIdx - 1 + dir + #widths) % #widths) + 1
+        hl.dispatch(hl.dsp.layout("colresize all " .. widths[colWidthIdx]))
         if w ~= nil then hl.dispatch(hl.dsp.focus({ window = "address:" .. w.address })) end
       end
       hl.bind(mainMod .. " + O", function() cycleColWidth(1) end, { description = "Cycle all column widths forward" })
