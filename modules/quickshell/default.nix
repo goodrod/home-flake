@@ -89,7 +89,13 @@ in {
       Service = {
         ExecStart = "${pkgs.quickshell}/bin/qs -c bar";
         Restart = "on-failure";
-        Environment = ["QT_QPA_PLATFORMTHEME=qt6ct"];
+        Environment = [
+          "QT_QPA_PLATFORMTHEME=qt6ct"
+          # Force software rendering: on non-NixOS the Nix Mesa/EGL can't
+          # initialize the system GPU driver, so hardware GL context creation
+          # fails ("Failed to initialize graphics backend for OpenGL").
+          "QT_QUICK_BACKEND=software"
+        ];
       };
       Install.WantedBy = ["graphical-session.target"];
     };
