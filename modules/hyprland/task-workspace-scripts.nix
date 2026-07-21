@@ -131,10 +131,13 @@ rec {
       {
         # With no predefined tasks this prints one empty row - deliberate:
         # it's the preselected blank line you type a brand-new name over to
-        # create a workspace on the fly (fuzzel returns the typed text).
+        # create a workspace on the fly (fuzzel returns the typed text when it
+        # matches nothing). To create a name that DOES fuzzy-match an existing
+        # task (e.g. "Test A" while "Test a feature" exists), press Shift+Enter
+        # (fuzzel's execute-input) which returns the raw typed text verbatim.
         printf '%s\t%s\n' ${pickerPairs}
         jq -r 'to_entries[] | "${adhocIcon}  \(.key)\t\(.key)"' "$state_file"
-      } | fuzzel --dmenu --with-nth=1 --placeholder="Task workspace"
+      } | fuzzel --dmenu --with-nth=1 --placeholder="Task workspace  (Shift+Enter: create typed name)"
     ) || true
     task="''${selection##*$'\t'}"
     [ -n "$task" ] && exec ${taskLaunchOrFocus} "$task"
@@ -201,7 +204,7 @@ rec {
       {
         printf '%s\t%s\n' ${pickerPairs}
         jq -r 'to_entries[] | "${adhocIcon}  \(.key)\t\(.key)"' "$state_file"
-      } | fuzzel --dmenu --with-nth=1 --placeholder="Move window to task workspace"
+      } | fuzzel --dmenu --with-nth=1 --placeholder="Move window to task workspace  (Shift+Enter: create typed name)"
     ) || true
     task="''${selection##*$'\t'}"
     [ -n "$task" ] && exec ${taskMoveWindow} "$task"
