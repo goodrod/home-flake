@@ -82,6 +82,25 @@ in
         hl.dispatch(hl.dsp.layout("colresize all " .. widths[colWidthIdx]))
         if w ~= nil then hl.dispatch(hl.dsp.focus({ window = "address:" .. w.address })) end
       end
+      -- Landing on a portrait monitor should snap any columns it already had
+      -- (e.g. carried over from a landscape monitor) to full width, not just
+      -- block the cycle going forward from here.
+      local function clampToFullWidthIfPortrait(mon)
+        if not mon then return end
+        local w, h = effectiveMonitorSize(mon)
+        if h > w then
+          colWidthIdx = #colWidths
+          hl.dispatch(hl.dsp.layout("colresize all 1.0"))
+        end
+      end
+      -- workspace.active: fires on an actual workspace switch (e.g. moving a
+      -- workspace to this monitor, or switching workspaces on it).
+      hl.on("workspace.active", function(ws) clampToFullWidthIfPortrait(ws and ws.monitor) end)
+      -- monitor.focused: workspace.active does NOT fire when the monitor's
+      -- workspace was already active and you just move input focus onto it
+      -- (e.g. the per-monitor focusKey binds), so that case needs its own hook.
+      hl.on("monitor.focused", function(mon) clampToFullWidthIfPortrait(mon) end)
+
       hl.bind(mainMod .. " + O", function() cycleColWidth(1) end, { description = "Cycle all column widths forward" })
       hl.bind(mainMod .. " + SHIFT + O", function() cycleColWidth(-1) end, { description = "Cycle all column widths back" })
       hl.bind(mainMod .. " + H", hl.dsp.exec_cmd('${scripts.toggleWindow} "${scripts.parseHotkeys} | fzf"'), { description = "Toggle window" })
