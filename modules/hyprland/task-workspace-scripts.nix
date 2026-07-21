@@ -129,7 +129,10 @@ rec {
 
     selection=$(
       {
-        ${lib.optionalString (taskList != [ ]) ''printf '%s\t%s\n' ${pickerPairs}''}
+        # With no predefined tasks this prints one empty row - deliberate:
+        # it's the preselected blank line you type a brand-new name over to
+        # create a workspace on the fly (fuzzel returns the typed text).
+        printf '%s\t%s\n' ${pickerPairs}
         jq -r 'to_entries[] | "${adhocIcon}  \(.key)\t\(.key)"' "$state_file"
       } | fuzzel --dmenu --with-nth=1 --placeholder="Task workspace"
     ) || true
@@ -196,7 +199,7 @@ rec {
 
     selection=$(
       {
-        ${lib.optionalString (taskList != [ ]) ''printf '%s\t%s\n' ${pickerPairs}''}
+        printf '%s\t%s\n' ${pickerPairs}
         jq -r 'to_entries[] | "${adhocIcon}  \(.key)\t\(.key)"' "$state_file"
       } | fuzzel --dmenu --with-nth=1 --placeholder="Move window to task workspace"
     ) || true
