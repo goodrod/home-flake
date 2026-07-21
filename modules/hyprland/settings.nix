@@ -47,6 +47,11 @@ in
       hl.env("__GLX_VENDOR_LIBRARY_NAME", "nvidia")
       hl.env("XCURSOR_SIZE", "24")
       hl.env("HYPRCURSOR_SIZE", "24")
+      -- Session had no locale (LC_CTYPE=POSIX), so UTF-8-unaware apps like
+      -- fuzzel drop every entry containing multibyte glyphs - e.g. the task
+      -- picker's icon column, leaving it apparently empty. Give the whole
+      -- session a UTF-8 locale.
+      hl.env("LANG", "sv_SE.utf8")
 
       -- ══════════════════════════════════════
       -- General config

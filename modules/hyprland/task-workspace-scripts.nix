@@ -129,7 +129,7 @@ rec {
 
     selection=$(
       {
-        printf '%s\t%s\n' ${pickerPairs}
+        ${lib.optionalString (taskList != [ ]) ''printf '%s\t%s\n' ${pickerPairs}''}
         jq -r 'to_entries[] | "${adhocIcon}  \(.key)\t\(.key)"' "$state_file"
       } | fuzzel --dmenu --with-nth=1 --placeholder="Task workspace"
     ) || true
@@ -196,7 +196,7 @@ rec {
 
     selection=$(
       {
-        printf '%s\t%s\n' ${pickerPairs}
+        ${lib.optionalString (taskList != [ ]) ''printf '%s\t%s\n' ${pickerPairs}''}
         jq -r 'to_entries[] | "${adhocIcon}  \(.key)\t\(.key)"' "$state_file"
       } | fuzzel --dmenu --with-nth=1 --placeholder="Move window to task workspace"
     ) || true
