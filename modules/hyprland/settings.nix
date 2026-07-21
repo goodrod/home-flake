@@ -51,7 +51,7 @@ in
       -- fuzzel drop every entry containing multibyte glyphs - e.g. the task
       -- picker's icon column, leaving it apparently empty. Give the whole
       -- session a UTF-8 locale.
-      hl.env("LANG", "sv_SE.utf8")
+      hl.env("LANG", "C.UTF-8")
 
       -- ══════════════════════════════════════
       -- General config
