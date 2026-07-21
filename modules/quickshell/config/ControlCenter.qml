@@ -2,6 +2,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
+import Quickshell.Hyprland
 import Quickshell.Services.Notifications
 import Quickshell.Services.Pipewire
 import Quickshell.Networking
@@ -313,77 +314,81 @@ Item {
     }
   }
 
-  PanelWindow {
-    screen: Quickshell.screens[0]
-    color: "transparent"
-    visible: controlCenter.toasts.length > 0
-    WlrLayershell.namespace: "quickshell:notification-popups"
-    WlrLayershell.layer: WlrLayer.Overlay
-    WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
-    exclusionMode: ExclusionMode.Ignore
-    anchors { top: true; right: true }
-    margins.top: controlCenter.barHeight + 10
-    margins.right: 14
-    implicitWidth: 340
-    implicitHeight: toastColumn.implicitHeight + 20
+  Variants {
+    model: Quickshell.screens
 
-    Column {
-      id: toastColumn
-      x: 10
-      y: 10
-      width: parent.width - 20
-      spacing: 8
+    PanelWindow {
+      screen: modelData
+      color: "transparent"
+      visible: controlCenter.toasts.length > 0
+      WlrLayershell.namespace: "quickshell:notification-popups"
+      WlrLayershell.layer: WlrLayer.Overlay
+      WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
+      exclusionMode: ExclusionMode.Ignore
+      anchors { top: true; right: true }
+      margins.top: controlCenter.barHeight + 10
+      margins.right: 14
+      implicitWidth: 340
+      implicitHeight: toastColumn.implicitHeight + 20
 
-      Repeater {
-        model: controlCenter.toasts
-        delegate: Rectangle {
-          width: toastColumn.width
-          height: toastContent.implicitHeight + 20
-          radius: 14
-          color: controlCenter.islandBg
+      Column {
+        id: toastColumn
+        x: 10
+        y: 10
+        width: parent.width - 20
+        spacing: 8
 
-          Column {
-            id: toastContent
-            anchors { left: parent.left; right: parent.right; top: parent.top; margins: 10 }
-            spacing: 4
+        Repeater {
+          model: controlCenter.toasts
+          delegate: Rectangle {
+            width: toastColumn.width
+            height: toastContent.implicitHeight + 20
+            radius: 14
+            color: controlCenter.islandBg
 
-            Item {
-              width: parent.width
-              height: Math.max(summaryText.implicitHeight, 16)
+            Column {
+              id: toastContent
+              anchors { left: parent.left; right: parent.right; top: parent.top; margins: 10 }
+              spacing: 4
 
-              Text {
-                id: summaryText
-                anchors { left: parent.left; right: closeIcon.left; rightMargin: 8 }
-                text: modelData.summary
-                color: controlCenter.textColor
-                font.bold: true
-                font.pixelSize: 14
-                elide: Text.ElideRight
-              }
+              Item {
+                width: parent.width
+                height: Math.max(summaryText.implicitHeight, 16)
 
-              Text {
-                id: closeIcon
-                anchors.right: parent.right
-                text: "✕"
-                color: controlCenter.mutedTextColor
-                font.pixelSize: 12
+                Text {
+                  id: summaryText
+                  anchors { left: parent.left; right: closeIcon.left; rightMargin: 8 }
+                  text: modelData.summary
+                  color: controlCenter.textColor
+                  font.bold: true
+                  font.pixelSize: 14
+                  elide: Text.ElideRight
+                }
 
-                MouseArea {
-                  anchors.fill: parent
-                  onClicked: controlCenter.dismissToast(modelData.id)
+                Text {
+                  id: closeIcon
+                  anchors.right: parent.right
+                  text: "✕"
+                  color: controlCenter.mutedTextColor
+                  font.pixelSize: 12
+
+                  MouseArea {
+                    anchors.fill: parent
+                    onClicked: controlCenter.dismissToast(modelData.id)
+                  }
                 }
               }
-            }
 
-            Text {
-              width: parent.width
-              visible: modelData.body.length > 0
-              text: modelData.body
-              color: controlCenter.mutedTextColor
-              font.pixelSize: 12
-              wrapMode: Text.WordWrap
-              maximumLineCount: 3
-              elide: Text.ElideRight
+              Text {
+                width: parent.width
+                visible: modelData.body.length > 0
+                text: modelData.body
+                color: controlCenter.mutedTextColor
+                font.pixelSize: 12
+                wrapMode: Text.WordWrap
+                maximumLineCount: 3
+                elide: Text.ElideRight
+              }
             }
           }
         }
@@ -392,6 +397,7 @@ Item {
   }
 
   PanelWindow {
+    id: ccWindow
     screen: controlCenter.targetScreen
     visible: controlCenter.shown
     color: "transparent"
@@ -400,6 +406,12 @@ Item {
     WlrLayershell.keyboardFocus: controlCenter.shown ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
     exclusionMode: ExclusionMode.Ignore
     anchors { top: true; bottom: true; left: true; right: true }
+
+    HyprlandFocusGrab {
+      windows: [ccWindow]
+      active: controlCenter.shown
+      onCleared: controlCenter.close()
+    }
 
     MouseArea {
       anchors.fill: parent
