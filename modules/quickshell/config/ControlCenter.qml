@@ -26,6 +26,7 @@ Item {
   property var history: []
   property bool dnd: false
   property bool shown: false
+  property var targetScreen: Quickshell.screens[0]
   readonly property int count: history.length
 
   readonly property var btAdapter: Bluetooth.defaultAdapter
@@ -391,7 +392,7 @@ Item {
   }
 
   PanelWindow {
-    screen: Quickshell.screens[0]
+    screen: controlCenter.targetScreen
     visible: controlCenter.shown
     color: "transparent"
     WlrLayershell.namespace: "quickshell:notification-center"
