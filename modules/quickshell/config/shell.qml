@@ -279,6 +279,13 @@ ShellRoot {
       implicitHeight: 50
       color: "transparent"
 
+      // Responsive breakpoints: on narrow screens the absolutely-anchored
+      // islands (left tray, centered workspaces, right metrics) overlap.
+      // Hide low-priority chips so the clusters shrink and stop colliding.
+      // Row/Repeater drop !visible items from layout automatically.
+      readonly property bool showMetrics: width >= 1500
+      readonly property bool showNetwork: width >= 1200
+
       Rectangle {
         id: clockIsland
         anchors.left: parent.left
@@ -415,6 +422,7 @@ ShellRoot {
       }
 
       Rectangle {
+        visible: bar.showMetrics
         anchors.left: workspacesIsland.right
         anchors.leftMargin: 14
         anchors.verticalCenter: parent.verticalCenter
@@ -453,6 +461,7 @@ ShellRoot {
           spacing: 20
 
           Chip {
+            visible: bar.showNetwork
             anchors.verticalCenter: parent.verticalCenter
             readonly property var device: connectedNetworkDevice()
             readonly property var net: connectedNetwork(device)
@@ -491,6 +500,7 @@ ShellRoot {
 
           Chip {
             id: cpuChip
+            visible: bar.showMetrics
             anchors.verticalCenter: parent.verticalCenter
             label: "  " + cpuUsage + "%"
 
@@ -502,12 +512,14 @@ ShellRoot {
           }
 
           Chip {
+            visible: bar.showMetrics
             anchors.verticalCenter: parent.verticalCenter
             label: "  " + memUsedGb.toFixed(1) + "G"
           }
 
           Chip {
             id: diskChip
+            visible: bar.showMetrics
             anchors.verticalCenter: parent.verticalCenter
             label: "\u{F02CA}  " + diskPercent + "%"
 
