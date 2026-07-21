@@ -9,7 +9,7 @@ in
     state_file="''${XDG_RUNTIME_DIR:-/tmp}/hypr-last-notif-app"
 
     stdbuf -oL dbus-monitor --session "interface='org.freedesktop.Notifications',member='Notify'" |
-      stdbuf -oL awk '
+      stdbuf -oL ${pkgs.gawk}/bin/awk '
         /^method call|^signal|^error / {
           state = ($0 ~ /member=Notify/) ? 1 : 0
           app = ""; senderpid = ""; shellpid = ""; wantfield = ""
