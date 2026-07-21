@@ -85,6 +85,7 @@ in
         },
         misc = {
           force_default_wallpaper = -1,
+          disable_hyprland_logo = true,
         },
         ecosystem = {
           no_update_news = true,
