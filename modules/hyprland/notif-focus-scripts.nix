@@ -89,25 +89,31 @@ in
     IFS=$'\t' read -r app resolved_pid < "$state_file" || true
     clients_json=$(hyprctl clients -j)
     ws_id=""
+    address=""
 
     if [ -n "$resolved_pid" ]; then
-      ws_id=$(jq -r --arg p "$resolved_pid" '[.[] | select((.pid|tostring)==$p)] | .[0].workspace.id // empty' <<< "$clients_json")
+      IFS=$'\t' read -r ws_id address <<< "$(jq -r --arg p "$resolved_pid" '
+        [.[] | select((.pid|tostring)==$p)] | .[0] | "\(.workspace.id // "")\t\(.address // "")"
+      ' <<< "$clients_json")"
     fi
 
     if [ -z "$ws_id" ]; then
       app_lower=$(tr '[:upper:]' '[:lower:]' <<< "$app")
-      ws_id=$(jq -r --arg a "$app_lower" '
+      IFS=$'\t' read -r ws_id address <<< "$(jq -r --arg a "$app_lower" '
         [.[] | . as $w
           | (($w.class // "") | ascii_downcase) as $cl
           | (($w.initialClass // "") | ascii_downcase) as $icl
           | (($w.title // "") | ascii_downcase) as $tl
           | select(($cl|contains($a)) or ($a|contains($cl)) or ($icl|contains($a)) or ($tl|contains($a)))
-        ] | .[0].workspace.id // empty
-      ' <<< "$clients_json")
+        ] | .[0] | "\(.workspace.id // "")\t\(.address // "")"
+      ' <<< "$clients_json")"
     fi
 
     if [ -n "$ws_id" ]; then
       hyprctl dispatch "hl.dsp.focus({ workspace = $ws_id, on_current_monitor = true })"
+      if [ -n "$address" ]; then
+        hyprctl dispatch "hl.dsp.focus({ window = \"address:$address\" })"
+      fi
     else
       notify-send "Focus last notifier" "No window found for: $app"
     fi
