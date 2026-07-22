@@ -66,6 +66,7 @@ in
           resize_on_border = false,
           allow_tearing = false,
           layout = "scrolling",
+          no_focus_fallback = true,
         },
         scrolling = {
           column_width = 0.5,
