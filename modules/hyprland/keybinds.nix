@@ -142,11 +142,14 @@ in
       hl.bind(mainMod .. " + CTRL + up", hl.dsp.window.move({direction = "u"}), { description = "Move window u" })
       hl.bind(mainMod .. " + CTRL + down", hl.dsp.window.move({direction = "d"}), { description = "Move window d" })
 
-      -- Move focus (general.no_focus_fallback in settings.nix keeps this on the current monitor)
-      hl.bind(mainMod .. " + left", hl.dsp.focus({direction = "l"}), { description = "Move focus l" })
-      hl.bind(mainMod .. " + right", hl.dsp.focus({direction = "r"}), { description = "Move focus r" })
-      hl.bind(mainMod .. " + up", hl.dsp.focus({direction = "u"}), { description = "Move focus u" })
-      hl.bind(mainMod .. " + down", hl.dsp.focus({direction = "d"}), { description = "Move focus d" })
+      -- Move focus. The general focus({direction}) dispatcher falls back to a
+      -- geometric nearest-window search that can cross monitors; the scrolling
+      -- layout's own "focus" message wraps within the layout instead of
+      -- jumping to a neighboring monitor.
+      hl.bind(mainMod .. " + left", hl.dsp.layout("focus l"), { description = "Move focus l" })
+      hl.bind(mainMod .. " + right", hl.dsp.layout("focus r"), { description = "Move focus r" })
+      hl.bind(mainMod .. " + up", hl.dsp.layout("focus u"), { description = "Move focus u" })
+      hl.bind(mainMod .. " + down", hl.dsp.layout("focus d"), { description = "Move focus d" })
 
       -- Special workspaces (ALT + 0-9)
       ${lib.concatStringsSep "\n" (map (n: ''hl.bind(mainMod .. " + ALT + ${toString n}", hl.dsp.workspace.toggle_special("${toString n}"), { description = "Toggle special WS ${toString n}" })'') (lib.range 0 9))}
