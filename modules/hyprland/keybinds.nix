@@ -89,6 +89,16 @@ in
         if not mon then return end
         local w, h = effectiveMonitorSize(mon)
         if h > w then
+          -- colresize has no monitor/workspace target of its own - it always
+          -- acts on whatever window currently holds dispatch focus. A mouse-only
+          -- hover onto this monitor (monitor.focused) doesn't move that focus,
+          -- so without this the resize lands on the previously-focused
+          -- monitor's workspace instead of this one.
+          local ws = mon.active_workspace
+          local target = ws and ws.last_window
+          if target then
+            hl.dispatch(hl.dsp.focus({ window = "address:" .. target.address }))
+          end
           colWidthIdx = #colWidths
           hl.dispatch(hl.dsp.layout("colresize all 1.0"))
         end
@@ -154,18 +164,6 @@ in
       ${lib.concatStringsSep "\n" (map (n:
         let ws = toString (n * 10); key = toString (lib.mod n 10);
         in ''hl.bind(mainMod .. " + CTRL + ${key}", hl.dsp.window.move({workspace = ${ws}, follow = false}), { description = "Move to WS ${ws}" })''
-      ) (lib.range 1 10))}
-
-      -- Shift workspaces (SHIFT + 1-0 -> 11,21..101)
-      ${lib.concatStringsSep "\n" (map (n:
-        let ws = toString (n * 10 + 1); key = toString (lib.mod n 10);
-        in ''hl.bind(mainMod .. " + SHIFT + ${key}", hl.dsp.focus({workspace = ${ws}, on_current_monitor = true}), { description = "Focus WS ${ws} on current monitor" })''
-      ) (lib.range 1 10))}
-
-      -- Move to shift workspaces (SHIFT + CTRL + 1-0 -> 11,21..101)
-      ${lib.concatStringsSep "\n" (map (n:
-        let ws = toString (n * 10 + 1); key = toString (lib.mod n 10);
-        in ''hl.bind(mainMod .. " + SHIFT + CTRL + ${key}", hl.dsp.window.move({workspace = ${ws}, follow = false}), { description = "Move to WS ${ws}" })''
       ) (lib.range 1 10))}
 
       -- Execute command
