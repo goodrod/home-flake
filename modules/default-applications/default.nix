@@ -49,6 +49,8 @@ in {
       swappy
       grim
       wf-recorder
+      ffmpeg
+      fd
       tree
       pkgs.custom-nvim
       thunar
