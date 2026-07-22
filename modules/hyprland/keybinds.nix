@@ -142,11 +142,21 @@ in
       hl.bind(mainMod .. " + CTRL + up", hl.dsp.window.move({direction = "u"}), { description = "Move window u" })
       hl.bind(mainMod .. " + CTRL + down", hl.dsp.window.move({direction = "d"}), { description = "Move window d" })
 
-      -- Move focus
-      hl.bind(mainMod .. " + left", hl.dsp.focus({direction = "l"}), { description = "Move focus l" })
-      hl.bind(mainMod .. " + right", hl.dsp.focus({direction = "r"}), { description = "Move focus r" })
-      hl.bind(mainMod .. " + up", hl.dsp.focus({direction = "u"}), { description = "Move focus u" })
-      hl.bind(mainMod .. " + down", hl.dsp.focus({direction = "d"}), { description = "Move focus d" })
+      -- Move focus (stay on current monitor; revert if movefocus would hop monitors)
+      local function focusDirSameMonitor(dir)
+        local w = hl.get_active_window()
+        local monId = w and w.monitor and w.monitor.id
+        hl.dispatch(hl.dsp.focus({direction = dir}))
+        if monId == nil then return end
+        local nw = hl.get_active_window()
+        if nw and nw.monitor and nw.monitor.id ~= monId then
+          hl.dispatch(hl.dsp.focus({window = "address:" .. w.address}))
+        end
+      end
+      hl.bind(mainMod .. " + left", function() focusDirSameMonitor("l") end, { description = "Move focus l (same monitor)" })
+      hl.bind(mainMod .. " + right", function() focusDirSameMonitor("r") end, { description = "Move focus r (same monitor)" })
+      hl.bind(mainMod .. " + up", function() focusDirSameMonitor("u") end, { description = "Move focus u (same monitor)" })
+      hl.bind(mainMod .. " + down", function() focusDirSameMonitor("d") end, { description = "Move focus d (same monitor)" })
 
       -- Special workspaces (ALT + 0-9)
       ${lib.concatStringsSep "\n" (map (n: ''hl.bind(mainMod .. " + ALT + ${toString n}", hl.dsp.workspace.toggle_special("${toString n}"), { description = "Toggle special WS ${toString n}" })'') (lib.range 0 9))}
