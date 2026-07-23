@@ -2,7 +2,7 @@
 
   programs.neovim = {
     enable = true;
-    extraPackages = with pkgs; [ lua-language-server rust-analyzer stylua ripgrep ];
+    extraPackages = with pkgs; [ lua-language-server stylua ripgrep ];
     plugins = with pkgs.vimPlugins; [
       which-key-nvim
       oil-nvim
@@ -11,7 +11,6 @@
       neo-tree-nvim
       nvim-treesitter
       nvim-cmp
-      nvim-lspconfig
       luasnip
       nvchad-ui
       lualine-nvim
