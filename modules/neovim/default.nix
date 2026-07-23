@@ -2,7 +2,7 @@
 
   programs.neovim = {
     enable = true;
-    extraPackages = with pkgs; [ lua-language-server rust-analyzer kotlin-language-server stylua ripgrep ];
+    extraPackages = with pkgs; [ lua-language-server rust-analyzer stylua ripgrep ];
     plugins = with pkgs.vimPlugins; [
       which-key-nvim
       oil-nvim
