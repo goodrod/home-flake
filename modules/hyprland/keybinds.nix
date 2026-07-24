@@ -94,10 +94,18 @@ in
           -- hover onto this monitor (monitor.focused) doesn't move that focus,
           -- so without this the resize lands on the previously-focused
           -- monitor's workspace instead of this one.
-          local ws = mon.active_workspace
-          local target = ws and ws.last_window
-          if target then
-            hl.dispatch(hl.dsp.focus({ window = "address:" .. target.address }))
+          --
+          -- Skip the refocus when the active window is already on this
+          -- monitor (e.g. mid-drag via window.drag()): focuswindow warps the
+          -- cursor to the target's center, which would yank a dragged window
+          -- out from under the mouse.
+          local active = hl.get_active_window()
+          if not (active and active.monitor and active.monitor.id == mon.id) then
+            local ws = mon.active_workspace
+            local target = ws and ws.last_window
+            if target then
+              hl.dispatch(hl.dsp.focus({ window = "address:" .. target.address }))
+            end
           end
           colWidthIdx = #colWidths
           hl.dispatch(hl.dsp.layout("colresize all 1.0"))
