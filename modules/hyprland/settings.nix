@@ -74,6 +74,7 @@ in
         },
         cursor = {
           no_hardware_cursors = true,
+          no_warps = true,
         },
         input = {
           kb_layout = "se",
