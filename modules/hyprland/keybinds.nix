@@ -159,11 +159,17 @@ in
       hl.bind(mainMod .. " + up", hl.dsp.layout("focus u"), { description = "Move focus u" })
       hl.bind(mainMod .. " + down", hl.dsp.layout("focus d"), { description = "Move focus d" })
 
-      -- Special workspaces (ALT + 0-9)
-      ${lib.concatStringsSep "\n" (map (n: ''hl.bind(mainMod .. " + ALT + ${toString n}", hl.dsp.workspace.toggle_special("${toString n}"), { description = "Toggle special WS ${toString n}" })'') (lib.range 0 9))}
+      -- Shifted workspaces, "+n" variant, id+1 (ALT + 1-0 -> 11,21..101)
+      ${lib.concatStringsSep "\n" (map (n:
+        let ws = toString (n * 10 + 1); key = toString (lib.mod n 10);
+        in ''hl.bind(mainMod .. " + ALT + ${key}", hl.dsp.focus({workspace = ${ws}, on_current_monitor = true}), { description = "Focus WS ${ws} on current monitor" })''
+      ) (lib.range 1 10))}
 
-      -- Move to special workspaces (ALT + CTRL + 0-9)
-      ${lib.concatStringsSep "\n" (map (n: ''hl.bind(mainMod .. " + ALT + CTRL + ${toString n}", hl.dsp.window.move({workspace = "special:${toString n}"}), { description = "Move to WS special:${toString n}" })'') (lib.range 0 9))}
+      -- Move to shifted workspaces (ALT + CTRL + 1-0 -> 11,21..101)
+      ${lib.concatStringsSep "\n" (map (n:
+        let ws = toString (n * 10 + 1); key = toString (lib.mod n 10);
+        in ''hl.bind(mainMod .. " + ALT + CTRL + ${key}", hl.dsp.window.move({workspace = ${ws}, follow = false}), { description = "Move to WS ${ws}" })''
+      ) (lib.range 1 10))}
 
       -- Workspaces (1-0 -> 10,20..100)
       ${lib.concatStringsSep "\n" (map (n:
