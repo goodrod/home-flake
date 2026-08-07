@@ -3,12 +3,12 @@ let
   inherit (pkgs) writeScript writeShellScriptBin;
 in
 {
-  # Shadows libnotify's notify-send on PATH. Records the caller's ancestor
-  # chain at send time and hands it to the watcher as an x-pid-chain hint,
-  # which is what lets mod+N map a notification back to a window. Capturing
-  # here is exact: $PPID and its ancestors cannot be gone while we run,
-  # whereas the sender itself is often dead by the time the watcher sees the
-  # dbus message.
+  # Shadows libnotify's notify-send on PATH. Its whole job is to record the
+  # caller's ancestor chain at send time, while every process in it is still
+  # alive, and hand it to the watcher as a hint. The watcher can walk /proc
+  # itself, but a bare `notify-send foo` exits a millisecond or two after its
+  # dbus call, so that walk is a race the watcher can lose. Here there is no
+  # race: $PPID is the caller and it cannot be gone while we run.
   notifySendWrapper = writeShellScriptBin "notify-send" ''
     real=${pkgs.libnotify}/bin/notify-send
 
@@ -46,11 +46,13 @@ in
 
     stdbuf -oL dbus-monitor --session "interface='org.freedesktop.Notifications',member='Notify'" |
       stdbuf -oL ${pkgs.gawk}/bin/awk '
-        # Fallback chain for senders that skip the notify-send wrapper. Runs
-        # inside awk, off /proc, the instant the pid is parsed: fork-free and
-        # microseconds, which it has to be. A CLI sender exits a millisecond
-        # or two after its dbus call and a dead pid has no ppid left to read,
-        # so anything slower gets an unusable chain.
+        # Walk the ancestor chain straight out of /proc, inside awk, the very
+        # instant the pid is parsed. A CLI sender like notify-send exits within
+        # a millisecond or two of its dbus call, so anything slower loses the
+        # race and the chain is unrecoverable (a dead pid has no ppid to read).
+        # An earlier version forked `ps` per level from the shell loop below;
+        # that cost ~10ms per fork and reliably missed unhinted senders.
+        # /proc reads here are fork-free and take microseconds.
         function ancestors(pid,   line, arr, p, i, out, f) {
           out = ""
           p = pid
