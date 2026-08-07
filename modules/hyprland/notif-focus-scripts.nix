@@ -10,9 +10,33 @@ in
 
     stdbuf -oL dbus-monitor --session "interface='org.freedesktop.Notifications',member='Notify'" |
       stdbuf -oL ${pkgs.gawk}/bin/awk '
+        # Walk the ancestor chain straight out of /proc, inside awk, the very
+        # instant the pid is parsed. A CLI sender like notify-send exits within
+        # a millisecond or two of its dbus call, so anything slower loses the
+        # race and the chain is unrecoverable (a dead pid has no ppid to read).
+        # An earlier version forked `ps` per level from the shell loop below;
+        # that cost ~10ms per fork and reliably missed unhinted senders.
+        # /proc reads here are fork-free and take microseconds.
+        function ancestors(pid,   line, arr, p, i, out, f) {
+          out = ""
+          p = pid
+          for (i = 0; i < 20; i++) {
+            if (p == "" || p == "0" || p == "1") break
+            out = out (out == "" ? "" : " ") p
+            f = "/proc/" p "/stat"
+            if ((getline line < f) <= 0) { close(f); break }
+            close(f)
+            # strip "pid (comm) " - comm may contain spaces and parens, so
+            # lean on the greedy .* to land on the last ") " in the field
+            sub(/^[0-9]+ \(.*\) /, "", line)
+            split(line, arr, " ")
+            p = arr[2]
+          }
+          return out
+        }
         /^method call|^signal|^error / {
           state = ($0 ~ /member=Notify/) ? 1 : 0
-          app = ""; senderpid = ""; shellpid = ""; wantfield = ""
+          app = ""; senderchain = ""; shellchain = ""; wantfield = ""
           next
         }
         state==1 && app=="" {
@@ -24,52 +48,32 @@ in
           if ($0 ~ /string "x-shell-pid"/) { wantfield = "shell"; next }
           if (wantfield != "") {
             if (match($0, /(int64|uint32|int32) *([0-9]+)/, a)) {
-              if (wantfield == "sender") { senderpid = a[2] } else { shellpid = a[2] }
+              if (wantfield == "sender") { senderchain = ancestors(a[2]) }
+              else { shellchain = ancestors(a[2]) }
             }
             wantfield = ""
             next
           }
           if ($0 ~ /^ *int32 /) {
-            print app "\t" senderpid "\t" shellpid
+            chain = shellchain
+            if (senderchain != "") { chain = (chain == "" ? "" : chain " ") senderchain }
+            print app "\t" chain
             fflush()
             state = 0
           }
         }
       ' |
-      while IFS=$'\t' read -r app senderpid shellpid; do
+      while IFS=$'\t' read -r app pids; do
         [ -z "$app" ] && continue
 
-        start_pid="$senderpid"
-        [ -n "$shellpid" ] && start_pid="$shellpid"
-
-        # Collect the whole ancestor chain via ps FIRST, as fast as possible:
-        # a CLI sender like notify-send can exit within milliseconds of
-        # making its call, and the hyprctl clients -j lookup below is slow
-        # enough (forks hyprctl, serializes every window) that by the time
-        # we'd get to it the sender (and even its parent) may already be
-        # gone, making `ps` on it useless. Collecting pids up front and
-        # matching against the window list afterwards sidesteps that: the
-        # window's own pid is long-lived regardless of how slow the lookup is.
-        pids="$start_pid"
-        cur="$start_pid"
-        if [ -n "$cur" ]; then
-          for _ in $(seq 1 15); do
-            parent=$(ps -o ppid= -p "$cur" 2>/dev/null | tr -d ' ') || true
-            [ -z "$parent" ] || [ "$parent" = "1" ] && break
-            pids="$pids $parent"
-            cur="$parent"
-          done
-        fi
-
+        # First pid in the chain that owns a window wins: the chain is ordered
+        # nearest ancestor first, so that is the closest enclosing window.
         resolved_pid=""
         if [ -n "$pids" ]; then
-          clients_json=$(hyprctl clients -j)
-          for p in $pids; do
-            if jq -e --arg p "$p" 'any(.[]; (.pid|tostring)==$p)' <<< "$clients_json" >/dev/null; then
-              resolved_pid="$p"
-              break
-            fi
-          done
+          resolved_pid=$(hyprctl clients -j | jq -r --arg pids "$pids" '
+            [.[] | .pid | tostring] as $win
+            | first(($pids | split(" "))[] | select(. as $p | $win | index($p))) // ""
+          ')
         fi
 
         printf "%s\t%s\n" "$app" "$resolved_pid" > "$state_file"
