@@ -5,7 +5,9 @@ let
 in
 {
   config = lib.mkIf option.enable {
-    home.packages = [ pkgs.dbus ];
+    # hiPrio: libnotify lands in the same profile and owns bin/notify-send too,
+    # the wrapper has to win that collision to actually shadow it
+    home.packages = [ pkgs.dbus (lib.hiPrio scripts.notifySendWrapper) ];
 
     systemd.user.services.hypr-notif-watcher = {
       Unit = {
