@@ -159,6 +159,30 @@ in
       hl.bind(mainMod .. " + up", hl.dsp.layout("focus u"), { description = "Move focus u" })
       hl.bind(mainMod .. " + down", hl.dsp.layout("focus d"), { description = "Move focus d" })
 
+      -- Jump to the first/last column of the workspace. The scrolling layout's
+      -- own "focus leftmost"/"focus rightmost" messages mean leftmost/rightmost
+      -- *currently on screen*, not first/last in the workspace (verified live),
+      -- so pick the extreme by x ourselves. Floating windows are skipped: the
+      -- pinned toggle-window popups (scripts.nix) sit outside the column strip
+      -- and would otherwise win the comparison.
+      local function focusEdgeColumn(edge)
+        local ws = hl.get_active_workspace()
+        if ws == nil then return end
+        local best
+        for _, w in ipairs(hl.get_workspace_windows(ws)) do
+          if not w.floating and w.mapped then
+            if best == nil
+              or (edge == "first" and w.at.x < best.at.x)
+              or (edge == "last" and w.at.x > best.at.x) then
+              best = w
+            end
+          end
+        end
+        if best then hl.dispatch(hl.dsp.focus({ window = "address:" .. best.address })) end
+      end
+      hl.bind(mainMod .. " + home", function() focusEdgeColumn("first") end, { description = "Focus first window in workspace" })
+      hl.bind(mainMod .. " + end", function() focusEdgeColumn("last") end, { description = "Focus last window in workspace" })
+
       -- Shifted workspaces, "+n" variant, id+1 (ALT + 1-0 -> 11,21..101)
       ${lib.concatStringsSep "\n" (map (n:
         let ws = toString (n * 10 + 1); key = toString (lib.mod n 10);
