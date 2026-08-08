@@ -29,6 +29,8 @@ Item {
   property bool shown: false
   property var targetScreen: Quickshell.screens[0]
   readonly property int count: history.length
+  // Keyboard cursor into `history`, only meaningful while `shown`.
+  property int selectedIndex: 0
 
   readonly property var btAdapter: Bluetooth.defaultAdapter
   readonly property bool airplaneModeOn: !Networking.wifiEnabled && (!btAdapter || !btAdapter.enabled)
@@ -40,8 +42,32 @@ Item {
 
   signal requestSessionScreen()
 
+  // The screen Hyprland currently has focused, so a keyboard-invoked open
+  // lands where the user is looking instead of always on screen 0.
+  function focusedScreen() {
+    const mon = Hyprland.focusedMonitor;
+    if (mon) {
+      for (let i = 0; i < Quickshell.screens.length; i++) {
+        if (Quickshell.screens[i].name === mon.name) return Quickshell.screens[i];
+      }
+    }
+    return targetScreen || Quickshell.screens[0];
+  }
+
+  function openOn(screen) {
+    targetScreen = screen || focusedScreen();
+    selectedIndex = 0;
+    shown = true;
+  }
+  function open() {
+    openOn(focusedScreen());
+  }
+  function toggleOn(screen) {
+    if (shown) close();
+    else openOn(screen);
+  }
   function toggle() {
-    shown = !shown;
+    toggleOn(focusedScreen());
   }
   function close() {
     shown = false;
@@ -57,6 +83,7 @@ Item {
     if (entry.wrapped) entry.wrapped.dismiss();
     history = history.filter((h) => h.id !== entry.id);
     toasts = toasts.filter((t) => t.id !== entry.id);
+    clampSelection();
   }
   function clearAll() {
     for (const h of history) {
@@ -64,6 +91,70 @@ Item {
     }
     history = [];
     toasts = [];
+    selectedIndex = 0;
+  }
+
+  function clampSelection() {
+    if (history.length === 0) selectedIndex = 0;
+    else selectedIndex = Math.max(0, Math.min(selectedIndex, history.length - 1));
+  }
+  function moveSelection(delta) {
+    if (history.length === 0) return;
+    selectedIndex = Math.max(0, Math.min(selectedIndex + delta, history.length - 1));
+  }
+  function dismissSelected() {
+    if (selectedIndex < 0 || selectedIndex >= history.length) return;
+    closeNotification(history[selectedIndex]);
+  }
+
+  function dismissEntries(doomed) {
+    if (doomed.length === 0) return;
+    for (const h of doomed) {
+      if (h.wrapped) h.wrapped.dismiss();
+    }
+    const doomedIds = doomed.map((h) => h.id);
+    history = history.filter((h) => doomedIds.indexOf(h.id) === -1);
+    toasts = toasts.filter((t) => doomedIds.indexOf(t.id) === -1);
+    clampSelection();
+  }
+
+  // Dismiss the notifications the "focus the app that notified me" bind just
+  // jumped to: once you are looking at the sender, they are read.
+  //
+  // Prefer the window pid the focus script resolved - that isolates one
+  // terminal's notifications from every other `notify-send` sender. Only when
+  // no notification carries a pid chain (a GUI app talking to dbus directly,
+  // matched by class instead) does it fall back to the dbus app_name, where
+  // clearing the whole group is the right behaviour anyway.
+  function dismissFor(app, pid) {
+    const wanted = (pid || "").trim();
+    if (wanted.length > 0) {
+      const byPid = history.filter((h) => (h.pids || []).indexOf(wanted) !== -1);
+      if (byPid.length > 0) {
+        dismissEntries(byPid);
+        return;
+      }
+    }
+    dismissApp(app);
+  }
+
+  function dismissApp(app) {
+    const needle = (app || "").trim().toLowerCase();
+    if (needle.length === 0) return;
+    dismissEntries(history.filter((h) => (h.appName || "").trim().toLowerCase() === needle));
+  }
+
+  // Reachable from a keybind via: qs -c bar ipc call notifs <fn> [args]
+  IpcHandler {
+    target: "notifs"
+
+    function toggle(): void { controlCenter.toggle(); }
+    function open(): void { controlCenter.open(); }
+    function close(): void { controlCenter.close(); }
+    function clear(): void { controlCenter.clearAll(); }
+    function dismissApp(app: string): void { controlCenter.dismissApp(app); }
+    function dismissFor(app: string, pid: string): void { controlCenter.dismissFor(app, pid); }
+    function count(): int { return controlCenter.history.length; }
   }
 
   function toggleAirplaneMode() {
@@ -92,20 +183,42 @@ Item {
   }
   Component.onCompleted: userAtHostProc.running = true
 
+  // Pid chain of the process that sent a notification, out of the hints the
+  // notify-send wrapper (hyprland/notif-focus-scripts.nix) attaches. Lets a
+  // dismiss target one sender instead of every notification sharing an
+  // app_name - "notify-send" is one app_name across every terminal.
+  function notifPids(n) {
+    const pids = [];
+    const push = (v) => {
+      if (v === undefined || v === null) return;
+      for (const p of String(v).trim().split(/\s+/)) if (p.length > 0) pids.push(p);
+    };
+    push(n.hints["x-pid-chain"]);
+    push(n.hints["sender-pid"]);
+    push(n.hints["x-shell-pid"]);
+    return pids;
+  }
+
   NotificationServer {
     id: server
     bodySupported: true
     imageSupported: true
+    extraHints: ["x-pid-chain", "sender-pid", "x-shell-pid"]
 
     onNotification: (n) => {
       n.tracked = true;
       const entry = {
         id: n.id,
+        appName: n.appName || "",
+        pids: controlCenter.notifPids(n),
         summary: n.summary || "",
         body: n.body || "",
         wrapped: n
       };
       history = [entry, ...history];
+      // A new entry shifts everything down by one; keep the keyboard cursor
+      // on whatever the user was already pointing at while peeking.
+      if (shown && selectedIndex > 0) selectedIndex += 1;
       if (!controlCenter.dnd) {
         toasts = [entry, ...toasts];
         const timeout = n.expireTimeout > 0 ? n.expireTimeout : 5000;
@@ -115,6 +228,7 @@ Item {
       n.closed.connect(() => {
         history = history.filter((h) => h.id !== entry.id);
         toasts = toasts.filter((t) => t.id !== entry.id);
+        clampSelection();
       });
     }
   }
@@ -429,6 +543,41 @@ Item {
       focus: controlCenter.shown
 
       Keys.onEscapePressed: controlCenter.close()
+      Keys.onPressed: (event) => {
+        switch (event.key) {
+        case Qt.Key_Down:
+        case Qt.Key_J:
+          controlCenter.moveSelection(1);
+          break;
+        case Qt.Key_Up:
+        case Qt.Key_K:
+          controlCenter.moveSelection(-1);
+          break;
+        case Qt.Key_Home:
+          controlCenter.selectedIndex = 0;
+          break;
+        case Qt.Key_End:
+          controlCenter.selectedIndex = Math.max(0, controlCenter.history.length - 1);
+          break;
+        case Qt.Key_X:
+        case Qt.Key_Delete:
+        case Qt.Key_Backspace:
+          controlCenter.dismissSelected();
+          break;
+        case Qt.Key_C:
+          controlCenter.clearAll();
+          break;
+        case Qt.Key_D:
+          controlCenter.toggleDnd();
+          break;
+        case Qt.Key_Q:
+          controlCenter.close();
+          break;
+        default:
+          return;
+        }
+        event.accepted = true;
+      }
 
       Rectangle {
         anchors.fill: parent
@@ -589,13 +738,18 @@ Item {
 
           Text {
             anchors.left: parent.left
+            anchors.right: countActions.left
+            anchors.rightMargin: 8
             anchors.verticalCenter: parent.verticalCenter
             text: controlCenter.count + " Notifications"
+              + (controlCenter.count > 0 ? "   j/k move · x dismiss · c clear" : "")
             color: controlCenter.mutedTextColor
             font.pixelSize: 12
+            elide: Text.ElideRight
           }
 
           Row {
+            id: countActions
             anchors.right: parent.right
             anchors.verticalCenter: parent.verticalCenter
             spacing: 4
@@ -642,6 +796,7 @@ Item {
         }
 
         ListView {
+          id: notifList
           anchors {
             top: notifArea.top
             bottom: notifCountRow.top
@@ -653,12 +808,24 @@ Item {
           spacing: 8
           visible: controlCenter.history.length > 0
           model: controlCenter.history
+          currentIndex: controlCenter.selectedIndex
+          // ListView only auto-scrolls for its own navigation, not for a
+          // currentIndex driven from outside, so follow the cursor manually.
+          onCurrentIndexChanged: positionViewAtIndex(currentIndex, ListView.Contain)
 
           delegate: Rectangle {
+            readonly property bool selected: index === controlCenter.selectedIndex && controlCenter.shown
             width: ListView.view.width
             height: entryContent.implicitHeight + 20
             radius: 12
-            color: controlCenter.chipBg
+            color: selected ? controlCenter.chipHoverBg : controlCenter.chipBg
+            border.width: selected ? 2 : 0
+            border.color: controlCenter.accentColor
+
+            MouseArea {
+              anchors.fill: parent
+              onClicked: controlCenter.selectedIndex = index
+            }
 
             Column {
               id: entryContent

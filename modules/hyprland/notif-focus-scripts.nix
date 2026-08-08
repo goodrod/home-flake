@@ -1,6 +1,16 @@
 { pkgs }:
 let
   inherit (pkgs) writeScript writeShellScriptBin;
+
+  # Quickshell owns the notification center, so clearing has to go through its
+  # IPC. `qs` is only on PATH when the quickshell module is enabled, hence the
+  # guard: with dunst/swaync instead, these are no-ops rather than errors.
+  notifIpc = ''
+    qs_notif_ipc() {
+      command -v qs >/dev/null 2>&1 || return 0
+      qs -c bar ipc call notifs "$@" >/dev/null 2>&1 || true
+    }
+  '';
 in
 {
   # Shadows libnotify's notify-send on PATH. Its whole job is to record the
@@ -122,9 +132,24 @@ in
       done
   '';
 
+  notifCenterToggle = writeScript "notif-center-toggle.sh" ''
+    #!/usr/bin/env bash
+    set -euo pipefail
+    ${notifIpc}
+    qs_notif_ipc toggle
+  '';
+
+  notifClearAll = writeScript "notif-clear-all.sh" ''
+    #!/usr/bin/env bash
+    set -euo pipefail
+    ${notifIpc}
+    qs_notif_ipc clear
+  '';
+
   focusLastNotifApp = writeScript "focus-last-notif-app.sh" ''
     #!/usr/bin/env bash
     set -euo pipefail
+    ${notifIpc}
     state_file="''${XDG_RUNTIME_DIR:-/tmp}/hypr-last-notif-app"
 
     if [ ! -s "$state_file" ]; then
@@ -160,6 +185,11 @@ in
       if [ -n "$address" ]; then
         hyprctl dispatch "hl.dsp.focus({ window = \"address:$address\" })"
       fi
+      # You are now looking at the sender, so its pending notifications are
+      # read. Only on a successful jump: a failed one leaves them for a retry.
+      # resolved_pid narrows this to the one window, so clearing a notification
+      # from one terminal leaves the other terminals' notifications alone.
+      qs_notif_ipc dismissFor "$app" "$resolved_pid"
     else
       notify-send "Focus last notifier" "No window found for: $app"
     fi

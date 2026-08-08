@@ -587,10 +587,7 @@ ShellRoot {
               id: bellMouse
               anchors.fill: parent
               hoverEnabled: true
-              onClicked: {
-                controlCenter.targetScreen = modelData;
-                controlCenter.toggle();
-              }
+              onClicked: controlCenter.toggleOn(modelData)
             }
           }
 
