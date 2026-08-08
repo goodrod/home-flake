@@ -203,10 +203,21 @@ in
       fi
     }
 
+    # Anything but a JSON array means quickshell is not answering (not
+    # installed, not running, older config), so fall through to the watcher.
     entries=$(qs_notif_ipc_out list)
+    if ! jq -e 'type == "array"' >/dev/null 2>&1 <<< "$entries"; then
+      entries=""
+    fi
 
-    if [ -n "$entries" ] && [ "$entries" != "[]" ]; then
+    if [ -n "$entries" ]; then
       total=$(jq 'length' <<< "$entries")
+
+      if [ "$total" -eq 0 ]; then
+        qs_notif_ipc banner "Nothing to jump to" ""
+        exit 0
+      fi
+
       i=0
       while [ "$i" -lt "$total" ]; do
         entry=$(jq -c ".[$i]" <<< "$entries")
@@ -232,7 +243,15 @@ in
         i=$((i + 1))
       done
 
-      notify-send "Jump to notification" "No window open for any of the $total pending notifications"
+      # A banner, not a notification: a notification here would itself join
+      # the stack, and its sender (this script, spawned by Hyprland) owns no
+      # window, so it could never be jumped to and cleared.
+      if [ "$total" -eq 1 ]; then
+        left="1 notification is left, its sender has no window open"
+      else
+        left="$total notifications are left, none of their senders have a window open"
+      fi
+      qs_notif_ipc banner "Nothing to jump to" "$left"
       exit 0
     fi
 

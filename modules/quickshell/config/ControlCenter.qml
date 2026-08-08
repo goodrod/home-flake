@@ -153,12 +153,16 @@ Item {
 
   // One step of the "walk the notification stack" bind: the focus script has
   // just moved focus to this entry's window, so replay its text and drop it.
+  function showBanner(label, summary, body) {
+    peekScreen = focusedScreen();
+    peek = { label: label, summary: summary || "", body: body || "" };
+    peekTimer.restart();
+  }
+
   function jumpedTo(id) {
     const entry = history.filter((h) => h.id === id)[0];
     if (!entry) return;
-    peekScreen = focusedScreen();
-    peek = { app: entry.appName, summary: entry.summary, body: entry.body };
-    peekTimer.restart();
+    showBanner("jumped to" + (entry.appName ? " · " + entry.appName : ""), entry.summary, entry.body);
     dismissEntries([entry]);
   }
 
@@ -180,6 +184,11 @@ Item {
     function dismissApp(app: string): void { controlCenter.dismissApp(app); }
     function dismissFor(app: string, pid: string): void { controlCenter.dismissFor(app, pid); }
     function jumpedTo(id: int): void { controlCenter.jumpedTo(id); }
+    // Status the jump bind wants to report without minting a notification
+    // that would itself land in the stack, unreachable, forever.
+    function banner(summary: string, body: string): void {
+      controlCenter.showBanner("notifications", summary, body);
+    }
     function count(): int { return controlCenter.history.length; }
     // Inspection aid: what the center holds, newest first, with the pid chain
     // each entry was matched on.
@@ -575,8 +584,7 @@ Item {
 
         Text {
           width: parent.width
-          text: "jumped to"
-            + (controlCenter.peek && controlCenter.peek.app ? " · " + controlCenter.peek.app : "")
+          text: controlCenter.peek ? controlCenter.peek.label : ""
           color: controlCenter.accentColor
           font.pixelSize: 11
           font.bold: true
