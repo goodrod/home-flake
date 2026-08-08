@@ -32,6 +32,12 @@ Item {
   // Keyboard cursor into `history`, only meaningful while `shown`.
   property int selectedIndex: 0
 
+  // Text of the notification the focus bind just jumped to, replayed as a
+  // banner. Without it the entry is dismissed the moment you arrive, so you
+  // land in the window with no record of what was being reported.
+  property var peek: null
+  property var peekScreen: null
+
   readonly property var btAdapter: Bluetooth.defaultAdapter
   readonly property bool airplaneModeOn: !Networking.wifiEnabled && (!btAdapter || !btAdapter.enabled)
 
@@ -145,6 +151,24 @@ Item {
     dismissEntries(history.filter((h) => (h.appName || "").trim().toLowerCase() === needle));
   }
 
+  // One step of the "walk the notification stack" bind: the focus script has
+  // just moved focus to this entry's window, so replay its text and drop it.
+  function jumpedTo(id) {
+    const entry = history.filter((h) => h.id === id)[0];
+    if (!entry) return;
+    peekScreen = focusedScreen();
+    peek = { app: entry.appName, summary: entry.summary, body: entry.body };
+    peekTimer.restart();
+    dismissEntries([entry]);
+  }
+
+  Timer {
+    id: peekTimer
+    interval: 4000
+    repeat: false
+    onTriggered: controlCenter.peek = null
+  }
+
   // Reachable from a keybind via: qs -c bar ipc call notifs <fn> [args]
   IpcHandler {
     target: "notifs"
@@ -155,6 +179,7 @@ Item {
     function clear(): void { controlCenter.clearAll(); }
     function dismissApp(app: string): void { controlCenter.dismissApp(app); }
     function dismissFor(app: string, pid: string): void { controlCenter.dismissFor(app, pid); }
+    function jumpedTo(id: int): void { controlCenter.jumpedTo(id); }
     function count(): int { return controlCenter.history.length; }
     // Inspection aid: what the center holds, newest first, with the pid chain
     // each entry was matched on.
@@ -516,6 +541,66 @@ Item {
               }
             }
           }
+        }
+      }
+    }
+  }
+
+  // "Jumped to" banner. Anchored top-only so layershell centers it
+  // horizontally, well clear of the toast stack in the top right corner.
+  PanelWindow {
+    visible: controlCenter.peek !== null
+    screen: controlCenter.peekScreen || controlCenter.targetScreen
+    color: "transparent"
+    WlrLayershell.namespace: "quickshell:notification-peek"
+    WlrLayershell.layer: WlrLayer.Overlay
+    WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
+    exclusionMode: ExclusionMode.Ignore
+    anchors { top: true }
+    margins.top: controlCenter.barHeight + 10
+    implicitWidth: 460
+    implicitHeight: peekContent.implicitHeight + 24
+
+    Rectangle {
+      anchors.fill: parent
+      radius: 14
+      color: controlCenter.islandBg
+      border.width: 2
+      border.color: controlCenter.accentColor
+
+      Column {
+        id: peekContent
+        anchors { left: parent.left; right: parent.right; top: parent.top; margins: 12 }
+        spacing: 4
+
+        Text {
+          width: parent.width
+          text: "jumped to"
+            + (controlCenter.peek && controlCenter.peek.app ? " · " + controlCenter.peek.app : "")
+          color: controlCenter.accentColor
+          font.pixelSize: 11
+          font.bold: true
+          elide: Text.ElideRight
+        }
+
+        Text {
+          width: parent.width
+          text: controlCenter.peek ? controlCenter.peek.summary : ""
+          color: controlCenter.textColor
+          font.pixelSize: 14
+          font.bold: true
+          elide: Text.ElideRight
+        }
+
+        Text {
+          width: parent.width
+          visible: controlCenter.peek && controlCenter.peek.body.length > 0
+          text: controlCenter.peek ? controlCenter.peek.body : ""
+          color: controlCenter.mutedTextColor
+          font.pixelSize: 12
+          wrapMode: Text.WordWrap
+          maximumLineCount: 4
+          elide: Text.ElideRight
         }
       }
     }

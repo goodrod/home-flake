@@ -10,6 +10,11 @@ let
       command -v qs >/dev/null 2>&1 || return 0
       qs -c bar ipc call notifs "$@" >/dev/null 2>&1 || true
     }
+    # Same call, but hands back what the IPC function returned.
+    qs_notif_ipc_out() {
+      command -v qs >/dev/null 2>&1 || return 0
+      qs -c bar ipc call notifs "$@" 2>/dev/null || true
+    }
   '';
 in
 {
@@ -146,50 +151,110 @@ in
     qs_notif_ipc clear
   '';
 
+  # Walks the notification stack one entry per press: jump to the newest
+  # notification whose sender still has a window, dismiss that one entry, and
+  # let quickshell replay its text as a banner. The next press lands on the
+  # next entry down. Entries whose sender is gone are skipped rather than
+  # dismissed, so a press never destroys something you have not seen.
+  #
+  # Quickshell's history is the stack. The dbus watcher's state file is only
+  # the fallback for when quickshell is not the notification daemon, and it
+  # only ever remembers the single latest notification.
   focusLastNotifApp = writeScript "focus-last-notif-app.sh" ''
     #!/usr/bin/env bash
     set -euo pipefail
     ${notifIpc}
     state_file="''${XDG_RUNTIME_DIR:-/tmp}/hypr-last-notif-app"
 
-    if [ ! -s "$state_file" ]; then
-      notify-send "Focus last notifier" "No notification seen yet"
-      exit 0
-    fi
-
-    IFS=$'\t' read -r app resolved_pid < "$state_file" || true
     clients_json=$(hyprctl clients -j)
-    ws_id=""
-    address=""
 
-    if [ -n "$resolved_pid" ]; then
-      IFS=$'\t' read -r ws_id address <<< "$(jq -r --arg p "$resolved_pid" '
-        [.[] | select((.pid|tostring)==$p)] | .[0] | "\(.workspace.id // "")\t\(.address // "")"
-      ' <<< "$clients_json")"
-    fi
+    # "workspace id<tab>address" of the first pid in the chain that owns a
+    # window. The chain runs nearest-ancestor first, so that is the closest
+    # enclosing window (the terminal, not the login shell).
+    resolve_by_pids() {
+      [ -n "$1" ] || return 0
+      jq -r --arg pids "$1" '
+        [.[] | {p: (.pid|tostring), ws: (.workspace.id // ""), addr: (.address // "")}] as $wins
+        | first(($pids | split(" "))[] | . as $p | ($wins[] | select(.p == $p)))
+        | "\(.ws)\t\(.addr)"
+      ' <<< "$clients_json"
+    }
 
-    if [ -z "$ws_id" ]; then
-      app_lower=$(tr '[:upper:]' '[:lower:]' <<< "$app")
-      IFS=$'\t' read -r ws_id address <<< "$(jq -r --arg a "$app_lower" '
+    # Fallback for senders that never identified a pid: match the dbus
+    # app_name against window class/title.
+    resolve_by_app() {
+      local app_lower
+      app_lower=$(tr '[:upper:]' '[:lower:]' <<< "$1")
+      [ -n "$app_lower" ] || return 0
+      jq -r --arg a "$app_lower" '
         [.[] | . as $w
           | (($w.class // "") | ascii_downcase) as $cl
           | (($w.initialClass // "") | ascii_downcase) as $icl
           | (($w.title // "") | ascii_downcase) as $tl
           | select(($cl|contains($a)) or ($a|contains($cl)) or ($icl|contains($a)) or ($tl|contains($a)))
         ] | .[0] | "\(.workspace.id // "")\t\(.address // "")"
-      ' <<< "$clients_json")"
+      ' <<< "$clients_json"
+    }
+
+    focus_window() {
+      hyprctl dispatch "hl.dsp.focus({ workspace = $1, on_current_monitor = true })"
+      if [ -n "$2" ]; then
+        hyprctl dispatch "hl.dsp.focus({ window = \"address:$2\" })"
+      fi
+    }
+
+    entries=$(qs_notif_ipc_out list)
+
+    if [ -n "$entries" ] && [ "$entries" != "[]" ]; then
+      total=$(jq 'length' <<< "$entries")
+      i=0
+      while [ "$i" -lt "$total" ]; do
+        entry=$(jq -c ".[$i]" <<< "$entries")
+        id=$(jq -r '.id' <<< "$entry")
+        app=$(jq -r '.app // ""' <<< "$entry")
+        pids=$(jq -r '.pids // [] | join(" ")' <<< "$entry")
+
+        ws_id=""
+        address=""
+        IFS=$'\t' read -r ws_id address <<< "$(resolve_by_pids "$pids")" || true
+        if [ -z "$ws_id" ]; then
+          IFS=$'\t' read -r ws_id address <<< "$(resolve_by_app "$app")" || true
+        fi
+
+        if [ -n "$ws_id" ]; then
+          focus_window "$ws_id" "$address"
+          # Dismisses this one entry and flashes its text on the monitor you
+          # just landed on, so the message survives the dismiss.
+          qs_notif_ipc jumpedTo "$id"
+          exit 0
+        fi
+
+        i=$((i + 1))
+      done
+
+      notify-send "Jump to notification" "No window open for any of the $total pending notifications"
+      exit 0
+    fi
+
+    # Fallback: no quickshell, so all we have is the watcher's last-seen entry.
+    if [ ! -s "$state_file" ]; then
+      notify-send "Focus last notifier" "No notification seen yet"
+      exit 0
+    fi
+
+    IFS=$'\t' read -r app resolved_pid < "$state_file" || true
+    ws_id=""
+    address=""
+
+    if [ -n "$resolved_pid" ]; then
+      IFS=$'\t' read -r ws_id address <<< "$(resolve_by_pids "$resolved_pid")" || true
+    fi
+    if [ -z "$ws_id" ]; then
+      IFS=$'\t' read -r ws_id address <<< "$(resolve_by_app "$app")" || true
     fi
 
     if [ -n "$ws_id" ]; then
-      hyprctl dispatch "hl.dsp.focus({ workspace = $ws_id, on_current_monitor = true })"
-      if [ -n "$address" ]; then
-        hyprctl dispatch "hl.dsp.focus({ window = \"address:$address\" })"
-      fi
-      # You are now looking at the sender, so its pending notifications are
-      # read. Only on a successful jump: a failed one leaves them for a retry.
-      # resolved_pid narrows this to the one window, so clearing a notification
-      # from one terminal leaves the other terminals' notifications alone.
-      qs_notif_ipc dismissFor "$app" "$resolved_pid"
+      focus_window "$ws_id" "$address"
     else
       notify-send "Focus last notifier" "No window found for: $app"
     fi
