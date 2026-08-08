@@ -129,11 +129,12 @@ Item {
   function dismissFor(app, pid) {
     const wanted = (pid || "").trim();
     if (wanted.length > 0) {
-      const byPid = history.filter((h) => (h.pids || []).indexOf(wanted) !== -1);
-      if (byPid.length > 0) {
-        dismissEntries(byPid);
-        return;
-      }
+      // A resolved pid is an exact claim about which window notified, so a
+      // miss means "none of these are yours". Falling back to the app_name
+      // here would clear every other terminal's notifications too, since they
+      // all share the app_name "notify-send".
+      dismissEntries(history.filter((h) => (h.pids || []).indexOf(wanted) !== -1));
+      return;
     }
     dismissApp(app);
   }
@@ -155,6 +156,16 @@ Item {
     function dismissApp(app: string): void { controlCenter.dismissApp(app); }
     function dismissFor(app: string, pid: string): void { controlCenter.dismissFor(app, pid); }
     function count(): int { return controlCenter.history.length; }
+    // Inspection aid: what the center holds, newest first, with the pid chain
+    // each entry was matched on.
+    function list(): string {
+      return JSON.stringify(controlCenter.history.map((h) => ({
+        id: h.id,
+        app: h.appName,
+        pids: h.pids,
+        summary: h.summary
+      })));
+    }
   }
 
   function toggleAirplaneMode() {
