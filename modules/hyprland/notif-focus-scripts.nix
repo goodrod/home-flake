@@ -157,6 +157,10 @@ in
   # next entry down. Entries whose sender is gone are skipped rather than
   # dismissed, so a press never destroys something you have not seen.
   #
+  # With a notification id as $1 the walk is narrowed to that one entry: that
+  # is how the notification center's own "jump to the marked entry" key gets
+  # here, so the user picks the target instead of taking the top of the stack.
+  #
   # Quickshell's history is the stack. The dbus watcher's state file is only
   # the fallback for when quickshell is not the notification daemon, and it
   # only ever remembers the single latest notification.
@@ -165,6 +169,11 @@ in
     set -euo pipefail
     ${notifIpc}
     state_file="''${XDG_RUNTIME_DIR:-/tmp}/hypr-last-notif-app"
+
+    target_id="''${1:-}"
+    case "$target_id" in
+      ""|*[!0-9]*) target_id="" ;;
+    esac
 
     clients_json=$(hyprctl clients -j)
 
@@ -208,6 +217,20 @@ in
     entries=$(qs_notif_ipc_out list)
     if ! jq -e 'type == "array"' >/dev/null 2>&1 <<< "$entries"; then
       entries=""
+    fi
+
+    # A targeted jump only ever means something against quickshell's history,
+    # so it never falls through to the watcher's single last-seen entry - that
+    # would jump somewhere the user did not point at.
+    if [ -n "$target_id" ]; then
+      if [ -z "$entries" ]; then
+        exit 0
+      fi
+      entries=$(jq -c --argjson id "$target_id" '[.[] | select(.id == $id)]' <<< "$entries")
+      if [ "$(jq 'length' <<< "$entries")" -eq 0 ]; then
+        qs_notif_ipc banner "Nothing to jump to" "That notification is already gone"
+        exit 0
+      fi
     fi
 
     if [ -n "$entries" ]; then

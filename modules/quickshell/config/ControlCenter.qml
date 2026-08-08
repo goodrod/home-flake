@@ -113,6 +113,37 @@ Item {
     closeNotification(history[selectedIndex]);
   }
 
+  // Jump to the window that sent the marked entry. The window focus, the
+  // dismiss and the "jumped to" banner all happen inside the script, via the
+  // jumpedTo IPC call - same path as the mod+N stack walk, just aimed at one
+  // id instead of the top of the stack.
+  //
+  // Closing first is not cosmetic: the center holds an exclusive layershell
+  // keyboard grab, so focusing a window under it would leave the keyboard
+  // behind in the panel.
+  function jumpToSelected() {
+    if (selectedIndex < 0 || selectedIndex >= history.length) return;
+    if (!scriptsData.notifJump) return;
+    const id = history[selectedIndex].id;
+    close();
+    notifJumpProc.command = [scriptsData.notifJump, String(id)];
+    notifJumpProc.running = true;
+  }
+
+  FileView {
+    id: scriptsFile
+    path: Qt.resolvedUrl("./scripts.json")
+    watchChanges: true
+    onFileChanged: reload()
+
+    JsonAdapter {
+      id: scriptsData
+      property string notifJump: ""
+    }
+  }
+
+  Process { id: notifJumpProc }
+
   function dismissEntries(doomed) {
     if (doomed.length === 0) return;
     for (const h of doomed) {
@@ -663,6 +694,10 @@ Item {
         case Qt.Key_End:
           controlCenter.selectedIndex = Math.max(0, controlCenter.history.length - 1);
           break;
+        case Qt.Key_Return:
+        case Qt.Key_Enter:
+          controlCenter.jumpToSelected();
+          break;
         case Qt.Key_X:
         case Qt.Key_Delete:
         case Qt.Key_Backspace:
@@ -846,7 +881,7 @@ Item {
             anchors.rightMargin: 8
             anchors.verticalCenter: parent.verticalCenter
             text: controlCenter.count + " Notifications"
-              + (controlCenter.count > 0 ? "   k/l move · x dismiss · c clear" : "")
+              + (controlCenter.count > 0 ? "   k/l move · ⏎ jump · x dismiss · c clear" : "")
             color: controlCenter.mutedTextColor
             font.pixelSize: 12
             elide: Text.ElideRight

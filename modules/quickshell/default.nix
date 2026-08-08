@@ -27,6 +27,8 @@
     inherit pkgs lib config;
   };
 
+  notifFocusScripts = import ../hyprland/notif-focus-scripts.nix {inherit pkgs;};
+
   lockCmd =
     if config.module.hyprland.lockscreen == "swaylock"
     then "swaylock -f"
@@ -35,6 +37,9 @@
   scriptsJson = pkgs.writeText "quickshell-bar-scripts.json" (builtins.toJSON {
     taskStatus = "${taskScripts.taskStatusScript}";
     taskPicker = "${taskScripts.taskPicker}";
+    # Same script mod+N runs, called with a notification id so the center can
+    # jump to the entry the keyboard cursor is on.
+    notifJump = "${notifFocusScripts.focusLastNotifApp}";
     lockCmd = lockCmd;
   });
 
