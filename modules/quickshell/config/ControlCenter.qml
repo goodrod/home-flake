@@ -546,7 +546,7 @@ Item {
       Keys.onPressed: (event) => {
         switch (event.key) {
         case Qt.Key_Down:
-        case Qt.Key_J:
+        case Qt.Key_L:
           controlCenter.moveSelection(1);
           break;
         case Qt.Key_Up:
@@ -742,7 +742,7 @@ Item {
             anchors.rightMargin: 8
             anchors.verticalCenter: parent.verticalCenter
             text: controlCenter.count + " Notifications"
-              + (controlCenter.count > 0 ? "   j/k move · x dismiss · c clear" : "")
+              + (controlCenter.count > 0 ? "   k/l move · x dismiss · c clear" : "")
             color: controlCenter.mutedTextColor
             font.pixelSize: 12
             elide: Text.ElideRight

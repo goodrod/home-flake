@@ -52,7 +52,7 @@ in
       hl.bind(mainMod .. " + V", hl.dsp.exec_cmd("${scripts.toggleWindow} pulsemixer"), { description = "Toggle Pulse audio mixer" })
       hl.bind(mainMod .. " + M", hl.dsp.exec_cmd("${scripts.toggleWindow} htop"), { description = "Toggle htop" })
       hl.bind(mainMod .. " + N", hl.dsp.exec_cmd("${notifFocusScripts.focusLastNotifApp}"), { description = "Focus app that sent last notification, clear its notifications" })
-      hl.bind(mainMod .. " + SHIFT + N", hl.dsp.exec_cmd("${notifFocusScripts.notifCenterToggle}"), { description = "Toggle notification center (j/k move, x dismiss, c clear, esc close)" })
+      hl.bind(mainMod .. " + SHIFT + N", hl.dsp.exec_cmd("${notifFocusScripts.notifCenterToggle}"), { description = "Toggle notification center (k/l move, x dismiss, c clear, esc close)" })
       hl.bind(mainMod .. " + CTRL + N", hl.dsp.exec_cmd("${notifFocusScripts.notifClearAll}"), { description = "Dismiss all notifications" })
       hl.bind(mainMod .. " + T", hl.dsp.exec_cmd("${taskScripts.taskPicker}"), { description = "Task workspace picker" })
       hl.bind(mainMod .. " + CTRL + T", hl.dsp.exec_cmd("${taskScripts.taskMoveWindowPicker}"), { description = "Send focused window to a task workspace" })
