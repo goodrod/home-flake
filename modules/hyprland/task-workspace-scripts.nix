@@ -70,10 +70,25 @@ rec {
     #!/usr/bin/env bash
     set -euo pipefail
     task="''${1:-}"
+    # Monitor the picker sampled at keypress time (see taskPicker). Optional,
+    # so a bare CLI invocation still works - it just falls back to whatever
+    # Hyprland calls the current monitor right now.
+    mon="''${2:-}"
     declare -A task_id=(
       ${idAssignLines}
     )
     id="''${task_id[$task]:-}"
+
+    # on_current_monitor resolves "current" at dispatch time, which is AFTER
+    # fuzzel has opened and closed - and fuzzel's layer surface takes keyboard
+    # focus on whichever monitor it opened on, so "current" can be a different
+    # monitor than the one SUPER+T was pressed from. Pin it back first.
+    focus_task_ws() {
+      if [ -n "$mon" ]; then
+        hyprctl dispatch "hl.dsp.focus({monitor = \"$mon\"})"
+      fi
+      hyprctl dispatch "hl.dsp.focus({workspace = $id, on_current_monitor = true})"
+    }
 
     state_file="''${XDG_STATE_HOME:-$HOME/.local/state}/hypr-task-workspaces.json"
     mkdir -p "$(dirname "$state_file")"
@@ -94,17 +109,26 @@ rec {
       jq --arg n "$task" --argjson id "$id" '. + {($n): $id}' "$state_file" > "$state_file.tmp"
       mv "$state_file.tmp" "$state_file"
       notify-send "Task workspace" "Created: $task"
-      hyprctl dispatch "hl.dsp.focus({workspace = $id, on_current_monitor = true})"
+      focus_task_ws
       exit 0
     fi
 
+    needs_launch=0
     if [ "$is_predefined" -eq 1 ] && ! hyprctl clients -j | jq -e --argjson id "$id" 'any(.[]; .workspace.id == $id)' >/dev/null; then
+      needs_launch=1
+    fi
+
+    # Focus before launching, not after: an empty predefined task's workspace
+    # doesn't exist yet, and it's this dispatch that creates it - on the right
+    # monitor. Launching first would let a fast-mapping window create it
+    # wherever the pending-move hook happened to land.
+    focus_task_ws
+
+    if [ "$needs_launch" -eq 1 ]; then
       case "$task" in
         ${launchCaseLines}
       esac
     fi
-
-    hyprctl dispatch "hl.dsp.focus({workspace = $id, on_current_monitor = true})"
   '';
 
   # Fuzzel dmenu picker listing predefined + ad-hoc tasks, fuzzy-searchable
@@ -123,6 +147,13 @@ rec {
     #!/usr/bin/env bash
     set -euo pipefail
     pgrep fuzzel && pkill fuzzel && exit 0
+
+    # Sampled here, BEFORE fuzzel opens: fuzzel's layer surface grabs keyboard
+    # focus on whichever monitor it maps to, so by the time a task is picked
+    # Hyprland's notion of the current monitor may no longer be the one SUPER+T
+    # was pressed from. taskLaunchOrFocus re-focuses this one first.
+    mon=$(hyprctl monitors -j | jq -r 'first(.[] | select(.focused)) | .name // empty')
+
     state_file="''${XDG_STATE_HOME:-$HOME/.local/state}/hypr-task-workspaces.json"
     mkdir -p "$(dirname "$state_file")"
     [ -s "$state_file" ] || printf '{}' > "$state_file"
@@ -140,7 +171,7 @@ rec {
       } | fuzzel --dmenu --with-nth=1 --placeholder="Task workspace  (Shift+Enter: create typed name)"
     ) || true
     task="''${selection##*$'\t'}"
-    [ -n "$task" ] && exec ${taskLaunchOrFocus} "$task"
+    [ -n "$task" ] && exec ${taskLaunchOrFocus} "$task" "$mon"
   '';
 
   # Resolve a task name to a workspace id (predefined, known ad-hoc, or
