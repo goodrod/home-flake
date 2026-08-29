@@ -1,9 +1,9 @@
 { config, lib, ... }:
 let
-  option = config.module.hyprland;
+  settings = config.module.hyprland;
 in
 {
-  config = lib.mkIf option.enable {
+  config = lib.mkIf settings.enable {
     module.hyprland.luaConfig = lib.mkOrder 250 ''
       -- ══════════════════════════════════════
       -- Pending window-workspace redirect

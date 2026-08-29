@@ -1,13 +1,13 @@
 { config, pkgs, lib, inputs, ... }:
 let
   inherit (lib) mkEnableOption mkIf;
-  cfg = config.module.bluetooth;
+  settings = config.module.bluetooth;
 in {
   options.module.bluetooth = {
     enable = mkEnableOption "bluetooth";
   };
 
-  config = mkIf cfg.enable {
+  config = mkIf settings.enable {
     home.packages = with pkgs; [ blueman bluetuith ];
   };
 }

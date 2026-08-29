@@ -1,13 +1,13 @@
 { config, pkgs, lib, ... }:
 let
   inherit (lib) mkEnableOption mkIf;
-  cfg = config.module.default-applications;
+  settings = config.module.default-applications;
 in {
   options.module.default-applications = {
     enable = mkEnableOption "default-applications";
   };
 
-  config = mkIf cfg.enable {
+  config = mkIf settings.enable {
     home.packages = with pkgs; [
       alacritty
       jq

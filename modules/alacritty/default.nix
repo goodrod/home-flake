@@ -3,11 +3,11 @@
 let
   inherit (lib) mkOption mkEnableOption types mkIf;
   inherit (types) path str;
-  option = config.module.alacritty;
+  settings = config.module.alacritty;
 in {
   options.module.alacritty = { enable = mkEnableOption "alacritty"; };
 
-  config = mkIf option.enable {
+  config = mkIf settings.enable {
     programs.alacritty = {
       enable = true;
       settings = {

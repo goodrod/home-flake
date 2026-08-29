@@ -1,7 +1,7 @@
 { config, lib, pkgs, ... }:
 let
   inherit (lib) mkEnableOption mkOption types mkIf concatStringsSep;
-  option = config.module.git-repos;
+  settings = config.module.git-repos;
   cloneScript = concatStringsSep "\n" (map (repo: ''
     if [ ! -d "$HOME/${repo.path}" ]; then
       mkdir -p "$HOME/$(dirname "${repo.path}")"
@@ -15,7 +15,7 @@ let
         ln -s "$HOME/${repo.path}" "$HOME/${repo.link}"
       fi
     ''}
-  '') option.repos);
+  '') settings.repos);
 in {
   options.module.git-repos = {
     enable = mkEnableOption "git-repos";
@@ -38,7 +38,7 @@ in {
     };
   };
 
-  config = mkIf option.enable {
+  config = mkIf settings.enable {
     home.activation.cloneRepos = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
       ${cloneScript}
     '';

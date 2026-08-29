@@ -7,7 +7,7 @@
 let
   inherit (lib) mkOption mkEnableOption types mkIf concatStringsSep;
   inherit (types) str bool listOf lines attrsOf submodule nullOr int;
-  option = config.module.hyprland;
+  settings = config.module.hyprland;
 in
 {
   imports = [
@@ -72,7 +72,7 @@ in
     };
   };
 
-  config = mkIf option.enable {
+  config = mkIf settings.enable {
     wayland.windowManager.hyprland = {
       enable = true;
       sourceFirst = true;
@@ -84,7 +84,7 @@ in
       extraConfig = "-- Real configuration lives in xdg.configFile \"hypr/hyprland.lua\"";
     };
 
-    xdg.configFile."hypr/hyprland.lua".text = option.luaConfig;
+    xdg.configFile."hypr/hyprland.lua".text = settings.luaConfig;
 
     services = {
       hypridle.enable = false;

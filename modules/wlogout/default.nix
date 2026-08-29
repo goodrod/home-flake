@@ -2,10 +2,10 @@
 let
   inherit (lib) mkOption mkEnableOption types mkIf;
   inherit (types) path str;
-  cfg = config.module.wlogout;
+  settings = config.module.wlogout;
   lockCmd = if config.module.hyprland.lockscreen == "swaylock" then "swaylock -f" else "hyprlock";
   layoutFile = builtins.replaceStrings ["@lockCmd@"] [lockCmd]
-    (builtins.readFile "${cfg.config-source-directory}/layout");
+    (builtins.readFile "${settings.config-source-directory}/layout");
 in {
   options.module.wlogout = {
     enable = mkEnableOption "wlogout";
@@ -23,12 +23,12 @@ in {
     };
   };
 
-  config = mkIf cfg.enable {
+  config = mkIf settings.enable {
     home.packages = [ pkgs.wlogout ];
-    home.file."${cfg.config-output-directory}/layout".text = layoutFile;
-    home.file."${cfg.config-output-directory}/style.css".source = "${cfg.config-source-directory}/style.css";
-    home.file."${cfg.config-output-directory}/icons" = {
-      source = "${cfg.config-source-directory}/icons";
+    home.file."${settings.config-output-directory}/layout".text = layoutFile;
+    home.file."${settings.config-output-directory}/style.css".source = "${settings.config-source-directory}/style.css";
+    home.file."${settings.config-output-directory}/icons" = {
+      source = "${settings.config-source-directory}/icons";
       recursive = true;
     };
   };

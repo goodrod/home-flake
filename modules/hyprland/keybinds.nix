@@ -1,18 +1,18 @@
 { config, pkgs, lib, ... }:
 let
-  option = config.module.hyprland;
+  settings = config.module.hyprland;
   scripts = import ./scripts.nix { inherit pkgs; };
   notifFocusScripts = import ./notif-focus-scripts.nix { inherit pkgs; };
   taskScripts = import ./task-workspace-scripts.nix { inherit pkgs lib config; };
-  lockCmd = if option.lockscreen == "swaylock" then "/usr/bin/swaylock" else "hyprlock";
+  lockCmd = if settings.lockscreen == "swaylock" then "/usr/bin/swaylock" else "hyprlock";
 
   monitorFocusLines = lib.concatStringsSep "\n      " (
     map (m: ''hl.bind(mainMod .. " + ${m.focusKey}", hl.dsp.focus({monitor = "${m.name}"}), { description = "Focus monitor ${m.name}" })'')
-      (lib.filter (m: m.enable && m.focusKey != null) (lib.attrValues option.monitors))
+      (lib.filter (m: m.enable && m.focusKey != null) (lib.attrValues settings.monitors))
   );
 in
 {
-  config = lib.mkIf option.enable {
+  config = lib.mkIf settings.enable {
     module.hyprland.luaConfig = lib.mkOrder 300 ''
       -- ══════════════════════════════════════
       -- Keybinds

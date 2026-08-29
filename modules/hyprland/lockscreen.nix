@@ -1,11 +1,11 @@
 { config, lib, ... }:
 let
-  option = config.module.hyprland;
+  settings = config.module.hyprland;
 in
 {
-  config = lib.mkIf option.enable {
+  config = lib.mkIf settings.enable {
     programs.hyprlock = {
-      enable = option.lockscreen == "hyprlock";
+      enable = settings.lockscreen == "hyprlock";
       settings = {
         background = {
           monitor = "";
@@ -67,7 +67,7 @@ in
       };
     };
 
-    xdg.configFile."swaylock/config" = lib.mkIf (option.lockscreen == "swaylock") {
+    xdg.configFile."swaylock/config" = lib.mkIf (settings.lockscreen == "swaylock") {
       text = ''
         font=Sans
         font-size=20

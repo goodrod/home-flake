@@ -1,13 +1,13 @@
 { config, lib, ... }:
 let
   inherit (lib) mkEnableOption mkIf;
-  cfg = config.module.swaync;
+  settings = config.module.swaync;
 in {
   options.module.swaync = {
     enable = mkEnableOption "swaync";
   };
 
-  config = mkIf cfg.enable {
+  config = mkIf settings.enable {
     services.swaync = {
       enable = true;
       settings = {

@@ -1,6 +1,6 @@
 { config, pkgs, lib, ... }:
 let
-  option = config.module.hyprland;
+  settings = config.module.hyprland;
   scripts = import ./scripts.nix { inherit pkgs; };
 
   # Parse "preferred,0x0,1.0" into mode, position, scale
@@ -15,7 +15,7 @@ let
       })
     '';
 
-  enabledMonitors = lib.filter (m: m.enable) (lib.attrValues option.monitors);
+  enabledMonitors = lib.filter (m: m.enable) (lib.attrValues settings.monitors);
 
   monitorLines = lib.concatStringsSep "\n" (
     map (m: parseMonitorSettings m.name m.settings) enabledMonitors
@@ -28,11 +28,11 @@ let
   );
 
   startupLines = lib.concatStringsSep "\n" (
-    map (cmd: ''  hl.dispatch(hl.dsp.exec_cmd("${cmd}"))'') option.startup-commands
+    map (cmd: ''  hl.dispatch(hl.dsp.exec_cmd("${cmd}"))'') settings.startup-commands
   );
 in
 {
-  config = lib.mkIf option.enable {
+  config = lib.mkIf settings.enable {
     module.hyprland.luaConfig = lib.mkOrder 100 ''
       -- ══════════════════════════════════════
       -- Monitors

@@ -1,10 +1,10 @@
 { config, lib, ... }:
 let
-  option = config.module.hyprland;
+  settings = config.module.hyprland;
 
   workspaceRuleLines = lib.concatStringsSep "\n      " (
     map (m: ''hl.workspace_rule({ workspace = "${toString m.workspace}", monitor = "${m.name}", default = true })'')
-      (lib.filter (m: m.enable && m.workspace != null) (lib.attrValues option.monitors))
+      (lib.filter (m: m.enable && m.workspace != null) (lib.attrValues settings.monitors))
   );
 
   # Single source of truth for workspaces lives in module.workspaces.
@@ -46,7 +46,7 @@ let
   );
 in
 {
-  config = lib.mkIf option.enable {
+  config = lib.mkIf settings.enable {
     module.hyprland.luaConfig = lib.mkOrder 400 ''
       -- ══════════════════════════════════════
       -- Window Rules

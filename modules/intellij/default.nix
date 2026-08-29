@@ -1,7 +1,7 @@
 { config, pkgs, lib, ... }:
 let
   inherit (lib) mkEnableOption mkIf;
-  cfg = config.module.intellij;
+  settings = config.module.intellij;
   intellij-wrapped = pkgs.symlinkJoin {
     name = "intellij-wrapped";
     paths = [ pkgs.jetbrains.idea ];
@@ -16,7 +16,7 @@ in {
     enable = mkEnableOption "intellij";
   };
 
-  config = mkIf cfg.enable {
+  config = mkIf settings.enable {
     home.packages = [ intellij-wrapped ];
   };
 }

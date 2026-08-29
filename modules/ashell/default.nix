@@ -1,13 +1,13 @@
 { config, pkgs, lib, ... }:
 let
   inherit (lib) mkEnableOption mkIf;
-  cfg = config.module.ashell;
+  settings = config.module.ashell;
 in {
   options.module.ashell = {
     enable = mkEnableOption "ashell";
   };
 
-  config = mkIf cfg.enable {
+  config = mkIf settings.enable {
     home.packages = [ pkgs.ashell ];
   };
 }

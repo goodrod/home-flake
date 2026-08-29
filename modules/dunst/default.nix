@@ -1,13 +1,13 @@
 { config, pkgs, lib, inputs, ... }:
 let
   inherit (lib) mkEnableOption mkIf;
-  cfg = config.module.dunst;
+  settings = config.module.dunst;
 in {
   options.module.dunst = {
     enable = mkEnableOption "dunst";
   };
 
-  config = mkIf cfg.enable {
+  config = mkIf settings.enable {
     services.dunst = {
       enable = true;
       iconTheme = {

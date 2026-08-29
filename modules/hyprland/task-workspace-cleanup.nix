@@ -1,10 +1,10 @@
 { config, pkgs, lib, ... }:
 let
-  option = config.module.hyprland;
+  settings = config.module.hyprland;
   taskScripts = import ./task-workspace-scripts.nix { inherit pkgs lib config; };
 in
 {
-  config = lib.mkIf option.enable {
+  config = lib.mkIf settings.enable {
     module.hyprland.luaConfig = lib.mkOrder 260 ''
       -- ══════════════════════════════════════
       -- Task workspace auto-forget

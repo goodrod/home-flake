@@ -3,7 +3,7 @@
 let
   inherit (lib) mkOption mkEnableOption types mkIf;
   inherit (types) path str;
-  option = config.module.navi;
+  settings = config.module.navi;
 in {
   options.module.navi = {
     enable = mkEnableOption "navi";
@@ -34,7 +34,7 @@ in {
     };
   };
 
-  config = mkIf option.enable {
+  config = mkIf settings.enable {
     programs.bash = {
       bashrcExtra = ''
         [ -n "$PS1" ] && eval "$(navi widget bash)"
@@ -43,13 +43,13 @@ in {
 
     home.packages = with pkgs; [ navi ];
 
-    home.file."${option.cheats-output-directory}" = {
-      source = "${option.cheats-source-directory}";
+    home.file."${settings.cheats-output-directory}" = {
+      source = "${settings.cheats-source-directory}";
       executable = false;
       recursive = true;
     };
-    home.file."${option.config-output-directory}" = {
-      source = "${option.config-source-directory}";
+    home.file."${settings.config-output-directory}" = {
+      source = "${settings.config-source-directory}";
       executable = false;
       recursive = true;
     };

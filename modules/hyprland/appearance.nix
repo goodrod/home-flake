@@ -1,9 +1,9 @@
 { config, pkgs, lib, ... }:
 let
-  option = config.module.hyprland;
+  settings = config.module.hyprland;
 in
 {
-  config = lib.mkIf option.enable {
+  config = lib.mkIf settings.enable {
     home.pointerCursor = {
       package = pkgs.bibata-cursors;
       name = "Bibata-Modern-Classic";

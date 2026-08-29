@@ -5,11 +5,11 @@
   ...
 }: let
   inherit (lib) mkEnableOption mkIf;
-  option = config.module.bash;
+  settings = config.module.bash;
 in {
   options.module.bash = {enable = mkEnableOption "bash";};
 
-  config = mkIf option.enable {
+  config = mkIf settings.enable {
     home.packages = with pkgs; [xauth util-linux];
 
     programs.bash = {

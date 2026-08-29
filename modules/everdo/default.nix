@@ -1,7 +1,7 @@
 { config, pkgs, lib, inputs, ... }:
 let
   inherit (lib) mkIf mkOption types;
-  cfg = config.module.everdo;
+  settings = config.module.everdo;
 in {
   options.module.everdo = {
     enable = mkOption {
@@ -11,7 +11,7 @@ in {
     };
   };
 
-  config = mkIf cfg.enable {
+  config = mkIf settings.enable {
     home.packages = [ pkgs.everdo ];
 
     xdg.desktopEntries.everdo = {

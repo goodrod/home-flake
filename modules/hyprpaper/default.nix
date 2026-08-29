@@ -1,9 +1,9 @@
 { config, lib, pkgs, ... }:
 let
   inherit (lib) mkOption mkEnableOption types mkIf optional concatStringsSep;
-  cfg = config.module.hyprpaper;
+  settings = config.module.hyprpaper;
   monitors = config.module.hyprland.monitors;
-  wallpaperPath = "${config.home.homeDirectory}/${cfg.wallpaper-output-directory}/${cfg.wallpaper}";
+  wallpaperPath = "${config.home.homeDirectory}/${settings.wallpaper-output-directory}/${settings.wallpaper}";
   enabledMonitors =
     map (m: m.name) (lib.filter (m: m.enable) (lib.attrValues monitors));
   wallpaperBlocks =
@@ -44,9 +44,9 @@ in {
     };
   };
 
-  config = mkIf cfg.enable {
-    home.file."${cfg.wallpaper-output-directory}" = {
-      source = "${cfg.wallpaper-source-directory}";
+  config = mkIf settings.enable {
+    home.file."${settings.wallpaper-output-directory}" = {
+      source = "${settings.wallpaper-source-directory}";
       recursive = true;
     };
     xdg.configFile."hypr/hyprpaper.conf".text = ''

@@ -1,19 +1,19 @@
 { config, pkgs, lib, inputs, ... }:
 let
   inherit (lib) mkEnableOption mkIf;
-  cfg = config.module.fuzzel;
+  settings = config.module.fuzzel;
 in {
   options.module.fuzzel = {
     enable = mkEnableOption "fuzzel";
   };
 
-  config = mkIf cfg.enable {
+  config = mkIf settings.enable {
     programs.fuzzel = {
       enable = true;
       settings = {
         main = {
           font = "Hack Nerd Font:size=12"; # Monospaced font
-          width = 50; # Width option
+          width = 50; # Width settings
           lines = 20;
           horizontal-pad = 20; # Horizontal padding
           vertical-pad = 8; # Vertical padding

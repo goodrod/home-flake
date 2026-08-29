@@ -1,13 +1,13 @@
 { config, pkgs, lib, inputs, ... }:
 let
   inherit (lib) mkEnableOption mkIf;
-  cfg = config.module.spotify;
+  settings = config.module.spotify;
 in {
   options.module.spotify = {
     enable = mkEnableOption "spotify";
   };
 
-  config = mkIf cfg.enable {
+  config = mkIf settings.enable {
     home.packages = with pkgs; [ spotify spotify-player ];
   };
 }
