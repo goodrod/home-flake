@@ -1,6 +1,6 @@
 { config, pkgs, lib, inputs, ... }:
-with lib;
 let
+  inherit (lib) mkEnableOption mkIf;
   cfg = config.module.personal-apps;
 in {
   options.module.personal-apps = {

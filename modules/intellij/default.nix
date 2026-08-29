@@ -1,6 +1,6 @@
 { config, pkgs, lib, ... }:
-with lib;
 let
+  inherit (lib) mkEnableOption mkIf;
   cfg = config.module.intellij;
   intellij-wrapped = pkgs.symlinkJoin {
     name = "intellij-wrapped";

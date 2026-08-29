@@ -1,6 +1,6 @@
 { config, pkgs, lib, ... }:
-with lib;
 let
+  inherit (lib) mkEnableOption mkIf;
   cfg = config.module.default-applications;
 in {
   options.module.default-applications = {

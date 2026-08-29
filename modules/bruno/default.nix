@@ -1,6 +1,6 @@
 { config, pkgs, lib, ... }:
-with lib;
 let
+  inherit (lib) mkEnableOption mkIf;
   cfg = config.module.bruno;
   # Bruno's Electron single-instance lock lives in ~/.config/bruno as symlinks
   # (SingletonSocket/Lock/Cookie) whose socket target sits under /tmp. After a

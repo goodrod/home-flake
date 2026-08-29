@@ -1,6 +1,6 @@
 { config, pkgs, lib, inputs, ... }:
-with lib;
 let
+  inherit (lib) mkIf mkOption types;
   cfg = config.module.everdo;
 in {
   options.module.everdo = {

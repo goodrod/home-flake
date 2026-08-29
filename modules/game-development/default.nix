@@ -1,6 +1,6 @@
 { config, pkgs, lib, inputs, ... }:
-with lib;
 let
+  inherit (lib) mkEnableOption mkIf;
   cfg = config.module.game-development;
 in {
   options.module.game-development = {
