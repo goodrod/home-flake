@@ -1,4 +1,4 @@
-{ config, pkgs, lib, inputs, ... }:
+{ config, pkgs, lib, ... }:
 let
   inherit (lib) mkIf mkOption types;
   settings = config.module.everdo;
