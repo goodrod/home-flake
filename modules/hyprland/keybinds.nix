@@ -105,9 +105,12 @@ in
           if not (active and active.monitor and active.monitor.id == mon.id) then
             local ws = mon.active_workspace
             local target = ws and ws.last_window
-            if target then
-              hl.dispatch(hl.dsp.focus({ window = "address:" .. target.address }))
-            end
+            -- An empty workspace has no window to take focus, so the resize
+            -- below would act on the previously-focused monitor instead:
+            -- hovering the portrait monitor would full-width the OTHER
+            -- monitor's columns. Nothing to clamp here, so bail out.
+            if not target then return end
+            hl.dispatch(hl.dsp.focus({ window = "address:" .. target.address }))
           end
           colWidthIdx = #colWidths
           hl.dispatch(hl.dsp.layout("colresize all 1.0"))
