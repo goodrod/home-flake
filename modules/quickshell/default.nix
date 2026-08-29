@@ -6,7 +6,7 @@
 }: let
   inherit (lib) mkOption mkEnableOption types mkIf;
   inherit (types) path str;
-  quickshellConfig = config.module.quickshell;
+  settings = config.module.quickshell;
 
   workspaces = config.module.workspaces.entries;
   sortedWs = lib.sort (a: b: a.id < b.id) (lib.attrValues workspaces);
@@ -45,7 +45,7 @@
 
   mergedConfigDir = pkgs.runCommand "quickshell-bar-config" {} ''
     mkdir -p "$out"
-    cp -r "${quickshellConfig.config-source-directory}/." "$out/"
+    cp -r "${settings.config-source-directory}/." "$out/"
     cp "${workspacesJson}" "$out/workspaces.json"
     cp "${scriptsJson}" "$out/scripts.json"
   '';
@@ -66,13 +66,13 @@ in {
     };
   };
 
-  config = mkIf quickshellConfig.enable {
+  config = mkIf settings.enable {
     fonts.fontconfig.enable = true;
     home.packages = with pkgs;
       [quickshell qt6Packages.qt6ct brightnessctl]
       ++ builtins.filter lib.attrsets.isDerivation (builtins.attrValues pkgs.nerd-fonts);
 
-    home.file."${quickshellConfig.config-output-directory}" = {
+    home.file."${settings.config-output-directory}" = {
       source = mergedConfigDir;
       executable = false;
       recursive = true;
