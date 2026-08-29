@@ -68,6 +68,82 @@ rec {
     fi
   '';
 
+  # Resize every column and keep the grid flush with the screen.
+  #
+  # layoutmsg "colresize all" is the one colresize variant that returns before
+  # the layout's own fit step, so it changes the widths while leaving the scroll
+  # offset alone and the new columns end up straddling both screen edges. The
+  # layout exposes no "snap to grid" message, and the only one that sets an
+  # absolute offset is "fit active", which always anchors the FOCUSED column to
+  # the left edge - i.e. it yanks the view over whenever the focused window
+  # isn't the leftmost one.
+  #
+  # So pick the anchor ourselves: the column nearest the left edge, clamped so
+  # the focused window still fits on screen and so we never scroll past the last
+  # column (nothing in the layout clamps that end, it would just show a gap).
+  # Focus it, anchor there, hand focus back. One --batch, so one frame.
+  #
+  # Positions come from hyprctl, which reports animation goals, not the
+  # in-flight values - so this is safe to run while the previous resize is still
+  # animating. External script rather than inline Lua for the reason above
+  # toggleNoShare.
+  snapColumns = writeScript "snap-columns.sh" ''
+    #!/usr/bin/env bash
+    set -euo pipefail
+    width="$1"
+
+    active=$(hyprctl activewindow -j)
+    addr=$(jq -r '.address // empty' <<< "$active")
+    [ -n "$addr" ] || exit 0
+
+    anchor=$(jq -rn \
+      --argjson monitors "$(hyprctl monitors -j)" \
+      --argjson clients "$(hyprctl clients -j)" \
+      --argjson active "$active" \
+      --argjson width "$width" '
+      ($active.address) as $addr
+      | ($monitors[] | select(.id == $active.monitor)) as $m
+      | ($m.x + $m.reserved[0]) as $left
+      | [ $clients[]
+          | select(.workspace.id == $active.workspace.id and .floating == false and .mapped == true) ] as $tiled
+      # one column per distinct x; windows stacked in a column share it
+      | ($tiled | map(.at[0]) | unique) as $cols
+      | ($cols | index($active.at[0])) as $focused
+      | if $focused == null then $addr else
+          ($cols | length) as $count
+          | ((1 / $width) | floor) as $onscreen
+          # the column sitting closest to the left edge right now: that is the
+          # one the eye reads as "leftmost", so keep it there
+          | ([ $cols | to_entries[] | {i: .key, d: (($left - .value) | fabs)} ]
+             | min_by(.d) | .i) as $nearest
+          # but never so far left that the focused window falls off the right
+          # edge, and never past the tail, which would leave a gap
+          | ([0, ($focused - $onscreen + 1)] | max) as $lo
+          | ([$focused, ([0, ($count - $onscreen)] | max)] | min) as $hi
+          | ([([$nearest, $lo] | max), $hi] | min) as $k
+          # already the right column: leave focus alone, a column can hold
+          # several stacked windows and we would land on the wrong one
+          # (no apostrophes in here - the jq program is single-quoted)
+          | if $k == $focused then $addr
+            else ($tiled | map(select(.at[0] == $cols[$k])) | .[0].address) end
+        end
+    ' || true)
+    # anything unexpected (floating window, empty workspace): still resize,
+    # just anchor on the focused column
+    [ -n "$anchor" ] || anchor="$addr"
+
+    batch="dispatch hl.dsp.layout(\"colresize all $width\")"
+    if [ "$anchor" != "$addr" ]; then
+      batch="$batch ; dispatch hl.dsp.focus({ window = \"address:$anchor\" })"
+    fi
+    batch="$batch ; dispatch hl.dsp.layout(\"fit active\")"
+    batch="$batch ; dispatch hl.dsp.layout(\"colresize all $width\")"
+    if [ "$anchor" != "$addr" ]; then
+      batch="$batch ; dispatch hl.dsp.focus({ window = \"address:$addr\" })"
+    fi
+    hyprctl --batch "$batch" > /dev/null
+  '';
+
   parseHotkeys = writeScript "parseHotkeys.sh" ''
     #!/usr/bin/env bash
 

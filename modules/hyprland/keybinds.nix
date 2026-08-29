@@ -77,25 +77,15 @@ in
         return colWidths
       end
 
-      -- "colresize all" is the one colresize variant that returns before the
-      -- layout's own fit/center step, so it changes every column's width while
-      -- leaving the scroll offset untouched - the new grid then straddles both
-      -- screen edges and you get a sliver of a column on each side. Re-anchor
-      -- by hand: "fit active" moves the offset to the focused column's start
-      -- (using the widths we just applied), and it forces that one column to
-      -- full width, so resize everything again to put it back.
-      local function snapColumnsToScreen(width)
-        hl.dispatch(hl.dsp.layout("fit active"))
-        hl.dispatch(hl.dsp.layout("colresize all " .. width))
-      end
-
+      -- The resize itself, plus keeping the grid flush with the screen edge,
+      -- lives in snap-columns.sh - it needs window geometry, and reading that
+      -- from inside a keybind callback deadlocks Hyprland (see scripts.nix).
+      -- The script restores focus itself.
       local function cycleColWidth(dir)
         local w = hl.get_active_window()
         local widths = colWidthsFor(w)
         colWidthIdx = ((colWidthIdx - 1 + dir + #widths) % #widths) + 1
-        hl.dispatch(hl.dsp.layout("colresize all " .. widths[colWidthIdx]))
-        snapColumnsToScreen(widths[colWidthIdx])
-        if w ~= nil then hl.dispatch(hl.dsp.focus({ window = "address:" .. w.address })) end
+        hl.dispatch(hl.dsp.exec_cmd("${scripts.snapColumns} " .. widths[colWidthIdx]))
       end
       -- Landing on a portrait monitor should snap any columns it already had
       -- (e.g. carried over from a landscape monitor) to full width, not just
@@ -126,10 +116,10 @@ in
             hl.dispatch(hl.dsp.focus({ window = "address:" .. target.address }))
           end
           colWidthIdx = #colWidths
-          hl.dispatch(hl.dsp.layout("colresize all 1.0"))
-          -- Same offset problem as in cycleColWidth: without this the full-width
-          -- column lands half off-screen with a slice of its neighbour showing.
-          snapColumnsToScreen(1.0)
+          -- Same script as the width cycle: a plain "colresize all 1.0" would
+          -- leave the full-width column half off-screen with a slice of its
+          -- neighbour showing.
+          hl.dispatch(hl.dsp.exec_cmd("${scripts.snapColumns} 1.0"))
         end
       end
       -- workspace.active: fires on an actual workspace switch (e.g. moving a
