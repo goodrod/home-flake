@@ -91,14 +91,40 @@ rec {
     #!/usr/bin/env bash
     set -euo pipefail
     width="$1"
+    # Optional workspace id. colresize/fit have no target of their own, they
+    # act on whatever holds dispatch focus, so a caller wanting to resize a
+    # workspace it is not focused on would have to move focus there first.
+    # Given an id, the batch at the bottom borrows focus and hands it straight
+    # back instead, so callers never move focus themselves.
+    target_ws="''${2:-}"
 
-    active=$(hyprctl activewindow -j)
+    clients=$(hyprctl clients -j)
+    focused=$(hyprctl activewindow -j)
+    focus_addr=$(jq -r '.address // empty' <<< "$focused")
+
+    # The window the resize is measured around: the focused one, unless a
+    # different workspace was asked for.
+    active="$focused"
+    if [ -n "$target_ws" ] &&
+       [ "$(jq -r '.workspace.id // empty' <<< "$focused")" != "$target_ws" ]; then
+      # Stand in that workspace's last-focused window, so it is the one the
+      # on-screen clamp below keeps visible. Fall back to its leftmost tiled
+      # window when that address is gone, floating, or never existed.
+      last=$(hyprctl workspaces -j |
+        jq -r --argjson ws "$target_ws" '.[] | select(.id == $ws) | .lastwindow // empty')
+      active=$(jq -c --argjson ws "$target_ws" --arg last "$last" '
+        [ .[] | select(.workspace.id == $ws and .floating == false and .mapped == true) ] as $tiled
+        | (first($tiled[] | select(.address == $last)) // $tiled[0]) // empty
+      ' <<< "$clients")
+    fi
+
+    # nothing focused at all, or an empty target workspace: nothing to resize
     addr=$(jq -r '.address // empty' <<< "$active")
     [ -n "$addr" ] || exit 0
 
     anchor=$(jq -rn \
       --argjson monitors "$(hyprctl monitors -j)" \
-      --argjson clients "$(hyprctl clients -j)" \
+      --argjson clients "$clients" \
       --argjson active "$active" \
       --argjson width "$width" '
       ($active.address) as $addr
@@ -132,14 +158,20 @@ rec {
     # just anchor on the focused column
     [ -n "$anchor" ] || anchor="$addr"
 
-    batch="dispatch hl.dsp.layout(\"colresize all $width\")"
-    if [ "$anchor" != "$addr" ]; then
-      batch="$batch ; dispatch hl.dsp.focus({ window = \"address:$anchor\" })"
+    # Focus the anchor up front rather than between the two resizes: with a
+    # target workspace the dispatches below would otherwise land on whatever
+    # else held focus. Both colresize calls cover every column in the workspace
+    # either way, so nothing is lost by reordering.
+    batch=""
+    if [ "$anchor" != "$focus_addr" ]; then
+      batch="dispatch hl.dsp.focus({ window = \"address:$anchor\" }) ; "
     fi
+    batch="''${batch}dispatch hl.dsp.layout(\"colresize all $width\")"
     batch="$batch ; dispatch hl.dsp.layout(\"fit active\")"
     batch="$batch ; dispatch hl.dsp.layout(\"colresize all $width\")"
-    if [ "$anchor" != "$addr" ]; then
-      batch="$batch ; dispatch hl.dsp.focus({ window = \"address:$addr\" })"
+    # Hand focus back. Nothing was focused to begin with: leave it on the anchor.
+    if [ "$anchor" != "$focus_addr" ] && [ -n "$focus_addr" ]; then
+      batch="$batch ; dispatch hl.dsp.focus({ window = \"address:$focus_addr\" })"
     fi
     hyprctl --batch "$batch" > /dev/null
   '';

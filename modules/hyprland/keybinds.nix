@@ -97,29 +97,18 @@ in
           -- colresize has no monitor/workspace target of its own - it always
           -- acts on whatever window currently holds dispatch focus. A mouse-only
           -- hover onto this monitor (monitor.focused) doesn't move that focus,
-          -- so without this the resize lands on the previously-focused
-          -- monitor's workspace instead of this one.
-          --
-          -- Skip the refocus when the active window is already on this
-          -- monitor (e.g. mid-drag via window.drag()): focuswindow warps the
-          -- cursor to the target's center, which would yank a dragged window
-          -- out from under the mouse.
-          local active = hl.get_active_window()
-          if not (active and active.monitor and active.monitor.id == mon.id) then
-            local ws = mon.active_workspace
-            local target = ws and ws.last_window
-            -- An empty workspace has no window to take focus, so the resize
-            -- below would act on the previously-focused monitor instead:
-            -- hovering the portrait monitor would full-width the OTHER
-            -- monitor's columns. Nothing to clamp here, so bail out.
-            if not target then return end
-            hl.dispatch(hl.dsp.focus({ window = "address:" .. target.address }))
-          end
+          -- so name the workspace explicitly and let snap-columns.sh borrow
+          -- focus and hand it back around the resize. Moving focus from here
+          -- instead would mean hovering the portrait monitor steals focus,
+          -- which input:follow_mouse = 2 is set to prevent, and would yank a
+          -- window being dragged onto this monitor out from under the cursor.
+          local ws = mon.active_workspace
+          if not ws then return end
           colWidthIdx = #colWidths
           -- Same script as the width cycle: a plain "colresize all 1.0" would
           -- leave the full-width column half off-screen with a slice of its
           -- neighbour showing.
-          hl.dispatch(hl.dsp.exec_cmd("${scripts.snapColumns} 1.0"))
+          hl.dispatch(hl.dsp.exec_cmd("${scripts.snapColumns} 1.0 " .. ws.id))
         end
       end
       -- workspace.active: fires on an actual workspace switch (e.g. moving a
