@@ -7,7 +7,7 @@ let
   lockCmd = if settings.lockscreen == "swaylock" then "/usr/bin/swaylock" else "hyprlock";
 
   monitorFocusLines = lib.concatStringsSep "\n      " (
-    map (m: ''hl.bind(mainMod .. " + ${m.focusKey}", hl.dsp.focus({monitor = "${m.name}"}), { description = "Focus monitor ${m.name}" })'')
+    map (m: ''hl.bind(mainMod .. " + ${m.focusKey}", function() focusMonitor("${m.name}") end, { description = "Focus monitor ${m.name}" })'')
       (lib.filter (m: m.enable && m.focusKey != null) (lib.attrValues settings.monitors))
   );
 in
@@ -95,13 +95,11 @@ in
         local w, h = effectiveMonitorSize(mon)
         if h > w then
           -- colresize has no monitor/workspace target of its own - it always
-          -- acts on whatever window currently holds dispatch focus. A mouse-only
-          -- hover onto this monitor (monitor.focused) doesn't move that focus,
-          -- so name the workspace explicitly and let snap-columns.sh borrow
-          -- focus and hand it back around the resize. Moving focus from here
-          -- instead would mean hovering the portrait monitor steals focus,
-          -- which input:follow_mouse = 2 is set to prevent, and would yank a
-          -- window being dragged onto this monitor out from under the cursor.
+          -- acts on whatever window currently holds dispatch focus, and
+          -- workspace.active fires for monitors that are not the focused one
+          -- (moving a workspace onto this one from elsewhere). Name the
+          -- workspace explicitly and let snap-columns.sh borrow focus and hand
+          -- it straight back, rather than moving focus here and leaving it.
           local ws = mon.active_workspace
           if not ws then return end
           colWidthIdx = #colWidths
@@ -114,10 +112,19 @@ in
       -- workspace.active: fires on an actual workspace switch (e.g. moving a
       -- workspace to this monitor, or switching workspaces on it).
       hl.on("workspace.active", function(ws) clampToFullWidthIfPortrait(ws and ws.monitor) end)
-      -- monitor.focused: workspace.active does NOT fire when the monitor's
-      -- workspace was already active and you just move input focus onto it
-      -- (e.g. the per-monitor focusKey binds), so that case needs its own hook.
-      hl.on("monitor.focused", function(mon) clampToFullWidthIfPortrait(mon) end)
+      -- The other case is moving input focus onto a monitor whose workspace was
+      -- already active, which raises no workspace.active. Do NOT hook
+      -- monitor.focused for it: that fires on a plain mouse hover as well
+      -- (misc:mouse_move_focuses_monitor defaults to true), so the clamp ran on
+      -- hover, and the focus snap-columns.sh borrows raised the event again and
+      -- re-entered the hook - focus ping-ponged between the monitors until the
+      -- pointer left. Drive it from the bind that moves monitor focus instead,
+      -- so only a deliberate focus change clamps.
+      local function focusMonitor(name)
+        hl.dispatch(hl.dsp.focus({ monitor = name }))
+        local w = hl.get_active_window()
+        clampToFullWidthIfPortrait(w and w.monitor)
+      end
 
       hl.bind(mainMod .. " + O", function() cycleColWidth(1) end, { description = "Cycle all column widths forward" })
       hl.bind(mainMod .. " + SHIFT + O", function() cycleColWidth(-1) end, { description = "Cycle all column widths back" })
