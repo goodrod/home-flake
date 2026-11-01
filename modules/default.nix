@@ -10,7 +10,6 @@
     ./game-development
     ./icon-fonts
     ./intellij
-    ./kiro
     ./obsidian
     ./personal-apps
     ./spotify

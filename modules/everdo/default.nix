@@ -1,14 +1,10 @@
 { config, pkgs, lib, ... }:
 let
-  inherit (lib) mkIf mkOption types;
+  inherit (lib) mkEnableOption mkIf;
   settings = config.module.everdo;
 in {
   options.module.everdo = {
-    enable = mkOption {
-      type = types.bool;
-      default = true;
-      description = "Enable everdo.";
-    };
+    enable = mkEnableOption "everdo";
   };
 
   config = mkIf settings.enable {

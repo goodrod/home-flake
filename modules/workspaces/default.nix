@@ -54,7 +54,7 @@ in
         coding = {
           id = 70;
           icon = "󰅩";
-          match.class = "code-url-handler|jetbrains-rider|jetbrains-idea|Godot|kiro";
+          match.class = "code-url-handler|jetbrains-rider|jetbrains-idea|Godot";
         };
         term = {
           id = 80;
