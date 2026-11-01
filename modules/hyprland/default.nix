@@ -52,6 +52,11 @@ in
         default = "F7";
         description = "Key (with any extra modifiers) that, with SUPER, screenshots a region.";
       };
+      screenshotMonitor = mkOption {
+        type = str;
+        default = "SHIFT + F7";
+        description = "Key that, with SUPER, screenshots the whole focused monitor.";
+      };
       record = mkOption {
         type = str;
         default = "F8";
@@ -63,6 +68,17 @@ in
         example = "SHIFT + Delete";
         description = "Key that, with SUPER, exits Hyprland.";
       };
+    };
+
+    screenshot-editor-workspace = mkOption {
+      type = nullOr int;
+      default = null;
+      example = 10;
+      description = ''
+        Workspace the screenshot editor (satty) opens on, taking you along,
+        so it never lands in the middle of a game or a tiled layout. null
+        opens it on the current workspace.
+      '';
     };
 
     lockscreen = mkOption {
@@ -143,6 +159,9 @@ in
       hyprlauncher
       papirus-icon-theme
       playerctl
+      slurp
+      wf-recorder
+      wl-clipboard
     ];
 
     home.sessionVariables = {

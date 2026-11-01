@@ -212,4 +212,20 @@ rec {
       printf "%s    %s    %s\n", desc, key, cmd
     }'
   '';
+
+  screenshot = writeScript "screenshot.sh" ''
+    #!/usr/bin/env bash
+    set -euo pipefail
+    case "''${1:-region}" in
+      region) target=(-g "$(${pkgs.slurp}/bin/slurp)") ;;
+      monitor) target=(-o "$(hyprctl monitors -j | ${pkgs.jq}/bin/jq -r '.[] | select(.focused) | .name')") ;;
+      *) echo "usage: screenshot.sh [region|monitor]" >&2; exit 2 ;;
+    esac
+    dir="''${XDG_PICTURES_DIR:-$HOME/Pictures}/Screenshots"
+    mkdir -p "$dir"
+    ${pkgs.grim}/bin/grim "''${target[@]}" - | ${pkgs.satty}/bin/satty --filename - \
+      --output-filename "$dir/screenshot-%Y-%m-%d_%H-%M-%S.png" \
+      --copy-command ${pkgs.wl-clipboard}/bin/wl-copy \
+      --early-exit
+  '';
 }

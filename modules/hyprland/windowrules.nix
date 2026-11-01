@@ -2,6 +2,9 @@
 let
   settings = config.module.hyprland;
 
+  screenshotEditorRule = lib.optionalString (settings.screenshot-editor-workspace != null)
+    ''hl.window_rule({ match = { class = "com.gabm.satty" }, workspace = "${toString settings.screenshot-editor-workspace}" })'';
+
   workspaceRuleLines = lib.concatStringsSep "\n      " (
     map (m: ''hl.workspace_rule({ workspace = "${toString m.workspace}", monitor = "${m.name}", default = true })'')
       (lib.filter (m: m.enable && m.workspace != null) (lib.attrValues settings.monitors))
@@ -67,6 +70,8 @@ in
 
       -- Workspace assignments by tag
       ${assignmentRuleLines}
+
+      ${screenshotEditorRule}
 
       -- Toggle window rules
       hl.window_rule({ match = { class = "toggle-window" }, float = true })

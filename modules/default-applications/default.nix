@@ -29,10 +29,6 @@ in {
       traceroute
       htop
       atop
-      slurp
-      swappy
-      grim
-      wf-recorder
       ffmpeg
       fd
       tree
