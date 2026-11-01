@@ -103,7 +103,7 @@ ShellRoot {
   }
 
   function mergedWorkspaceIds() {
-    const ids = workspaceData.entries.map(e => e.id);
+    const ids = workspaceData.entries.filter(e => e.persistent).map(e => e.id);
     const seen = new Set(ids);
     for (const w of Hyprland.workspaces.values) {
       if (w.id < 200 && !seen.has(w.id)) {

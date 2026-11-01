@@ -46,6 +46,7 @@ in
         chat = {
           id = 60;
           icon = "󰭹";
+          persistent = true;
           match = {
             class = "discord|vesktop|Slack|.*teams.*|.*outlook.*|chrome-chat.google.com.*";
             initialTitle = "discord|vesktop|Slack|.*teams.*|.*outlook.*|chrome-chat.google.com.*";
@@ -54,16 +55,19 @@ in
         coding = {
           id = 70;
           icon = "󰅩";
+          persistent = true;
           match.class = "code-url-handler|jetbrains-rider|jetbrains-idea|Godot";
         };
         term = {
           id = 80;
           icon = "󰆍";
+          persistent = true;
           match.class = "Alacritty";
         };
         browser = {
           id = 90;
           icon = "󰈹";
+          persistent = true;
           match.class = "firefox_firefox|firefox|Chromium|vivaldi-stable|Mullvad Browser|google-chrome|Google-chrome";
         };
       };
