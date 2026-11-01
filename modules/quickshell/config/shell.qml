@@ -106,7 +106,8 @@ ShellRoot {
     const ids = workspaceData.entries.filter(e => e.persistent).map(e => e.id);
     const seen = new Set(ids);
     for (const w of Hyprland.workspaces.values) {
-      if (w.id < 200 && !seen.has(w.id)) {
+      const inUse = w.focused || w.toplevels.values.length > 0;
+      if (w.id < 200 && inUse && !seen.has(w.id)) {
         seen.add(w.id);
         ids.push(w.id);
       }
