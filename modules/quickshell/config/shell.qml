@@ -142,6 +142,12 @@ ShellRoot {
   Process { id: focusProc }
   Process { id: screenshotProc }
 
+  function takeScreenshot(mode) {
+    if (screenshotProc.running) return;
+    screenshotProc.command = [scriptsData.screenshot, mode];
+    screenshotProc.running = true;
+  }
+
   SessionScreen { id: sessionScreen }
 
   ControlCenter {
@@ -388,6 +394,29 @@ ShellRoot {
       }
 
       Rectangle {
+        id: screenshotIsland
+        visible: scriptsData.screenshot !== ""
+        anchors.left: trayIsland.right
+        anchors.leftMargin: 14
+        anchors.verticalCenter: parent.verticalCenter
+        height: root.islandHeight
+        width: screenshotButton.width + root.islandPadding * 2
+        radius: 16
+        color: root.islandBg
+
+        IconButton {
+          id: screenshotButton
+          anchors.centerIn: parent
+          width: 30
+          height: 30
+          radius: 15
+          glyph: "󰹑"
+          onPrimaryClicked: root.takeScreenshot("region")
+          onSecondaryClicked: root.takeScreenshot("monitor")
+        }
+      }
+
+      Rectangle {
         id: workspacesIsland
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.verticalCenter: parent.verticalCenter
@@ -472,39 +501,6 @@ ShellRoot {
           id: rightRow
           anchors.centerIn: parent
           spacing: 20
-
-          Item {
-            visible: scriptsData.screenshot !== ""
-            width: 22
-            height: 22
-            anchors.verticalCenter: parent.verticalCenter
-
-            Rectangle {
-              anchors.fill: parent
-              radius: 11
-              color: screenshotMouse.containsMouse ? root.chipHoverBg : "transparent"
-              Behavior on color { ColorAnimation { duration: 100 } }
-            }
-
-            Text {
-              anchors.centerIn: parent
-              text: "󰹑"
-              font.pixelSize: 15
-              color: root.textColor
-            }
-
-            MouseArea {
-              id: screenshotMouse
-              anchors.fill: parent
-              hoverEnabled: true
-              acceptedButtons: Qt.LeftButton | Qt.RightButton
-              onClicked: (mouse) => {
-                if (screenshotProc.running) return;
-                screenshotProc.command = [scriptsData.screenshot, mouse.button === Qt.RightButton ? "monitor" : "region"];
-                screenshotProc.running = true;
-              }
-            }
-          }
 
           Chip {
             visible: bar.showNetwork
