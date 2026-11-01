@@ -7,7 +7,6 @@
     ./bluetooth
     ./discord
     ./everdo
-    ./faugus
     ./game-development
     ./icon-fonts
     ./intellij
