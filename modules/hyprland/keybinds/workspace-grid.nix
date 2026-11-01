@@ -13,19 +13,22 @@ let
   moveBind = keyExpr: ws: ''hl.bind(${keyExpr}, hl.dsp.window.move({workspace = ${ws}, follow = false}), { description = "Move to WS ${ws}" })'';
 in
 {
-  config = lib.mkIf (settings.enable && settings.features.workspaceGrid.enable) {
-    module.hyprland.luaConfig = lib.mkOrder 320 ''
-      -- Shifted workspaces, "+n" variant, id+1 (ALT + 1-0 -> 11,21..101)
-      ${gridBinds "ALT + " 1 focusBind}
+  config = lib.mkIf settings.enable {
+    module.hyprland.luaConfig = lib.mkMerge [
+      (lib.mkIf settings.features.shiftedWorkspaces.enable (lib.mkOrder 320 ''
+        -- Shifted workspaces, "+n" variant, id+1 (ALT + 1-0 -> 11,21..101)
+        ${gridBinds "ALT + " 1 focusBind}
 
-      -- Move to shifted workspaces (ALT + CTRL + 1-0 -> 11,21..101)
-      ${gridBinds "ALT + CTRL + " 1 moveBind}
+        -- Move to shifted workspaces (ALT + CTRL + 1-0 -> 11,21..101)
+        ${gridBinds "ALT + CTRL + " 1 moveBind}
+      ''))
+      (lib.mkIf settings.features.workspaceGrid.enable (lib.mkOrder 321 ''
+        -- Workspaces (1-0 -> 10,20..100)
+        ${gridBinds "" 0 focusBind}
 
-      -- Workspaces (1-0 -> 10,20..100)
-      ${gridBinds "" 0 focusBind}
-
-      -- Move to workspaces (CTRL + 1-0 -> 10,20..100)
-      ${gridBinds "CTRL + " 0 moveBind}
-    '';
+        -- Move to workspaces (CTRL + 1-0 -> 10,20..100)
+        ${gridBinds "CTRL + " 0 moveBind}
+      ''))
+    ];
   };
 }

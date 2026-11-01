@@ -38,7 +38,10 @@ in
         the window tag and workspace assignment rules built from
         module.workspaces.entries'';
       workspaceGrid.enable = mkEnableOption ''
-        the SUPER/CTRL/ALT + 1-0 workspace focus and move binds'';
+        the SUPER + 1-0 workspace focus and SUPER+CTRL + 1-0 move binds'';
+      shiftedWorkspaces.enable = mkEnableOption ''
+        the "+1" twin of every grid workspace (11, 21..101) on SUPER+ALT,
+        and right-clicking a bar workspace to reach it'';
       columnTools.enable = mkEnableOption ''
         the scrolling-layout column tools: width cycling, the portrait
         full-width clamp, column swap/promote/fit and first/last column focus'';

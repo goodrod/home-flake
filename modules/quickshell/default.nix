@@ -4,11 +4,17 @@
   lib,
   ...
 }: let
-  inherit (lib) mkOption mkEnableOption types mkIf;
-  inherit (types) enum path str;
+  inherit (lib) mkOption mkEnableOption types mkIf optionalAttrs;
+  inherit (types) path str;
   settings = config.module.quickshell;
+  features = config.module.hyprland.features;
 
-  workspaces = config.module.workspaces.entries;
+  # The bar mirrors the Hyprland features: category icons only when windows
+  # are actually sorted onto those workspaces, task bits only with tasks.
+  workspaces =
+    if features.categoryWorkspaces.enable
+    then config.module.workspaces.entries
+    else {};
   sortedWs = lib.sort (a: b: a.id < b.id) (lib.attrValues workspaces);
 
   workspaceEntries = map (ws: {
@@ -34,22 +40,17 @@
     then "swaylock -f"
     else "hyprlock";
 
-  # The dev bar keeps its exact pre-variant scripts.json, so barVariant is only
-  # written for gaming (shell.qml defaults it to "dev").
   scriptsJson = pkgs.writeText "quickshell-bar-scripts.json" (builtins.toJSON ({
       # Same script mod+N runs, called with a notification id so the center can
       # jump to the entry the keyboard cursor is on.
       notifJump = "${notifFocusScripts.focusLastNotifApp}";
       lockCmd = lockCmd;
+      shiftedWorkspaces = features.shiftedWorkspaces.enable;
     }
-    // (
-      if settings.variant == "dev"
-      then {
-        taskStatus = "${taskScripts.taskStatusScript}";
-        taskPicker = "${taskScripts.taskPicker}";
-      }
-      else {barVariant = settings.variant;}
-    )));
+    // optionalAttrs features.taskWorkspaces.enable {
+      taskStatus = "${taskScripts.taskStatusScript}";
+      taskPicker = "${taskScripts.taskPicker}";
+    }));
 
   mergedConfigDir = pkgs.runCommand "quickshell-bar-config" {} ''
     mkdir -p "$out"
@@ -60,15 +61,6 @@
 in {
   options.module.quickshell = {
     enable = mkEnableOption "quickshell";
-
-    variant = mkOption {
-      type = enum ["dev" "gaming"];
-      default = "dev";
-      description = ''
-        Which bar to show. "dev" has the category workspace icons and the task
-        workspaces island; "gaming" shows plain numbered workspaces and no tasks.
-      '';
-    };
 
     config-source-directory = mkOption {
       default = ./config;

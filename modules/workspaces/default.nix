@@ -31,12 +31,6 @@ in
           persistent = true;
           match.title = ".*Spotify.*";
         };
-        gaming = {
-          id = 30;
-          icon = "󰊗";
-          persistent = true;
-          match.class = "steam";
-        };
         mail = {
           id = 40;
           icon = "󰇮";

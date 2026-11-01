@@ -86,20 +86,22 @@ ShellRoot {
       id: scriptsData
       property string taskStatus: ""
       property string taskPicker: ""
-      property string barVariant: "dev"
+      property bool shiftedWorkspaces: false
     }
   }
 
-  // The gaming bar drops the programming-centric bits: category workspace
-  // icons (and their right-click "+1" twin) and the tasks island.
-  readonly property bool devBar: scriptsData.barVariant !== "gaming"
+  // What the bar shows follows the Hyprland features the host turned on (see
+  // default.nix): no task scripts means no tasks island, no category entries
+  // means plain numbered workspaces, and no shifted workspaces means no
+  // right-click "+1" twin.
+  readonly property bool showTasks: scriptsData.taskStatus !== ""
 
   function focusedWorkspaceId() {
     return Hyprland.focusedWorkspace ? Hyprland.focusedWorkspace.id : -1;
   }
 
   function mergedWorkspaceIds() {
-    const ids = devBar ? workspaceData.entries.map(e => e.id) : [];
+    const ids = workspaceData.entries.map(e => e.id);
     const seen = new Set(ids);
     for (const w of Hyprland.workspaces.values) {
       if (w.id < 200 && !seen.has(w.id)) {
@@ -112,10 +114,10 @@ ShellRoot {
   }
 
   function workspaceIcon(id) {
-    if (!devBar) return String(id);
+    if (workspaceData.entries.length === 0) return String(id);
     for (const e of workspaceData.entries) {
       if (e.id === id) return e.icon;
-      if (e.id + 1 === id) return e.shiftedIcon;
+      if (scriptsData.shiftedWorkspaces && e.id + 1 === id) return e.shiftedIcon;
     }
     return "";
   }
@@ -418,7 +420,7 @@ ShellRoot {
                 hoverEnabled: true
                 acceptedButtons: Qt.LeftButton | Qt.RightButton
                 onClicked: (mouse) => {
-                  const targetId = (root.devBar && mouse.button === Qt.RightButton) ? wsId + 1 : wsId;
+                  const targetId = (scriptsData.shiftedWorkspaces && mouse.button === Qt.RightButton) ? wsId + 1 : wsId;
                   focusWorkspace(targetId);
                 }
               }
@@ -428,7 +430,7 @@ ShellRoot {
       }
 
       Rectangle {
-        visible: bar.showMetrics && root.devBar
+        visible: bar.showMetrics && root.showTasks
         anchors.left: workspacesIsland.right
         anchors.leftMargin: 14
         anchors.verticalCenter: parent.verticalCenter
