@@ -2,12 +2,17 @@
 let
   settings = config.module.hyprland;
 
+  # With category workspaces, only their numbers get keys; otherwise the
+  # whole 1-0 grid does.
+  categoryIds = map (ws: ws.id) (lib.attrValues config.module.workspaces.entries);
+  hasKey = n: !settings.features.categoryWorkspaces.enable || lib.elem (n * 10) categoryIds;
+
   # Keys 1-9,0 -> workspaces 10,20..100, plus offset.
   gridBinds = mods: offset: mkBind:
     lib.concatStringsSep "\n" (map (n:
       let ws = toString (n * 10 + offset); key = toString (lib.mod n 10);
       in mkBind ''mainMod .. " + ${mods}${key}"'' ws
-    ) (lib.range 1 10));
+    ) (lib.filter hasKey (lib.range 1 10)));
 
   pinned = map toString (lib.concatMap (m: m.pinnedWorkspaces)
     (lib.filter (m: m.enable) (lib.attrValues settings.monitors)));

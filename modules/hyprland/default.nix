@@ -188,6 +188,8 @@ in
       slurp
       wf-recorder
       wl-clipboard
+      jq
+      fzf
     ];
 
     home.sessionVariables = {
