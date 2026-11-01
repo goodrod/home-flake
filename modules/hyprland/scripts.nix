@@ -223,7 +223,7 @@ rec {
     esac
     dir="''${XDG_PICTURES_DIR:-$HOME/Pictures}/Screenshots"
     mkdir -p "$dir"
-    ${pkgs.grim}/bin/grim "''${target[@]}" - | ${pkgs.satty}/bin/satty --filename - \
+    ${pkgs.grim}/bin/grim "''${target[@]}" - | ADW_DEBUG_COLOR_SCHEME=prefer-dark ${pkgs.satty}/bin/satty --filename - \
       --output-filename "$dir/screenshot-%Y-%m-%d_%H-%M-%S.png" \
       --copy-command ${pkgs.wl-clipboard}/bin/wl-copy \
       --early-exit

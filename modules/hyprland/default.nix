@@ -75,9 +75,9 @@ in
       default = null;
       example = 10;
       description = ''
-        Workspace the screenshot editor (satty) opens on, taking you along,
-        so it never lands in the middle of a game or a tiled layout. null
-        opens it on the current workspace.
+        Workspace the screenshot editor (satty) opens on, in the background,
+        so it never lands on top of a game or in a tiled layout and never
+        pulls you away from one. null opens it on the current workspace.
       '';
     };
 
@@ -114,6 +114,16 @@ in
             type = nullOr int;
             default = null;
             description = "Default workspace number bound to this monitor (e.g. 10). null = no binding.";
+          };
+          pinnedWorkspaces = mkOption {
+            type = listOf int;
+            default = [ ];
+            example = [ 10 ];
+            description = ''
+              Workspaces that always live on this monitor. Jumping to one
+              (SUPER + its number, or the bar) goes to it here instead of
+              pulling it onto the monitor you are on.
+            '';
           };
           focusKey = mkOption {
             type = nullOr str;

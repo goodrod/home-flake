@@ -3,12 +3,16 @@ let
   settings = config.module.hyprland;
 
   screenshotEditorRule = lib.optionalString (settings.screenshot-editor-workspace != null)
-    ''hl.window_rule({ match = { class = "com.gabm.satty" }, workspace = "${toString settings.screenshot-editor-workspace}" })'';
+    ''hl.window_rule({ match = { class = "com.gabm.satty" }, workspace = "${toString settings.screenshot-editor-workspace} silent" })'';
 
   workspaceRuleLines = lib.concatStringsSep "\n      " (
     map (m: ''hl.workspace_rule({ workspace = "${toString m.workspace}", monitor = "${m.name}", default = true })'')
       (lib.filter (m: m.enable && m.workspace != null) (lib.attrValues settings.monitors))
   );
+
+  pinnedRuleLines = lib.concatStringsSep "\n      " (lib.concatMap (m:
+    map (ws: ''hl.workspace_rule({ workspace = "${toString ws}", monitor = "${m.name}" })'') m.pinnedWorkspaces
+  ) (lib.filter (m: m.enable) (lib.attrValues settings.monitors)));
 
   # Single source of truth for workspaces lives in module.workspaces.
   # Gated here rather than at the call site: an empty set yields no rules.
@@ -100,6 +104,7 @@ in
       -- Workspace Rules (monitor binding)
       -- ══════════════════════════════════════
       ${workspaceRuleLines}
+      ${pinnedRuleLines}
     '';
   };
 }

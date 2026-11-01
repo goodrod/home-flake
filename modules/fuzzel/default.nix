@@ -34,6 +34,7 @@ in {
             vertical-pad = 8; # Vertical padding
             inner-pad = 5; # Inner padding
             dpi-aware = "yes";
+            icon-theme = "Papirus-Dark";
           };
           border = {
             width = 2; # Border width

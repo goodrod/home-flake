@@ -9,7 +9,13 @@ let
       in mkBind ''mainMod .. " + ${mods}${key}"'' ws
     ) (lib.range 1 10));
 
-  focusBind = keyExpr: ws: ''hl.bind(${keyExpr}, hl.dsp.focus({workspace = ${ws}, on_current_monitor = true}), { description = "Focus WS ${ws} on current monitor" })'';
+  pinned = map toString (lib.concatMap (m: m.pinnedWorkspaces)
+    (lib.filter (m: m.enable) (lib.attrValues settings.monitors)));
+
+  focusBind = keyExpr: ws:
+    if lib.elem ws pinned
+    then ''hl.bind(${keyExpr}, hl.dsp.focus({workspace = ${ws}}), { description = "Focus WS ${ws} on its pinned monitor" })''
+    else ''hl.bind(${keyExpr}, hl.dsp.focus({workspace = ${ws}, on_current_monitor = true}), { description = "Focus WS ${ws} on current monitor" })'';
   moveBind = keyExpr: ws: ''hl.bind(${keyExpr}, hl.dsp.window.move({workspace = ${ws}, follow = false}), { description = "Move to WS ${ws}" })'';
 in
 {

@@ -13,6 +13,7 @@
     ./obsidian
     ./personal-apps
     ./spotify
+    ./steam-games-menu
     ./fuzzel
     ./dunst
     ./default-home-dirs
