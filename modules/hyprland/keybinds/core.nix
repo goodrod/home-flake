@@ -32,7 +32,7 @@ in
       hl.bind(mainMod .. " + SHIFT + L", function()
         hl.dispatch(hl.dsp.exec_cmd("playerctl -a pause; ${lockCmd}"))
       end, { description = "Lock screen" })
-      hl.bind(mainMod .. " + F12", hl.dsp.exit(), { description = "Exit Hyprland" })
+      hl.bind(mainMod .. " + ${settings.keys.exit}", hl.dsp.exit(), { description = "Exit Hyprland" })
       hl.bind(mainMod .. " + SHIFT + F", hl.dsp.window.float({ action = "toggle" }), { description = "Toggle floating" })
 
       -- App toggles
@@ -48,8 +48,8 @@ in
       hl.bind(mainMod .. " + H", hl.dsp.exec_cmd('${scripts.toggleWindow} "${scripts.parseHotkeys} | fzf"'), { description = "Toggle window" })
 
       -- Screenshot / recording
-      hl.bind(mainMod .. " + F7", hl.dsp.exec_cmd('grim -g "$(slurp)" - | swappy -f -'), { description = "Take screenshot" })
-      hl.bind(mainMod .. " + F8", hl.dsp.exec_cmd([[sh -c 'pidf=/tmp/wf-recorder-clip.pid; outdir=$HOME/Videos; mkdir -p "$outdir"; if [ -s "$pidf" ] && kill -0 "$(cat "$pidf")" 2>/dev/null; then kill -INT "$(cat "$pidf")"; exit; fi; f="$outdir/recording-$(date +%F_%H-%M-%S).mp4"; wf-recorder -g "$(slurp)" -f "$f" & pid=$!; echo "$pid" > "$pidf"; wait "$pid"; rm -f "$pidf"; printf "file://%s\n" "$(realpath "$f")" | wl-copy --type text/uri-list']]), { description = "Toggle record region to clipboard" })
+      hl.bind(mainMod .. " + ${settings.keys.screenshot}", hl.dsp.exec_cmd('grim -g "$(slurp)" - | swappy -f -'), { description = "Take screenshot" })
+      hl.bind(mainMod .. " + ${settings.keys.record}", hl.dsp.exec_cmd([[sh -c 'pidf=/tmp/wf-recorder-clip.pid; outdir=$HOME/Videos; mkdir -p "$outdir"; if [ -s "$pidf" ] && kill -0 "$(cat "$pidf")" 2>/dev/null; then kill -INT "$(cat "$pidf")"; exit; fi; f="$outdir/recording-$(date +%F_%H-%M-%S).mp4"; wf-recorder -g "$(slurp)" -f "$f" & pid=$!; echo "$pid" > "$pidf"; wait "$pid"; rm -f "$pidf"; printf "file://%s\n" "$(realpath "$f")" | wl-copy --type text/uri-list']]), { description = "Toggle record region to clipboard" })
 
       -- Fullscreen
       hl.bind(mainMod .. " + A", hl.dsp.window.fullscreen({mode = "fullscreen"}), { description = "Toggle fullscreen" })

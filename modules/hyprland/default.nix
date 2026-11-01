@@ -46,6 +46,25 @@ in
         the scrolling-layout column tools: width cycling, the portrait
         full-width clamp, column swap/promote/fit and first/last column focus'';
     };
+    keys = {
+      screenshot = mkOption {
+        type = str;
+        default = "F7";
+        description = "Key (with any extra modifiers) that, with SUPER, screenshots a region.";
+      };
+      record = mkOption {
+        type = str;
+        default = "F8";
+        description = "Key that, with SUPER, starts or stops recording a region.";
+      };
+      exit = mkOption {
+        type = str;
+        default = "F12";
+        example = "SHIFT + Delete";
+        description = "Key that, with SUPER, exits Hyprland.";
+      };
+    };
+
     lockscreen = mkOption {
       type = types.enum [ "hyprlock" "swaylock" ];
       default = "hyprlock";
