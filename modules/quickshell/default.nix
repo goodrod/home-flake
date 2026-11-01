@@ -5,7 +5,7 @@
   ...
 }: let
   inherit (lib) mkOption mkEnableOption types mkIf;
-  inherit (types) path str;
+  inherit (types) enum path str;
   settings = config.module.quickshell;
 
   workspaces = config.module.workspaces.entries;
@@ -34,14 +34,22 @@
     then "swaylock -f"
     else "hyprlock";
 
-  scriptsJson = pkgs.writeText "quickshell-bar-scripts.json" (builtins.toJSON {
-    taskStatus = "${taskScripts.taskStatusScript}";
-    taskPicker = "${taskScripts.taskPicker}";
-    # Same script mod+N runs, called with a notification id so the center can
-    # jump to the entry the keyboard cursor is on.
-    notifJump = "${notifFocusScripts.focusLastNotifApp}";
-    lockCmd = lockCmd;
-  });
+  # The dev bar keeps its exact pre-variant scripts.json, so barVariant is only
+  # written for gaming (shell.qml defaults it to "dev").
+  scriptsJson = pkgs.writeText "quickshell-bar-scripts.json" (builtins.toJSON ({
+      # Same script mod+N runs, called with a notification id so the center can
+      # jump to the entry the keyboard cursor is on.
+      notifJump = "${notifFocusScripts.focusLastNotifApp}";
+      lockCmd = lockCmd;
+    }
+    // (
+      if settings.variant == "dev"
+      then {
+        taskStatus = "${taskScripts.taskStatusScript}";
+        taskPicker = "${taskScripts.taskPicker}";
+      }
+      else {barVariant = settings.variant;}
+    )));
 
   mergedConfigDir = pkgs.runCommand "quickshell-bar-config" {} ''
     mkdir -p "$out"
@@ -52,6 +60,15 @@
 in {
   options.module.quickshell = {
     enable = mkEnableOption "quickshell";
+
+    variant = mkOption {
+      type = enum ["dev" "gaming"];
+      default = "dev";
+      description = ''
+        Which bar to show. "dev" has the category workspace icons and the task
+        workspaces island; "gaming" shows plain numbered workspaces and no tasks.
+      '';
+    };
 
     config-source-directory = mkOption {
       default = ./config;

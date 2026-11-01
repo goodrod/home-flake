@@ -4,7 +4,7 @@ let
   taskScripts = import ./task-workspace-scripts.nix { inherit pkgs lib config; };
 in
 {
-  config = lib.mkIf settings.enable {
+  config = lib.mkIf (settings.enable && settings.features.taskWorkspaces.enable) {
     module.hyprland.luaConfig = lib.mkOrder 260 ''
       -- ══════════════════════════════════════
       -- Task workspace auto-forget

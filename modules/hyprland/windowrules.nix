@@ -8,7 +8,8 @@ let
   );
 
   # Single source of truth for workspaces lives in module.workspaces.
-  workspaces = config.module.workspaces.entries;
+  # Gated here rather than at the call site: an empty set yields no rules.
+  workspaces = if settings.features.categoryWorkspaces.enable then config.module.workspaces.entries else { };
 
   # Map Nix match-field name -> Hyprland Lua match key.
   matchFields = [
@@ -78,7 +79,7 @@ in
       -- windows, so they need layer_rule/namespace, not window_rule/class.
       hl.layer_rule({ match = { namespace = "swaync-notification-window" }, no_screen_share = true })
       hl.layer_rule({ match = { namespace = "swaync-control-center" }, no_screen_share = true })
-      -- discord/vesktop/Slack default to excluded; SUPER+SHIFT+S (keybinds.nix)
+      -- discord/vesktop/Slack default to excluded; SUPER+SHIFT+S (keybinds/core.nix)
       -- can flip any window's exclusion, these included. See setNoShare there:
       -- a rule-based "tag" default would get continuously reasserted and fight
       -- the toggle, so the default is applied once on window open instead.

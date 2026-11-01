@@ -12,7 +12,7 @@ in
 {
   imports = [
     ./appearance.nix
-    ./keybinds.nix
+    ./keybinds
     ./windowrules.nix
     ./settings.nix
     ./lockscreen.nix
@@ -23,6 +23,26 @@ in
 
   options.module.hyprland = {
     enable = mkEnableOption "hyprland";
+
+    autostart-from-tty = mkEnableOption ''
+      starting Hyprland from the bash login shell on tty1, so a plain getty
+      login lands in the desktop. Other ttys stay a shell to recover from'';
+
+    # Off by default: the base module is the QoL every profile shares, and a
+    # host opts into the workspace-heavy desktop pieces it actually uses.
+    features = {
+      taskWorkspaces.enable = mkEnableOption ''
+        task workspaces: the SUPER+T pickers and the auto-forget of emptied
+        ad-hoc ones'';
+      categoryWorkspaces.enable = mkEnableOption ''
+        the window tag and workspace assignment rules built from
+        module.workspaces.entries'';
+      workspaceGrid.enable = mkEnableOption ''
+        the SUPER/CTRL/ALT + 1-0 workspace focus and move binds'';
+      columnTools.enable = mkEnableOption ''
+        the scrolling-layout column tools: width cycling, the portrait
+        full-width clamp, column swap/promote/fit and first/last column focus'';
+    };
     lockscreen = mkOption {
       type = types.enum [ "hyprlock" "swaylock" ];
       default = "hyprlock";
@@ -85,6 +105,12 @@ in
     };
 
     xdg.configFile."hypr/hyprland.lua".text = settings.luaConfig;
+
+    programs.bash.profileExtra = mkIf settings.autostart-from-tty ''
+      if [ -z "$WAYLAND_DISPLAY" ] && [ "''${XDG_VTNR:-}" = 1 ]; then
+        exec start-hyprland
+      fi
+    '';
 
     services = {
       hypridle.enable = false;
