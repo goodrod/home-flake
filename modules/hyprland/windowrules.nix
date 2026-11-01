@@ -84,6 +84,9 @@ in
       -- windows, so they need layer_rule/namespace, not window_rule/class.
       hl.layer_rule({ match = { namespace = "swaync-notification-window" }, no_screen_share = true })
       hl.layer_rule({ match = { namespace = "swaync-control-center" }, no_screen_share = true })
+      hl.layer_rule({ match = { namespace = "quickshell:notification-popups" }, no_screen_share = true })
+      hl.layer_rule({ match = { namespace = "quickshell:notification-peek" }, no_screen_share = true })
+      hl.layer_rule({ match = { namespace = "quickshell:notification-center" }, no_screen_share = true })
       -- discord/vesktop/Slack default to excluded; SUPER+SHIFT+S (keybinds/core.nix)
       -- can flip any window's exclusion, these included. See setNoShare there:
       -- a rule-based "tag" default would get continuously reasserted and fight

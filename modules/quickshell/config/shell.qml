@@ -86,6 +86,7 @@ ShellRoot {
       id: scriptsData
       property string taskStatus: ""
       property string taskPicker: ""
+      property string screenshot: ""
       property bool shiftedWorkspaces: false
     }
   }
@@ -136,6 +137,7 @@ ShellRoot {
   }
 
   Process { id: focusProc }
+  Process { id: screenshotProc }
 
   SessionScreen { id: sessionScreen }
 
@@ -549,6 +551,39 @@ ShellRoot {
               const tier = Math.max(0, Math.min(icons.length - 1, Math.floor(pct / 25)));
               const charging = battery.state === UPowerDeviceState.Charging;
               return icons[tier] + "  " + (charging ? "󱐋 " : "") + pct + "%";
+            }
+          }
+
+          Item {
+            visible: scriptsData.screenshot !== ""
+            width: 22
+            height: 22
+            anchors.verticalCenter: parent.verticalCenter
+
+            Rectangle {
+              anchors.fill: parent
+              radius: 11
+              color: screenshotMouse.containsMouse ? root.chipHoverBg : "transparent"
+              Behavior on color { ColorAnimation { duration: 100 } }
+            }
+
+            Text {
+              anchors.centerIn: parent
+              text: "󰹑"
+              font.pixelSize: 15
+              color: root.textColor
+            }
+
+            MouseArea {
+              id: screenshotMouse
+              anchors.fill: parent
+              hoverEnabled: true
+              acceptedButtons: Qt.LeftButton | Qt.RightButton
+              onClicked: (mouse) => {
+                if (screenshotProc.running) return;
+                screenshotProc.command = [scriptsData.screenshot, mouse.button === Qt.RightButton ? "monitor" : "region"];
+                screenshotProc.running = true;
+              }
             }
           }
 

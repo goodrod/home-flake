@@ -49,7 +49,7 @@ in
 
       -- Screenshot / recording
       hl.bind(mainMod .. " + ${settings.keys.screenshot}", hl.dsp.exec_cmd("${scripts.screenshot} region"), { description = "Screenshot a region and edit it" })
-      hl.bind(mainMod .. " + ${settings.keys.screenshotMonitor}", hl.dsp.exec_cmd("${scripts.screenshot} monitor"), { description = "Screenshot the focused monitor and edit it" })
+      hl.bind(mainMod .. " + ${settings.keys.screenshotMonitor}", hl.dsp.exec_cmd("${scripts.screenshot} monitor"), { description = "Screenshot a monitor (click to pick) and edit it" })
       hl.bind(mainMod .. " + ${settings.keys.record}", hl.dsp.exec_cmd([[sh -c 'pidf=/tmp/wf-recorder-clip.pid; outdir=$HOME/Videos; mkdir -p "$outdir"; if [ -s "$pidf" ] && kill -0 "$(cat "$pidf")" 2>/dev/null; then kill -INT "$(cat "$pidf")"; exit; fi; f="$outdir/recording-$(date +%F_%H-%M-%S).mp4"; wf-recorder -g "$(slurp)" -f "$f" & pid=$!; echo "$pid" > "$pidf"; wait "$pid"; rm -f "$pidf"; printf "file://%s\n" "$(realpath "$f")" | wl-copy --type text/uri-list']]), { description = "Toggle record region to clipboard" })
 
       -- Fullscreen

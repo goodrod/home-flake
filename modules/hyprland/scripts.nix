@@ -218,7 +218,7 @@ rec {
     set -euo pipefail
     case "''${1:-region}" in
       region) target=(-g "$(${pkgs.slurp}/bin/slurp)") ;;
-      monitor) target=(-o "$(hyprctl monitors -j | ${pkgs.jq}/bin/jq -r '.[] | select(.focused) | .name')") ;;
+      monitor) target=(-g "$(${pkgs.slurp}/bin/slurp -o -r)") ;;
       *) echo "usage: screenshot.sh [region|monitor]" >&2; exit 2 ;;
     esac
     dir="''${XDG_PICTURES_DIR:-$HOME/Pictures}/Screenshots"

@@ -55,7 +55,7 @@ in
       screenshotMonitor = mkOption {
         type = str;
         default = "SHIFT + F7";
-        description = "Key that, with SUPER, screenshots the whole focused monitor.";
+        description = "Key that, with SUPER, screenshots a whole monitor, picked with a click.";
       };
       record = mkOption {
         type = str;
