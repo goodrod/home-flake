@@ -226,6 +226,7 @@ rec {
     ${pkgs.grim}/bin/grim "''${target[@]}" - | ADW_DEBUG_COLOR_SCHEME=prefer-dark ${pkgs.satty}/bin/satty --filename - \
       --output-filename "$dir/screenshot-%Y-%m-%d_%H-%M-%S.png" \
       --copy-command ${pkgs.wl-clipboard}/bin/wl-copy \
+      --initial-tool brush \
       --early-exit
   '';
 }
