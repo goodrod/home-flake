@@ -217,8 +217,8 @@ rec {
     #!/usr/bin/env bash
     set -euo pipefail
     case "''${1:-region}" in
-      region) target=(-g "$(${pkgs.slurp}/bin/slurp)") ;;
-      monitor) target=(-g "$(${pkgs.slurp}/bin/slurp -o -r)") ;;
+      region) target=(-g "$(${pkgs.slurp}/bin/slurp < /dev/null)") ;;
+      monitor) target=(-g "$(${pkgs.slurp}/bin/slurp -o -r < /dev/null)") ;;
       *) echo "usage: screenshot.sh [region|monitor]" >&2; exit 2 ;;
     esac
     dir="''${XDG_PICTURES_DIR:-$HOME/Pictures}/Screenshots"
