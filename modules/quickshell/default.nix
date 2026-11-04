@@ -48,8 +48,6 @@
       screenshot = "${hyprlandScripts.screenshot}";
       lockCmd = lockCmd;
       shiftedWorkspaces = features.shiftedWorkspaces.enable;
-      pinnedWorkspaces = lib.concatMap (m: m.pinnedWorkspaces)
-        (lib.filter (m: m.enable) (lib.attrValues config.module.hyprland.monitors));
     }
     // optionalAttrs features.taskWorkspaces.enable {
       taskStatus = "${taskScripts.taskStatusScript}";

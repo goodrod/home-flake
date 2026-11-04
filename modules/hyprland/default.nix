@@ -19,7 +19,6 @@ in
     ./notif-focus.nix
     ./pending-move.nix
     ./task-workspace-cleanup.nix
-    ./exclusive-workspaces.nix
   ];
 
   options.module.hyprland = {
@@ -116,26 +115,6 @@ in
             default = null;
             description = "Default workspace number bound to this monitor (e.g. 10). null = no binding.";
           };
-          pinnedWorkspaces = mkOption {
-            type = listOf int;
-            default = [ ];
-            example = [ 10 ];
-            description = ''
-              Workspaces that always live on this monitor. Jumping to one
-              (SUPER + its number, or the bar) goes to it here instead of
-              pulling it onto the monitor you are on.
-            '';
-          };
-          exclusiveWorkspace = mkOption {
-            type = nullOr int;
-            default = null;
-            example = 10;
-            description = ''
-              While this workspace has windows, the monitor shows nothing
-              else: switching it to another workspace bounces straight back.
-              Must also be in pinnedWorkspaces.
-            '';
-          };
           focusKey = mkOption {
             type = nullOr str;
             default = null;
@@ -152,11 +131,6 @@ in
   };
 
   config = mkIf settings.enable {
-    assertions = map (m: {
-      assertion = m.exclusiveWorkspace == null || builtins.elem m.exclusiveWorkspace m.pinnedWorkspaces;
-      message = "module.hyprland.monitors: exclusiveWorkspace ${toString m.exclusiveWorkspace} on ${m.name} must also be in its pinnedWorkspaces.";
-    }) (builtins.attrValues settings.monitors);
-
     wayland.windowManager.hyprland = {
       enable = true;
       sourceFirst = true;

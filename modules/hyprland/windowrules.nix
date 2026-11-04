@@ -10,10 +10,6 @@ let
       (lib.filter (m: m.enable && m.workspace != null) (lib.attrValues settings.monitors))
   );
 
-  pinnedRuleLines = lib.concatStringsSep "\n      " (lib.concatMap (m:
-    map (ws: ''hl.workspace_rule({ workspace = "${toString ws}", monitor = "${m.name}" })'') m.pinnedWorkspaces
-  ) (lib.filter (m: m.enable) (lib.attrValues settings.monitors)));
-
   # Single source of truth for workspaces lives in module.workspaces.
   # Gated here rather than at the call site: an empty set yields no rules.
   workspaces = if settings.features.categoryWorkspaces.enable then config.module.workspaces.entries else { };
@@ -104,7 +100,6 @@ in
       -- Workspace Rules (monitor binding)
       -- ══════════════════════════════════════
       ${workspaceRuleLines}
-      ${pinnedRuleLines}
     '';
   };
 }

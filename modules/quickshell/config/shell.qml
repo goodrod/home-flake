@@ -88,7 +88,6 @@ ShellRoot {
       property string taskPicker: ""
       property string screenshot: ""
       property bool shiftedWorkspaces: false
-      property var pinnedWorkspaces: []
     }
   }
 
@@ -133,9 +132,7 @@ ShellRoot {
   function focusWorkspace(id) {
     focusProc.command = [
       "hyprctl", "dispatch",
-      scriptsData.pinnedWorkspaces.includes(id)
-        ? `hl.dsp.focus({workspace = ${id}})`
-        : `hl.dsp.focus({workspace = ${id}, on_current_monitor = true})`
+      `hl.dsp.focus({workspace = ${id}, on_current_monitor = true})`
     ];
     focusProc.running = true;
   }
