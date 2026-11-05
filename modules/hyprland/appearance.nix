@@ -5,6 +5,7 @@ in
 {
   config = lib.mkIf settings.enable {
     home.pointerCursor = {
+      enable = true;
       package = pkgs.bibata-cursors;
       name = "Bibata-Modern-Classic";
       size = 16;

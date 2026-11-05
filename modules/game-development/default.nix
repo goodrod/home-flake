@@ -8,6 +8,6 @@ in {
   };
 
   config = mkIf settings.enable {
-    home.packages = with pkgs; [ godot blender aseprite ];
+    home.packages = with pkgs; [ godot blender ];
   };
 }
