@@ -62,6 +62,11 @@ in
         default = "F8";
         description = "Key that, with SUPER, starts or stops recording a region.";
       };
+      promote = mkOption {
+        type = nullOr str;
+        default = "P";
+        description = "Key that, with SUPER, promotes a window to its own column. Null leaves it unbound.";
+      };
       exit = mkOption {
         type = str;
         default = "F12";

@@ -14,7 +14,7 @@ in
       hl.bind(mainMod .. " + plus", hl.dsp.layout("fit visible"), { description = "Fit all visible columns" })
       hl.bind(mainMod .. " + SHIFT + CTRL + left", hl.dsp.layout("swapcol l"), { description = "Swap column left" })
       hl.bind(mainMod .. " + SHIFT + CTRL + right", hl.dsp.layout("swapcol r"), { description = "Swap column right" })
-      hl.bind(mainMod .. " + P", hl.dsp.layout("promote"), { description = "Promote to own column" })
+      ${lib.optionalString (settings.keys.promote != null) ''hl.bind(mainMod .. " + ${settings.keys.promote}", hl.dsp.layout("promote"), { description = "Promote to own column" })''}
 
       -- mon.width/height are the panel-native (untransformed) pixel size, so
       -- swap them for 90/270 transforms to get the actual on-screen size.
